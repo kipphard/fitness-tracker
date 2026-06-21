@@ -93,6 +93,16 @@ def latest_weight(points: list[Point]) -> Decimal | None:
     return _dec(max(points, key=lambda p: p[0])[1])
 
 
+def weekly_change(points: list[Point], today: date) -> Decimal | None:
+    """Change between the two most recent completed weeks (latest − previous). Negative is a
+    loss. None if fewer than two completed, data-bearing weeks exist (Phase 8 rate guardrail)."""
+    current_monday = _monday(today)
+    completed = [wa for wa in weekly_averages(points) if wa.week_start < current_monday]
+    if len(completed) < 2:
+        return None
+    return completed[-1].average - completed[-2].average
+
+
 def effective_weight(
     points: list[Point], today: date, fallback: Decimal | int | float | str
 ) -> tuple[Decimal, WeightSource]:

@@ -9,6 +9,7 @@ from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
 from backend.persistence.models import (
+    BodyMeasurement,
     Exercise,
     ExerciseSource,
     Food,
@@ -431,3 +432,39 @@ def exercise_sets_with_dates(
         .order_by(WorkoutSession.started_at, SetLog.set_index)
     ).all()
     return [(row[0], row[1]) for row in rows]
+
+
+# --- body measurements (one per user+date) ---
+
+def get_measurement(
+    session: Session, user_id: uuid.UUID, day: date
+) -> BodyMeasurement | None:
+    return session.scalar(
+        select(BodyMeasurement).where(
+            BodyMeasurement.user_id == user_id, BodyMeasurement.date == day
+        )
+    )
+
+
+def upsert_measurement(
+    session: Session, user_id: uuid.UUID, day: date, **fields: Any
+) -> BodyMeasurement:
+    row = get_measurement(session, user_id, day)
+    if row is None:
+        row = BodyMeasurement(user_id=user_id, date=day, **fields)
+        session.add(row)
+    else:
+        for key, value in fields.items():
+            setattr(row, key, value)
+    session.flush()
+    return row
+
+
+def list_measurements(session: Session, user_id: uuid.UUID) -> list[BodyMeasurement]:
+    return list(
+        session.scalars(
+            select(BodyMeasurement)
+            .where(BodyMeasurement.user_id == user_id)
+            .order_by(BodyMeasurement.date)
+        )
+    )

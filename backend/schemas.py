@@ -432,3 +432,46 @@ class ProgressionOut(BaseModel):
     exercise_name: str
     points: list[ProgressionPointOut]
     prs: PRsOut | None = None
+
+
+# --- body measurements + trends (Phase 8) ---
+
+class MeasurementIn(BaseModel):
+    date: date_type | None = None
+    waist_cm: Decimal | None = Field(default=None, gt=0, le=300)
+    chest_cm: Decimal | None = Field(default=None, gt=0, le=300)
+    hips_cm: Decimal | None = Field(default=None, gt=0, le=300)
+    arm_cm: Decimal | None = Field(default=None, gt=0, le=150)
+    thigh_cm: Decimal | None = Field(default=None, gt=0, le=200)
+    notes: str | None = Field(default=None, max_length=500)
+
+
+class MeasurementOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    date: date_type
+    waist_cm: Decimal | None = None
+    chest_cm: Decimal | None = None
+    hips_cm: Decimal | None = None
+    arm_cm: Decimal | None = None
+    thigh_cm: Decimal | None = None
+    notes: str | None = None
+
+
+class AdherenceDayOut(BaseModel):
+    date: date_type
+    consumed: Decimal
+    target: Decimal
+
+
+class WeeklyWeightOut(BaseModel):
+    week_start: date_type
+    average: Decimal
+
+
+class TrendsOut(BaseModel):
+    target_kcal: Decimal | None = None
+    adherence: list[AdherenceDayOut]
+    weekly_weight: list[WeeklyWeightOut]
+    weekly_change_kg: Decimal | None = None
+    rate_warning: bool

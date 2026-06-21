@@ -64,3 +64,11 @@ def test_effective_weight_falls_back_to_latest_then_profile():
         Decimal("80"),
         WeightSource.profile,
     )
+
+
+def test_weekly_change():
+    points = [(date(2026, 6, 1), Decimal("100")), (date(2026, 6, 8), Decimal("99"))]
+    # 06-15 (week C): weeks A (100) and B (99) completed -> change = 99 - 100
+    assert trend.weekly_change(points, date(2026, 6, 15)) == Decimal("-1")
+    # 06-10 (week B): only A completed -> not enough data
+    assert trend.weekly_change(points, date(2026, 6, 10)) is None

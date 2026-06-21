@@ -9,6 +9,7 @@ from backend.weight.trend import (
     last_completed_week_average,
     latest_weight,
     weekly_averages,
+    weekly_change,
 )
 
 __all__ = [
@@ -21,4 +22,5 @@ __all__ = [
     "last_completed_week_average",
     "latest_weight",
     "weekly_averages",
+    "weekly_change",
 ]

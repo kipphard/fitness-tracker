@@ -4,10 +4,12 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "../auth";
 import { useTheme } from "../theme";
 import { LanguageSwitcher } from "./LanguageSwitcher";
+import { BodyScreen } from "./BodyScreen";
 import { DiaryScreen } from "./DiaryScreen";
 import { ProfileScreen } from "./ProfileScreen";
 import { SettingsScreen } from "./SettingsScreen";
 import { TodayScreen } from "./TodayScreen";
+import { TrendsScreen } from "./TrendsScreen";
 import { WeightScreen } from "./WeightScreen";
 import { WorkoutsScreen } from "./WorkoutsScreen";
 import { FormulaExplainer } from "./explainers/FormulaExplainer";
@@ -40,6 +42,12 @@ export function AppShell() {
           </NavLink>
           <NavLink to="/workouts" className={linkClass}>
             <span className="sidebar__icon">🏋️</span> {t("common.nav.workouts")}
+          </NavLink>
+          <NavLink to="/trends" className={linkClass}>
+            <span className="sidebar__icon">📈</span> {t("common.nav.trends")}
+          </NavLink>
+          <NavLink to="/body" className={linkClass}>
+            <span className="sidebar__icon">📏</span> {t("common.nav.body")}
           </NavLink>
           <NavLink to="/formula" className={linkClass}>
             <span className="sidebar__icon">📐</span> {t("common.nav.formula")}
@@ -79,6 +87,8 @@ export function AppShell() {
           <Route path="/calculator" element={<ProfileScreen />} />
           <Route path="/weight" element={<WeightScreen />} />
           <Route path="/workouts" element={<WorkoutsScreen />} />
+          <Route path="/trends" element={<TrendsScreen />} />
+          <Route path="/body" element={<BodyScreen />} />
           <Route path="/formula" element={<FormulaExplainer />} />
           <Route path="/activity" element={<ActivityExplainer />} />
           <Route path="/settings" element={<SettingsScreen />} />

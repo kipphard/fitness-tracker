@@ -279,3 +279,43 @@ export interface Progression {
   points: ProgressionPoint[];
   prs: PRs | null;
 }
+
+// --- body measurements + trends (Phase 8) ---
+
+export interface Measurement {
+  date: string;
+  waist_cm: string | null;
+  chest_cm: string | null;
+  hips_cm: string | null;
+  arm_cm: string | null;
+  thigh_cm: string | null;
+  notes: string | null;
+}
+
+export type MeasureField = "waist_cm" | "chest_cm" | "hips_cm" | "arm_cm" | "thigh_cm";
+export const MEASURE_FIELDS: MeasureField[] = [
+  "waist_cm",
+  "chest_cm",
+  "hips_cm",
+  "arm_cm",
+  "thigh_cm",
+];
+
+export interface AdherenceDay {
+  date: string;
+  consumed: string;
+  target: string;
+}
+
+export interface WeeklyWeight {
+  week_start: string;
+  average: string;
+}
+
+export interface Trends {
+  target_kcal: string | null;
+  adherence: AdherenceDay[];
+  weekly_weight: WeeklyWeight[];
+  weekly_change_kg: string | null;
+  rate_warning: boolean;
+}

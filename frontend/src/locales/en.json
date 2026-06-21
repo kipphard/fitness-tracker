@@ -12,6 +12,8 @@
       "calculator": "Calorie needs",
       "weight": "Weight",
       "workouts": "Workouts",
+      "trends": "Trends",
+      "body": "Body",
       "formula": "BMR formula",
       "activity": "Activity levels",
       "settings": "Settings"
@@ -219,6 +221,35 @@
       "intro": "Pick the option that best matches a typical day at work — not your workouts. Each level multiplies your BMR by the factor shown.",
       "factor": "Factor"
     }
+  },
+  "trends": {
+    "title": "Trends",
+    "subtitle": "Calorie adherence and weight over time.",
+    "rateWarning": "You're losing weight faster than ~1%/week — consider easing the deficit to protect muscle.",
+    "adherence": "Calorie adherence (14 days)",
+    "target": "Target",
+    "targetLine": "Daily target: {{target}} kcal",
+    "noData": "Log some food to see adherence.",
+    "weightTrend": "Weight trend",
+    "weeklyChange": "Change vs last week",
+    "weeklyAvg": "Weekly average",
+    "noWeight": "Log weigh-ins to see your weight trend."
+  },
+  "body": {
+    "title": "Body measurements",
+    "subtitle": "Track circumferences over time.",
+    "logTitle": "Log measurements",
+    "fields": {
+      "waist_cm": "Waist (cm)",
+      "chest_cm": "Chest (cm)",
+      "hips_cm": "Hips (cm)",
+      "arm_cm": "Arm (cm)",
+      "thigh_cm": "Thigh (cm)"
+    },
+    "notes": "Notes",
+    "trendTitle": "Trend",
+    "historyTitle": "History",
+    "empty": "No measurements yet."
   },
   "settings": {
     "title": "Settings",

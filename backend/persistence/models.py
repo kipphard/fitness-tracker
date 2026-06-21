@@ -385,3 +385,27 @@ class SetLog(Base):
     )
 
     session: Mapped["WorkoutSession"] = relationship(back_populates="sets")
+
+
+class BodyMeasurement(Base):
+    """Body circumference measurements (cm), one row per user+date (Phase 8). All optional."""
+
+    __tablename__ = "body_measurements"
+    __table_args__ = (
+        UniqueConstraint("user_id", "date", name="uq_body_measurements_user_date"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(GUID, primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        GUID, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    date: Mapped[date] = mapped_column(Date, nullable=False)
+    waist_cm: Mapped[Decimal | None] = mapped_column(Measure, nullable=True)
+    chest_cm: Mapped[Decimal | None] = mapped_column(Measure, nullable=True)
+    hips_cm: Mapped[Decimal | None] = mapped_column(Measure, nullable=True)
+    arm_cm: Mapped[Decimal | None] = mapped_column(Measure, nullable=True)
+    thigh_cm: Mapped[Decimal | None] = mapped_column(Measure, nullable=True)
+    notes: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_now, nullable=False
+    )

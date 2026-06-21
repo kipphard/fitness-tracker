@@ -11,11 +11,13 @@ from backend.api import (
     food,
     health,
     macros,
+    measurements,
     profile,
     routines,
     settings,
     steps,
     today,
+    trends,
     weight,
     workouts,
 )
@@ -49,6 +51,8 @@ app.include_router(today.router, prefix=API)
 app.include_router(exercises.router, prefix=API)
 app.include_router(routines.router, prefix=API)
 app.include_router(workouts.router, prefix=API)
+app.include_router(measurements.router, prefix=API)
+app.include_router(trends.router, prefix=API)
 
 
 @app.get("/", tags=["root"])

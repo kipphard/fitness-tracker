@@ -12,6 +12,8 @@
       "calculator": "Kalorienbedarf",
       "weight": "Gewicht",
       "workouts": "Training",
+      "trends": "Trends",
+      "body": "Körper",
       "formula": "BMR-Formel",
       "activity": "Aktivitätslevel",
       "settings": "Einstellungen"
@@ -219,6 +221,35 @@
       "intro": "Wähle die Option, die zu einem typischen Arbeitstag passt — nicht zu deinem Training. Jedes Level multipliziert deinen Grundumsatz mit dem angezeigten Faktor.",
       "factor": "Faktor"
     }
+  },
+  "trends": {
+    "title": "Trends",
+    "subtitle": "Kalorien-Einhaltung und Gewicht über die Zeit.",
+    "rateWarning": "Du verlierst schneller als ~1 %/Woche — erwäge ein kleineres Defizit, um Muskeln zu schützen.",
+    "adherence": "Kalorien-Einhaltung (14 Tage)",
+    "target": "Ziel",
+    "targetLine": "Tagesziel: {{target}} kcal",
+    "noData": "Trag etwas ein, um die Einhaltung zu sehen.",
+    "weightTrend": "Gewichtsverlauf",
+    "weeklyChange": "Änderung zur Vorwoche",
+    "weeklyAvg": "Wochenschnitt",
+    "noWeight": "Trag Wiegungen ein, um den Verlauf zu sehen."
+  },
+  "body": {
+    "title": "Körpermaße",
+    "subtitle": "Umfänge über die Zeit verfolgen.",
+    "logTitle": "Maße eintragen",
+    "fields": {
+      "waist_cm": "Taille (cm)",
+      "chest_cm": "Brust (cm)",
+      "hips_cm": "Hüfte (cm)",
+      "arm_cm": "Arm (cm)",
+      "thigh_cm": "Oberschenkel (cm)"
+    },
+    "notes": "Notizen",
+    "trendTitle": "Verlauf",
+    "historyTitle": "Verlauf",
+    "empty": "Noch keine Maße."
   },
   "settings": {
     "title": "Einstellungen",
