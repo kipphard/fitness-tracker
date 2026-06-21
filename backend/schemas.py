@@ -15,7 +15,7 @@ from decimal import Decimal
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 from backend.calories.engine import ActivityLevel, Gender, Goal
-from backend.persistence.models import Language, UnitSystem
+from backend.persistence.models import Language, MealSlot, UnitSystem
 
 
 # --- auth ---
@@ -178,7 +178,95 @@ class MacroResultOut(BaseModel):
     over_kcal: Decimal
 
 
+# --- food + diary (Phase 4) ---
+
+class FoodIn(BaseModel):
+    name: str = Field(min_length=1, max_length=200)
+    per100_kcal: Decimal = Field(ge=0, le=1000)
+    per100_protein_g: Decimal = Field(default=Decimal(0), ge=0, le=100)
+    per100_fat_g: Decimal = Field(default=Decimal(0), ge=0, le=100)
+    per100_carbs_g: Decimal = Field(default=Decimal(0), ge=0, le=100)
+    serving_g: Decimal | None = Field(default=None, gt=0, le=5000)
+    barcode: str | None = Field(default=None, max_length=50)
+
+
+class FoodOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    source: str
+    barcode: str | None = None
+    name: str
+    per100_kcal: Decimal
+    per100_protein_g: Decimal
+    per100_fat_g: Decimal
+    per100_carbs_g: Decimal
+    serving_g: Decimal | None = None
+
+
+class FoodDataOut(BaseModel):
+    """A transient Open Food Facts search result (not yet persisted; has no id)."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    name: str
+    barcode: str | None = None
+    per100_kcal: Decimal
+    per100_protein_g: Decimal
+    per100_fat_g: Decimal
+    per100_carbs_g: Decimal
+    serving_g: Decimal | None = None
+
+
+class ConsumedOut(BaseModel):
+    kcal: Decimal
+    protein_g: Decimal
+    fat_g: Decimal
+    carbs_g: Decimal
+
+
+class DiaryIn(BaseModel):
+    date: date_type | None = None  # defaults to today
+    slot: MealSlot
+    amount_g: Decimal = Field(gt=0, le=5000)
+    food_id: uuid.UUID | None = None
+    food: FoodIn | None = None  # inline custom food when food_id is absent
+
+
+class DiaryUpdateIn(BaseModel):
+    amount_g: Decimal | None = Field(default=None, gt=0, le=5000)
+    slot: MealSlot | None = None
+
+
+class DiaryEntryOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    date: date_type
+    slot: MealSlot
+    food_id: uuid.UUID | None = None
+    food_name: str
+    amount_g: Decimal
+    kcal: Decimal
+    protein_g: Decimal
+    fat_g: Decimal
+    carbs_g: Decimal
+
+
+class DiaryDayOut(BaseModel):
+    date: date_type
+    entries: list[DiaryEntryOut]
+    totals: ConsumedOut
+
+
+class DiaryCopyIn(BaseModel):
+    from_date: date_type
+    to_date: date_type | None = None
+
+
 class TodayOut(BaseModel):
     date: date_type
     calories: MyCaloriesOut
     macros: MacroResultOut
+    consumed: ConsumedOut
+    remaining_kcal: Decimal

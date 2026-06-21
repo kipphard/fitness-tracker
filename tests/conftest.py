@@ -4,6 +4,7 @@ Tests run entirely on in-memory SQLite (no Docker / Postgres needed). Required e
 set before any backend import so config/encryption load cleanly.
 """
 import os
+from decimal import Decimal
 
 from cryptography.fernet import Fernet
 
@@ -17,8 +18,40 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
+from backend.api.deps import get_off_client
+from backend.food.off import FoodData
 from backend.main import app
 from backend.persistence.database import Base, get_session
+
+
+class _FakeOFF:
+    """Fake Open Food Facts client (no network) used in tests."""
+
+    def get_product(self, barcode: str) -> FoodData | None:
+        if barcode == "0000000000000":
+            return None
+        return FoodData(
+            name="Test Bar",
+            barcode=barcode,
+            per100_kcal=Decimal("400"),
+            per100_protein_g=Decimal("20"),
+            per100_fat_g=Decimal("10"),
+            per100_carbs_g=Decimal("50"),
+            serving_g=Decimal("40"),
+        )
+
+    def search(self, query: str, limit: int = 10) -> list[FoodData]:
+        return [
+            FoodData(
+                name=f"{query} result",
+                barcode="111",
+                per100_kcal=Decimal("100"),
+                per100_protein_g=Decimal("5"),
+                per100_fat_g=Decimal("2"),
+                per100_carbs_g=Decimal("15"),
+                serving_g=None,
+            )
+        ]
 
 
 @pytest.fixture
@@ -66,6 +99,7 @@ def client(session_factory):
             session.close()
 
     app.dependency_overrides[get_session] = _override
+    app.dependency_overrides[get_off_client] = lambda: _FakeOFF()
     with TestClient(app) as test_client:
         _register(test_client, "user-a@example.com")
         yield test_client

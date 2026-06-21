@@ -11,6 +11,7 @@ from datetime import date
 from fastapi import APIRouter, HTTPException
 
 from backend.api.deps import CurrentUser, SessionDep
+from backend.api.diary import sum_consumed
 from backend.calories import engine
 from backend.macros import engine as macro_engine
 from backend.persistence import repository
@@ -46,10 +47,14 @@ def today(session: SessionDep, user: CurrentUser) -> TodayOut:
         cal.target, weight_kg, protein_g_per_kg, fat_g_per_kg
     )
 
+    consumed = sum_consumed(repository.list_food_logs(session, user.id, date.today()))
+
     return TodayOut(
         date=date.today(),
         calories=MyCaloriesOut(
             **asdict(cal), weight_kg=weight_kg, weight_source=source.value
         ),
         macros=MacroResultOut.model_validate(macros),
+        consumed=consumed,
+        remaining_kcal=cal.target - consumed.kcal,
     )

@@ -26,7 +26,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from backend.calories.engine import ActivityLevel, Gender, Goal
 from backend.macros.engine import DEFAULT_FAT_G_PER_KG, DEFAULT_PROTEIN_G_PER_KG
 from backend.persistence.database import Base
-from backend.persistence.types import GUID, Measure
+from backend.persistence.types import GUID, Macro, Measure
 
 
 def _now() -> datetime:
@@ -164,3 +164,71 @@ class MacroTarget(Base):
     )
 
     user: Mapped["User"] = relationship(back_populates="macro_target")
+
+
+class FoodSource(str, PyEnum):
+    off = "off"
+    custom = "custom"
+
+
+class MealSlot(str, PyEnum):
+    breakfast = "breakfast"
+    lunch = "lunch"
+    dinner = "dinner"
+    snack = "snack"
+
+
+class Food(Base):
+    """A food (custom or cached from Open Food Facts), scoped to its owner.
+
+    Nutrition is stored per 100 g; logging scales it by the grams eaten.
+    """
+
+    __tablename__ = "foods"
+    __table_args__ = (
+        UniqueConstraint("owner_id", "barcode", name="uq_foods_owner_barcode"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(GUID, primary_key=True, default=uuid.uuid4)
+    owner_id: Mapped[uuid.UUID] = mapped_column(
+        GUID, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    source: Mapped[FoodSource] = mapped_column(
+        Enum(FoodSource, name="food_source"), nullable=False
+    )
+    barcode: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    name: Mapped[str] = mapped_column(String(200), nullable=False)
+    per100_kcal: Mapped[Decimal] = mapped_column(Measure, nullable=False)
+    per100_protein_g: Mapped[Decimal] = mapped_column(Measure, nullable=False, default=0)
+    per100_fat_g: Mapped[Decimal] = mapped_column(Measure, nullable=False, default=0)
+    per100_carbs_g: Mapped[Decimal] = mapped_column(Measure, nullable=False, default=0)
+    serving_g: Mapped[Decimal | None] = mapped_column(Measure, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_now, nullable=False
+    )
+
+
+class FoodLog(Base):
+    """A single diary entry. Macros are denormalized at log time so history is stable
+    even if the underlying food is later edited or deleted."""
+
+    __tablename__ = "food_logs"
+
+    id: Mapped[uuid.UUID] = mapped_column(GUID, primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        GUID, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    date: Mapped[date] = mapped_column(Date, nullable=False, index=True)
+    slot: Mapped[MealSlot] = mapped_column(Enum(MealSlot, name="meal_slot"), nullable=False)
+    food_id: Mapped[uuid.UUID | None] = mapped_column(
+        GUID, ForeignKey("foods.id", ondelete="SET NULL"), nullable=True
+    )
+    food_name: Mapped[str] = mapped_column(String(200), nullable=False)
+    amount_g: Mapped[Decimal] = mapped_column(Measure, nullable=False)
+    kcal: Mapped[Decimal] = mapped_column(Macro, nullable=False)
+    protein_g: Mapped[Decimal] = mapped_column(Macro, nullable=False)
+    fat_g: Mapped[Decimal] = mapped_column(Macro, nullable=False)
+    carbs_g: Mapped[Decimal] = mapped_column(Macro, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_now, nullable=False
+    )

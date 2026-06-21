@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "../auth";
 import { useTheme } from "../theme";
 import { LanguageSwitcher } from "./LanguageSwitcher";
+import { DiaryScreen } from "./DiaryScreen";
 import { ProfileScreen } from "./ProfileScreen";
 import { SettingsScreen } from "./SettingsScreen";
 import { TodayScreen } from "./TodayScreen";
@@ -26,6 +27,9 @@ export function AppShell() {
         <nav className="sidebar__nav">
           <NavLink to="/" end className={linkClass}>
             <span className="sidebar__icon">📅</span> {t("common.nav.today")}
+          </NavLink>
+          <NavLink to="/diary" className={linkClass}>
+            <span className="sidebar__icon">🍽️</span> {t("common.nav.diary")}
           </NavLink>
           <NavLink to="/calculator" className={linkClass}>
             <span className="sidebar__icon">🔥</span> {t("common.nav.calculator")}
@@ -67,6 +71,7 @@ export function AppShell() {
       <main className="app-main">
         <Routes>
           <Route path="/" element={<TodayScreen />} />
+          <Route path="/diary" element={<DiaryScreen />} />
           <Route path="/calculator" element={<ProfileScreen />} />
           <Route path="/weight" element={<WeightScreen />} />
           <Route path="/formula" element={<FormulaExplainer />} />

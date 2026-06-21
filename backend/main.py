@@ -6,6 +6,8 @@ from fastapi import FastAPI
 from backend.api import (
     auth,
     calories,
+    diary,
+    food,
     health,
     macros,
     profile,
@@ -36,6 +38,8 @@ app.include_router(settings.router, prefix=API)
 app.include_router(calories.router, prefix=API)
 app.include_router(weight.router, prefix=API)
 app.include_router(macros.router, prefix=API)
+app.include_router(food.router, prefix=API)
+app.include_router(diary.router, prefix=API)
 app.include_router(today.router, prefix=API)
 
 

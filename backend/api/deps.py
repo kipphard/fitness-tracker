@@ -9,6 +9,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
 
 from backend.auth.security import decode_token
+from backend.food.off import OpenFoodFactsClient
 from backend.persistence import repository
 from backend.persistence.database import get_session
 from backend.persistence.models import User
@@ -38,3 +39,11 @@ def get_current_user(
 
 
 CurrentUser = Annotated[User, Depends(get_current_user)]
+
+
+def get_off_client() -> OpenFoodFactsClient:
+    """Open Food Facts client. Overridden in tests with a fake (no network)."""
+    return OpenFoodFactsClient()
+
+
+OffClientDep = Annotated[OpenFoodFactsClient, Depends(get_off_client)]

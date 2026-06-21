@@ -447,6 +447,134 @@ a:hover {
 .macro-card strong {
   font-size: 1.05rem;
 }
+.macro-bar {
+  height: 6px;
+  background: var(--surface-2);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-top: 0.3rem;
+}
+.macro-bar__fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.2s ease;
+}
+
+/* ── Diary ─────────────────────────────────────────────────────────────── */
+.diary-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.date-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.date-nav .input {
+  width: auto;
+}
+.food-results {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  max-height: 240px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.food-results__item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  font-size: 0.9rem;
+}
+.food-results__item:hover {
+  background: var(--surface-2);
+}
+.food-results__empty {
+  font-size: 0.85rem;
+  padding: 0.4rem 0;
+}
+.diary-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+}
+.diary-barcode {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+.diary-barcode .input {
+  flex: 1;
+}
+.custom-food {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+.add-form {
+  margin-top: 0.9rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.add-form__name {
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+.slot-group h3 {
+  margin: 0.9rem 0 0.4rem;
+}
+.slot-group:first-child h3 {
+  margin-top: 0;
+}
+.diary-entry {
+  display: grid;
+  grid-template-columns: 1fr auto auto auto auto;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.9rem;
+}
+.diary-entry:last-child {
+  border-bottom: none;
+}
+.diary-entry__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.diary-total {
+  margin-top: 0.75rem;
+}
+.icon-btn--xs {
+  width: 1.7rem;
+  height: 1.7rem;
+  font-size: 0.8rem;
+}
 
 /* ── Prose / explainers ────────────────────────────────────────────────── */
 .formula {

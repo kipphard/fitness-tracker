@@ -15,5 +15,8 @@ GUID = Uuid(as_uuid=True)
 # JSON blob: JSONB on Postgres, generic JSON on SQLite.
 JSONType = JSONB().with_variant(JSON(), "sqlite")
 
-# Body measurements (kg / cm) are stored as exact Decimal, never float.
+# Body measurements (kg / cm) and per-100g nutrition are stored as exact Decimal.
 Measure = Numeric(6, 2)
+
+# Logged macro totals (a large portion can exceed 9999 kcal) — exact Decimal, never float.
+Macro = Numeric(10, 2)

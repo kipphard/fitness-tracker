@@ -8,7 +8,15 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from backend.persistence.models import MacroTarget, Profile, Settings, User, WeighIn
+from backend.persistence.models import (
+    Food,
+    FoodLog,
+    MacroTarget,
+    Profile,
+    Settings,
+    User,
+    WeighIn,
+)
 
 
 # --- users ---
@@ -118,3 +126,99 @@ def upsert_macro_target(
             setattr(macro, key, value)
     session.flush()
     return macro
+
+
+# --- foods (per-user catalogue: custom + OFF cache) ---
+
+def create_food(session: Session, owner_id: uuid.UUID, **fields: Any) -> Food:
+    food = Food(owner_id=owner_id, **fields)
+    session.add(food)
+    session.flush()
+    return food
+
+
+def get_food(session: Session, food_id: uuid.UUID, owner_id: uuid.UUID) -> Food | None:
+    food = session.get(Food, food_id)
+    if food is None or food.owner_id != owner_id:
+        return None
+    return food
+
+
+def get_food_by_barcode(
+    session: Session, owner_id: uuid.UUID, barcode: str
+) -> Food | None:
+    return session.scalar(
+        select(Food).where(Food.owner_id == owner_id, Food.barcode == barcode)
+    )
+
+
+def search_foods(
+    session: Session, owner_id: uuid.UUID, query: str, limit: int = 20
+) -> list[Food]:
+    return list(
+        session.scalars(
+            select(Food)
+            .where(Food.owner_id == owner_id, Food.name.ilike(f"%{query}%"))
+            .order_by(Food.name)
+            .limit(limit)
+        )
+    )
+
+
+# --- diary (food logs) ---
+
+def create_food_log(session: Session, user_id: uuid.UUID, **fields: Any) -> FoodLog:
+    log = FoodLog(user_id=user_id, **fields)
+    session.add(log)
+    session.flush()
+    return log
+
+
+def list_food_logs(
+    session: Session, user_id: uuid.UUID, day: date
+) -> list[FoodLog]:
+    return list(
+        session.scalars(
+            select(FoodLog)
+            .where(FoodLog.user_id == user_id, FoodLog.date == day)
+            .order_by(FoodLog.created_at)
+        )
+    )
+
+
+def get_food_log(
+    session: Session, log_id: uuid.UUID, user_id: uuid.UUID
+) -> FoodLog | None:
+    log = session.get(FoodLog, log_id)
+    if log is None or log.user_id != user_id:
+        return None
+    return log
+
+
+def delete_food_log(session: Session, log_id: uuid.UUID, user_id: uuid.UUID) -> bool:
+    log = get_food_log(session, log_id, user_id)
+    if log is None:
+        return False
+    session.delete(log)
+    return True
+
+
+def recent_foods(
+    session: Session, user_id: uuid.UUID, limit: int = 10
+) -> list[Food]:
+    """Distinct foods from the user's most recent log entries (for quick re-logging)."""
+    food_ids = session.execute(
+        select(FoodLog.food_id)
+        .where(FoodLog.user_id == user_id, FoodLog.food_id.isnot(None))
+        .order_by(FoodLog.created_at.desc())
+    ).scalars()
+    ordered: list[uuid.UUID] = []
+    for food_id in food_ids:
+        if food_id not in ordered:
+            ordered.append(food_id)
+        if len(ordered) >= limit:
+            break
+    if not ordered:
+        return []
+    by_id = {f.id: f for f in session.scalars(select(Food).where(Food.id.in_(ordered)))}
+    return [by_id[fid] for fid in ordered if fid in by_id]

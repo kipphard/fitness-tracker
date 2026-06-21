@@ -119,8 +119,56 @@ export interface MacroResult {
   over_kcal: string;
 }
 
+export interface Consumed {
+  kcal: string;
+  protein_g: string;
+  fat_g: string;
+  carbs_g: string;
+}
+
 export interface Today {
   date: string;
   calories: MyCalories;
   macros: MacroResult;
+  consumed: Consumed;
+  remaining_kcal: string;
+}
+
+// --- food + diary (Phase 4) ---
+
+export type MealSlot = "breakfast" | "lunch" | "dinner" | "snack";
+export const MEAL_SLOTS: MealSlot[] = ["breakfast", "lunch", "dinner", "snack"];
+
+export interface Food {
+  id: string;
+  source: "off" | "custom";
+  barcode: string | null;
+  name: string;
+  per100_kcal: string;
+  per100_protein_g: string;
+  per100_fat_g: string;
+  per100_carbs_g: string;
+  serving_g: string | null;
+}
+
+// A transient OFF search result (no id yet).
+export type FoodData = Omit<Food, "id" | "source">;
+
+export interface DiaryEntry {
+  id: string;
+  date: string;
+  slot: MealSlot;
+  food_id: string | null;
+  food_name: string;
+  amount_g: string;
+  kcal: string;
+  protein_g: string;
+  fat_g: string;
+  carbs_g: string;
+}
+
+export interface DiaryDay {
+  date: string;
+  entries: DiaryEntry[];
+  totals: Consumed;
 }

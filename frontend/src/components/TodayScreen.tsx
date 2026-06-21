@@ -11,11 +11,6 @@ import { Card } from "./Card";
 
 const MACRO_COLORS = { protein: "#6366f1", carbs: "#f59e0b", fat: "#10b981" };
 
-function pct(part: string, whole: string): number {
-  const total = num(whole);
-  return total > 0 ? Math.round((num(part) / total) * 100) : 0;
-}
-
 export function TodayScreen() {
   const { t } = useTranslation();
   const today = useApi<Today>("/today");
@@ -59,7 +54,7 @@ export function TodayScreen() {
     );
   }
 
-  const { calories, macros } = today.data;
+  const { calories, macros, consumed, remaining_kcal } = today.data;
   const donut = [
     { key: "protein", name: t("today.macros.protein"), value: num(macros.protein_kcal), color: MACRO_COLORS.protein },
     { key: "carbs", name: t("today.macros.carbs"), value: num(macros.carbs_kcal), color: MACRO_COLORS.carbs },
@@ -67,10 +62,14 @@ export function TodayScreen() {
   ];
 
   const macroCards = [
-    { key: "protein", g: macros.protein_g, c: macros.protein_kcal, color: MACRO_COLORS.protein },
-    { key: "carbs", g: macros.carbs_g, c: macros.carbs_kcal, color: MACRO_COLORS.carbs },
-    { key: "fat", g: macros.fat_g, c: macros.fat_kcal, color: MACRO_COLORS.fat },
+    { key: "protein", target: macros.protein_g, eaten: consumed.protein_g, color: MACRO_COLORS.protein },
+    { key: "carbs", target: macros.carbs_g, eaten: consumed.carbs_g, color: MACRO_COLORS.carbs },
+    { key: "fat", target: macros.fat_g, eaten: consumed.fat_g, color: MACRO_COLORS.fat },
   ];
+  const progress = (eaten: string, target: string) => {
+    const total = num(target);
+    return total > 0 ? Math.min(100, (num(eaten) / total) * 100) : 0;
+  };
 
   return (
     <div className="screen">
@@ -82,12 +81,16 @@ export function TodayScreen() {
       <div className="grid grid--2">
         <Card title={t("today.targetTitle")}>
           <div className="target-hero">
-            <strong className="tnum">{kcal(calories.target)}</strong>
-            <span className="muted">{t("profile.results.perDay")}</span>
+            <strong className="tnum">{kcal(remaining_kcal)}</strong>
+            <span className="muted">{t("today.left")}</span>
           </div>
           <div className="result-row">
-            <span className="muted">{t("profile.results.maintenance")}</span>
-            <span className="tnum">{kcal(calories.maintenance)}</span>
+            <span className="muted">{t("today.targetLabel")}</span>
+            <span className="tnum">{kcal(calories.target)}</span>
+          </div>
+          <div className="result-row">
+            <span className="muted">{t("today.eaten")}</span>
+            <span className="tnum">{kcal(consumed.kcal)}</span>
           </div>
           {calories.below_floor && (
             <div className="alert alert--warn">
@@ -98,7 +101,9 @@ export function TodayScreen() {
             {t("profile.results.weightBasis", { weight: oneDecimal(calories.weight_kg) })} ·{" "}
             {t(`profile.results.source.${calories.weight_source}`)}
           </p>
-          <div className="alert alert--info">{t("today.foodLogSoon")}</div>
+          <Link className="btn btn--ghost btn--sm" to="/diary">
+            {t("today.openDiary")}
+          </Link>
         </Card>
 
         <Card title={t("today.macrosTitle")}>
@@ -126,10 +131,15 @@ export function TodayScreen() {
               <div className="macro-card" key={m.key}>
                 <span className="macro-card__dot" style={{ background: m.color }} />
                 <span className="macro-card__name">{t(`today.macros.${m.key}`)}</span>
-                <strong className="tnum">{oneDecimal(m.g)} g</strong>
-                <span className="muted tnum">
-                  {kcal(m.c)} · {pct(m.c, macros.target_kcal)}%
-                </span>
+                <strong className="tnum">
+                  {oneDecimal(m.eaten)} / {oneDecimal(m.target)} g
+                </strong>
+                <div className="macro-bar">
+                  <div
+                    className="macro-bar__fill"
+                    style={{ width: `${progress(m.eaten, m.target)}%`, background: m.color }}
+                  />
+                </div>
               </div>
             ))}
           </div>
