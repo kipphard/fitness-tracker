@@ -58,7 +58,7 @@
     "logWeightBtn": "Log weight",
     "maintenance": "Maintenance",
     "plannedDeficit": "Planned deficit",
-    "netDeficitHint": "Planned deficit + steps",
+    "netDeficitHint": "Maintenance − eaten + steps",
     "weeklyLoss": "Weight loss",
     "weeklyGain": "Weight gain",
     "kgPerWeek": "kg/week"

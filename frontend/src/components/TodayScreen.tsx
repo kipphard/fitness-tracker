@@ -93,8 +93,9 @@ export function TodayScreen() {
   const weighedToday = (weighIns.data ?? []).some((w) => w.date === todayIso());
   // The deliberate cut/bulk gap your goal targets (maintenance − target), independent of intake.
   const plannedDeficit = num(calories.maintenance) - num(calories.target);
-  // The effective deficit for the day: the planned cut plus the extra burn from steps.
-  const netDeficit = plannedDeficit + num(activity_kcal);
+  // The live deficit so far today: maintenance minus what's been eaten, plus the step burn.
+  const netDeficit =
+    num(calories.maintenance) - num(consumed.kcal) + num(activity_kcal);
   // ~7700 kcal per kg of body fat (Wishnofsky's 3500 kcal/lb). A first-order estimate —
   // early loss also includes water/glycogen, and the body adapts over time.
   const KCAL_PER_KG = 7700;
@@ -189,6 +190,7 @@ export function TodayScreen() {
             <span className="muted">{t("today.netDeficit")}</span>
             <span className="tnum">{kcal(netDeficit)}</span>
           </div>
+          <p className="muted result-hint">{t("today.netDeficitHint")}</p>
           <div className="result-row">
             <span className="muted">
               {weeklyChangeKg >= 0 ? t("today.weeklyLoss") : t("today.weeklyGain")}
@@ -202,7 +204,6 @@ export function TodayScreen() {
               {t("today.kgPerWeek")}
             </span>
           </div>
-          <p className="muted result-hint">{t("today.netDeficitHint")}</p>
           {calories.below_floor && (
             <div className="alert alert--warn">
               {t("profile.results.floorWarning", { floor: kcal(calories.floor) })}
