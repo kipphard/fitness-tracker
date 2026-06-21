@@ -91,8 +91,8 @@ def lookup_barcode(
 
 @router.post("/photo", response_model=PhotoEstimateOut)
 def estimate_photo(
+    user: CurrentUser,  # resolved first, so unauthenticated requests 401 before the 503 check
     vision: VisionClientDep,
-    user: CurrentUser,
     file: UploadFile = File(...),
     context: str | None = Form(default=None),
 ) -> PhotoEstimateOut:
