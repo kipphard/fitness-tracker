@@ -82,7 +82,9 @@ nginx, against the host's **system PostgreSQL** (a dedicated `fitness` role + DB
 - **Push-to-deploy:** `.github/workflows/deploy.yml` builds the SPA, rsyncs to the server and
   restarts the service on push to `main`. Needs repo secret `DEPLOY_SSH_KEY`; GitHub Actions
   billing must be active. The frontend is built in CI (no Node on the server).
-- **Manual deploy:** rsync the repo to `/opt/fitness-tracker` (excluding
-  `.git/.venv/__pycache__/.env/node_modules`), then on the server:
-  `.venv/bin/pip install -e . && .venv/bin/alembic upgrade head && systemctl restart fitness-tracker`.
-  Validate any new migration on a throwaway `fitness_migtest` DB first.
+- **Manual deploy:** run **`./deploy.sh`** — it builds the SPA, rsyncs the repo to
+  `/opt/fitness-tracker` (excluding `.git/.venv/__pycache__/.env/node_modules`), then on the
+  server runs `pip install -e . && alembic upgrade head && systemctl restart fitness-tracker`
+  and checks `/health`. (Override the key with `DEPLOY_KEY=...`.) This is the deploy path until
+  GitHub Actions billing is active. Validate any new migration on a throwaway `fitness_migtest`
+  DB first.
