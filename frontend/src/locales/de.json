@@ -1,0 +1,117 @@
+{
+  "common": {
+    "appName": "Fitness Tracker",
+    "loading": "Lädt…",
+    "save": "Speichern",
+    "saving": "Speichert…",
+    "logout": "Abmelden",
+    "toggleTheme": "Hell / Dunkel umschalten",
+    "nav": {
+      "calculator": "Kalorienbedarf",
+      "formula": "BMR-Formel",
+      "activity": "Aktivitätslevel",
+      "settings": "Einstellungen"
+    }
+  },
+  "auth": {
+    "signInTitle": "Anmelden",
+    "registerTitle": "Konto erstellen",
+    "email": "E-Mail",
+    "password": "Passwort",
+    "signIn": "Anmelden",
+    "register": "Konto erstellen",
+    "toRegister": "Noch kein Konto? Registrieren",
+    "toLogin": "Schon ein Konto? Anmelden",
+    "passwordHint": "Mindestens 8 Zeichen",
+    "tagline": "Dein selbstgehosteter Fitness- & Ernährungstracker"
+  },
+  "profile": {
+    "title": "Dein Kalorienbedarf",
+    "subtitle": "Gib deine Daten ein, um dein Tagesziel zu berechnen.",
+    "height": "Größe (cm)",
+    "age": "Alter (Jahre)",
+    "gender": "Geschlecht",
+    "weight": "Gewicht (kg)",
+    "activity": "Berufliche Aktivität",
+    "goal": "Ziel",
+    "genderOptions": { "male": "Männlich", "female": "Weiblich" },
+    "goalOptions": {
+      "cut": "Abnehmen (Defizit)",
+      "maintain": "Halten",
+      "bulk": "Zunehmen (Aufbau)"
+    },
+    "calculate": "Speichern & berechnen",
+    "results": {
+      "title": "Deine Ergebnisse",
+      "bmr": "Grundumsatz (BMR)",
+      "maintenance": "Erhaltungsbedarf (TDEE)",
+      "target": "Tagesziel",
+      "perDay": "kcal / Tag",
+      "factor": "Aktivitätsfaktor",
+      "floorWarning": "Dein Ziel wurde auf den sicheren Mindestwert von {{floor}} kcal/Tag angehoben, um ein zu großes Defizit zu vermeiden.",
+      "learnFormula": "Wie wird der Grundumsatz berechnet?",
+      "learnActivity": "Was bedeuten die Aktivitätslevel?"
+    }
+  },
+  "calories": {
+    "levels": {
+      "sedentary": {
+        "label": "Bürojob, überwiegend sitzend",
+        "desc": "Büroarbeit mit wenig Bewegung über den Tag."
+      },
+      "lightly_active": {
+        "label": "Sitzend + etwas Bewegung",
+        "desc": "Überwiegend sitzend, aber öfter auf den Beinen."
+      },
+      "moderately_active": {
+        "label": "Überwiegend stehend oder gehend",
+        "desc": "Den Großteil des Tages auf den Beinen (z. B. Einzelhandel, Lehre)."
+      },
+      "heavy": {
+        "label": "Körperlich fordernder Job",
+        "desc": "Überwiegend körperliche Arbeit (z. B. Handwerk)."
+      },
+      "very_heavy": {
+        "label": "Schwere körperliche Arbeit",
+        "desc": "Den ganzen Tag schwere körperliche Arbeit (z. B. Bau)."
+      }
+    }
+  },
+  "explainers": {
+    "formula": {
+      "title": "Mifflin-St-Jeor-Formel",
+      "intro": "Dein Grundumsatz (BMR) ist die Energie, die dein Körper in völliger Ruhe verbraucht. Wir verwenden die Mifflin-St-Jeor-Gleichung, den heutigen Standard:",
+      "male": "Männer:  BMR = 10 × Gewicht(kg) + 6,25 × Größe(cm) − 5 × Alter + 5",
+      "female": "Frauen:  BMR = 10 × Gewicht(kg) + 6,25 × Größe(cm) − 5 × Alter − 161",
+      "termsTitle": "Was die einzelnen Terme bedeuten",
+      "terms": {
+        "weight": "10 × Gewicht (kg) — mehr Körpermasse verbraucht in Ruhe mehr Energie.",
+        "height": "6,25 × Größe (cm) — größere Körper haben mehr zu versorgendes Gewebe.",
+        "age": "− 5 × Alter — der Ruheumsatz sinkt mit dem Alter langsam.",
+        "constant": "+5 (Männer) / −161 (Frauen) — ein geschlechtsabhängiger Versatz für die durchschnittliche Körperzusammensetzung."
+      },
+      "tdeeTitle": "Vom Grundumsatz zum Erhaltungsbedarf",
+      "tdee": "Wir multiplizieren den Grundumsatz mit einem beruflichen Aktivitätsfaktor und erhalten so deinen Erhaltungsbedarf (TDEE) — die Kalorien, die dein Gewicht stabil halten.",
+      "goalTitle": "Vom Erhaltungsbedarf zu deinem Ziel",
+      "goal": "Dein Ziel verschiebt den Wert: Abnehmen = Erhaltungsbedarf − 500 kcal, Halten = Erhaltungsbedarf, Aufbau = Erhaltungsbedarf + 300 kcal. Ein Sicherheits-Mindestwert (1500 kcal für Männer, 1200 für Frauen) verhindert ein extremes Defizit.",
+      "excludeTitle": "Warum Sport nicht im Grundwert steckt",
+      "exclude": "Der Aktivitätsfaktor bildet nur Beruf und Alltag ab. Gezielter Sport und Schritte werden später tageweise obendrauf gerechnet — so erhöht ein hartes Training dein Budget nur an diesem Tag, statt jeden Tag."
+    },
+    "activity": {
+      "title": "Aktivitätslevel",
+      "intro": "Wähle die Option, die zu einem typischen Arbeitstag passt — nicht zu deinem Training. Jedes Level multipliziert deinen Grundumsatz mit dem angezeigten Faktor.",
+      "factor": "Faktor"
+    }
+  },
+  "settings": {
+    "title": "Einstellungen",
+    "language": "Sprache",
+    "units": "Einheiten",
+    "unitOptions": {
+      "metric": "Metrisch (kg, cm)",
+      "imperial": "Imperial (lb, in)"
+    },
+    "saved": "Gespeichert",
+    "note": "Imperiale Eingabe folgt in einer späteren Phase; die Berechnung erfolgt immer metrisch."
+  }
+}

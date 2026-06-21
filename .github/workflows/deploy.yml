@@ -1,0 +1,58 @@
+name: Deploy
+
+# Push-to-deploy: build the SPA, rsync the repo to the Hetzner box, run migrations and
+# restart the systemd service. Requires repo secret DEPLOY_SSH_KEY (the deploy key that
+# authorizes root@REDACTED). The server keeps its own /opt/fitness-tracker/.env
+# (excluded from rsync) and .venv. GitHub Actions billing must be active for this to run.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-fitness-tracker
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build frontend
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: |
+          cd frontend
+          npm ci
+          npm run build
+
+      - name: Set up deploy SSH key
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H REDACTED >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Rsync code to server
+        run: |
+          rsync -rlptz --delete \
+            -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=accept-new" \
+            --exclude '.git/' --exclude '.venv/' --exclude '__pycache__/' \
+            --exclude '.pytest_cache/' --exclude '.env' --exclude '*.egg-info/' \
+            --exclude '.ruff_cache/' --exclude 'frontend/node_modules/' \
+            ./ root@REDACTED:/opt/fitness-tracker/
+
+      - name: Install deps, migrate, restart
+        run: |
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=accept-new root@REDACTED 'bash -se' <<'EOS'
+          set -euo pipefail
+          cd /opt/fitness-tracker
+          .venv/bin/pip install --quiet -e .
+          set -a; . ./.env; set +a
+          .venv/bin/alembic upgrade head
+          systemctl restart fitness-tracker
+          systemctl is-active fitness-tracker
+          EOS

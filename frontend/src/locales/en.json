@@ -1,0 +1,117 @@
+{
+  "common": {
+    "appName": "Fitness Tracker",
+    "loading": "Loading…",
+    "save": "Save",
+    "saving": "Saving…",
+    "logout": "Log out",
+    "toggleTheme": "Toggle light / dark",
+    "nav": {
+      "calculator": "Calorie needs",
+      "formula": "BMR formula",
+      "activity": "Activity levels",
+      "settings": "Settings"
+    }
+  },
+  "auth": {
+    "signInTitle": "Sign in",
+    "registerTitle": "Create account",
+    "email": "Email",
+    "password": "Password",
+    "signIn": "Sign in",
+    "register": "Create account",
+    "toRegister": "Need an account? Register",
+    "toLogin": "Have an account? Sign in",
+    "passwordHint": "At least 8 characters",
+    "tagline": "Your self-hosted fitness & nutrition tracker"
+  },
+  "profile": {
+    "title": "Your calorie needs",
+    "subtitle": "Enter your details to calculate your daily target.",
+    "height": "Height (cm)",
+    "age": "Age (years)",
+    "gender": "Gender",
+    "weight": "Weight (kg)",
+    "activity": "Occupational activity",
+    "goal": "Goal",
+    "genderOptions": { "male": "Male", "female": "Female" },
+    "goalOptions": {
+      "cut": "Lose weight (cut)",
+      "maintain": "Maintain",
+      "bulk": "Gain weight (bulk)"
+    },
+    "calculate": "Save & calculate",
+    "results": {
+      "title": "Your results",
+      "bmr": "Basal metabolic rate (BMR)",
+      "maintenance": "Maintenance (TDEE)",
+      "target": "Daily target",
+      "perDay": "kcal / day",
+      "factor": "Activity factor",
+      "floorWarning": "Your target was raised to the minimum safe intake of {{floor}} kcal/day to avoid an excessive deficit.",
+      "learnFormula": "How is BMR calculated?",
+      "learnActivity": "What do the activity levels mean?"
+    }
+  },
+  "calories": {
+    "levels": {
+      "sedentary": {
+        "label": "Desk job, mostly sitting",
+        "desc": "Office work with little walking during the day."
+      },
+      "lightly_active": {
+        "label": "Sitting + some walking",
+        "desc": "Mostly seated, but on your feet a fair amount."
+      },
+      "moderately_active": {
+        "label": "Mostly standing or walking",
+        "desc": "On your feet most of the day (e.g. retail, teaching)."
+      },
+      "heavy": {
+        "label": "Physically demanding job",
+        "desc": "Manual work most of the day (e.g. a tradesperson)."
+      },
+      "very_heavy": {
+        "label": "Very heavy labor",
+        "desc": "Hard physical labor all day (e.g. construction)."
+      }
+    }
+  },
+  "explainers": {
+    "formula": {
+      "title": "Mifflin-St Jeor formula",
+      "intro": "Your basal metabolic rate (BMR) is the energy your body uses at complete rest. We use the Mifflin-St Jeor equation, today's standard:",
+      "male": "Men:  BMR = 10 × weight(kg) + 6.25 × height(cm) − 5 × age + 5",
+      "female": "Women:  BMR = 10 × weight(kg) + 6.25 × height(cm) − 5 × age − 161",
+      "termsTitle": "What each term means",
+      "terms": {
+        "weight": "10 × weight (kg) — more body mass burns more energy at rest.",
+        "height": "6.25 × height (cm) — taller bodies have more tissue to maintain.",
+        "age": "− 5 × age — resting metabolism declines slowly with age.",
+        "constant": "+5 (men) / −161 (women) — a sex-based offset for average body composition."
+      },
+      "tdeeTitle": "From BMR to maintenance",
+      "tdee": "We multiply BMR by an occupational activity factor to get your maintenance need (TDEE) — the calories that keep your weight stable.",
+      "goalTitle": "From maintenance to your target",
+      "goal": "Your goal then shifts the target: cut = maintenance − 500 kcal, maintain = maintenance, bulk = maintenance + 300 kcal. A safety floor (1500 kcal for men, 1200 for women) prevents an extreme deficit.",
+      "excludeTitle": "Why exercise is not in the base",
+      "exclude": "The activity factor reflects your job and daily life only. Deliberate exercise and steps are added on top, per day, in a later phase — so a hard training day raises your budget for that day instead of inflating every day."
+    },
+    "activity": {
+      "title": "Activity levels",
+      "intro": "Pick the option that best matches a typical day at work — not your workouts. Each level multiplies your BMR by the factor shown.",
+      "factor": "Factor"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "units": "Units",
+    "unitOptions": {
+      "metric": "Metric (kg, cm)",
+      "imperial": "Imperial (lb, in)"
+    },
+    "saved": "Saved",
+    "note": "Imperial input arrives in a later phase; the engine always computes in metric."
+  }
+}
