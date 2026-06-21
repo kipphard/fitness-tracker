@@ -2,12 +2,13 @@
 from __future__ import annotations
 
 import uuid
+from datetime import date
 from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from backend.persistence.models import Profile, Settings, User
+from backend.persistence.models import Profile, Settings, User, WeighIn
 
 
 # --- users ---
@@ -61,3 +62,39 @@ def upsert_settings(session: Session, user_id: uuid.UUID, **fields: Any) -> Sett
             setattr(settings, key, value)
     session.flush()
     return settings
+
+
+# --- weigh-ins (one per user+date) ---
+
+def list_weigh_ins(session: Session, user_id: uuid.UUID) -> list[WeighIn]:
+    """All weigh-ins for a user, oldest first (the order the trend math expects)."""
+    return list(
+        session.scalars(
+            select(WeighIn).where(WeighIn.user_id == user_id).order_by(WeighIn.date)
+        )
+    )
+
+
+def upsert_weigh_in(
+    session: Session, user_id: uuid.UUID, day: date, weight_kg: Any
+) -> WeighIn:
+    weigh_in = session.scalar(
+        select(WeighIn).where(WeighIn.user_id == user_id, WeighIn.date == day)
+    )
+    if weigh_in is None:
+        weigh_in = WeighIn(user_id=user_id, date=day, weight_kg=weight_kg)
+        session.add(weigh_in)
+    else:
+        weigh_in.weight_kg = weight_kg
+    session.flush()
+    return weigh_in
+
+
+def delete_weigh_in(session: Session, user_id: uuid.UUID, day: date) -> bool:
+    weigh_in = session.scalar(
+        select(WeighIn).where(WeighIn.user_id == user_id, WeighIn.date == day)
+    )
+    if weigh_in is None:
+        return False
+    session.delete(weigh_in)
+    return True

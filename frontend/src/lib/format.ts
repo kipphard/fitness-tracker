@@ -15,3 +15,9 @@ export function oneDecimal(value: string | number | null | undefined): string {
     maximumFractionDigits: 3,
   });
 }
+
+export function shortDate(value?: string | null): string {
+  if (!value) return "—";
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? "—" : d.toLocaleDateString();
+}

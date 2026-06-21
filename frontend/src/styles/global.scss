@@ -355,6 +355,38 @@ a:hover {
   margin-top: 0.5rem;
   font-size: 0.88rem;
 }
+.results__basis {
+  font-size: 0.82rem;
+  margin: 0;
+  border-top: 1px solid var(--border);
+  padding-top: 0.6rem;
+}
+
+/* ── Weight screen ─────────────────────────────────────────────────────── */
+.weight-summary {
+  margin-top: 1rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.weight-list__item {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.weight-list__item:last-child {
+  border-bottom: none;
+}
 
 /* ── Alerts ────────────────────────────────────────────────────────────── */
 .alert {

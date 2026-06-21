@@ -8,6 +8,7 @@
     "toggleTheme": "Toggle light / dark",
     "nav": {
       "calculator": "Calorie needs",
+      "weight": "Weight",
       "formula": "BMR formula",
       "activity": "Activity levels",
       "settings": "Settings"
@@ -50,8 +51,31 @@
       "factor": "Activity factor",
       "floorWarning": "Your target was raised to the minimum safe intake of {{floor}} kcal/day to avoid an excessive deficit.",
       "learnFormula": "How is BMR calculated?",
-      "learnActivity": "What do the activity levels mean?"
+      "learnActivity": "What do the activity levels mean?",
+      "logWeight": "Log your weight →",
+      "weightBasis": "Calculated from {{weight}} kg",
+      "source": {
+        "weekly_average": "last completed week's average",
+        "latest_weigh_in": "your latest weigh-in",
+        "profile": "your profile weight"
+      }
     }
+  },
+  "weight": {
+    "title": "Weight",
+    "subtitle": "Log your weight daily — the weekly average feeds your calorie target.",
+    "logTitle": "Log a weigh-in",
+    "date": "Date",
+    "weight": "Weight (kg)",
+    "logBtn": "Save weigh-in",
+    "trendWeight": "Trend weight",
+    "feedsTarget": "Feeds the target",
+    "trendTitle": "Trend",
+    "weighIns": "Weigh-ins",
+    "trendLine": "Trend",
+    "historyTitle": "History",
+    "delete": "Delete",
+    "empty": "No data yet — log your first weight."
   },
   "calories": {
     "levels": {

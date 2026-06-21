@@ -8,6 +8,7 @@
     "toggleTheme": "Hell / Dunkel umschalten",
     "nav": {
       "calculator": "Kalorienbedarf",
+      "weight": "Gewicht",
       "formula": "BMR-Formel",
       "activity": "Aktivitätslevel",
       "settings": "Einstellungen"
@@ -50,8 +51,31 @@
       "factor": "Aktivitätsfaktor",
       "floorWarning": "Dein Ziel wurde auf den sicheren Mindestwert von {{floor}} kcal/Tag angehoben, um ein zu großes Defizit zu vermeiden.",
       "learnFormula": "Wie wird der Grundumsatz berechnet?",
-      "learnActivity": "Was bedeuten die Aktivitätslevel?"
+      "learnActivity": "Was bedeuten die Aktivitätslevel?",
+      "logWeight": "Gewicht eintragen →",
+      "weightBasis": "Berechnet aus {{weight}} kg",
+      "source": {
+        "weekly_average": "Schnitt der letzten abgeschlossenen Woche",
+        "latest_weigh_in": "deine letzte Wiegung",
+        "profile": "dein Profilgewicht"
+      }
     }
+  },
+  "weight": {
+    "title": "Gewicht",
+    "subtitle": "Trag dein Gewicht täglich ein — der Wochenschnitt fließt in dein Kalorienziel.",
+    "logTitle": "Wiegen eintragen",
+    "date": "Datum",
+    "weight": "Gewicht (kg)",
+    "logBtn": "Wiegen speichern",
+    "trendWeight": "Trendgewicht",
+    "feedsTarget": "Fließt ins Ziel",
+    "trendTitle": "Verlauf",
+    "weighIns": "Wiegungen",
+    "trendLine": "Trend",
+    "historyTitle": "Verlauf",
+    "delete": "Löschen",
+    "empty": "Noch keine Daten — trag dein erstes Gewicht ein."
   },
   "calories": {
     "levels": {

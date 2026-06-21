@@ -8,7 +8,7 @@ import {
   GENDERS,
   GOALS,
   type ActivityLevelInfo,
-  type CalorieResult,
+  type MyCalories,
   type Profile,
   type ProfileInput,
 } from "../api/types";
@@ -28,7 +28,7 @@ export function ProfileScreen() {
   const { t } = useTranslation();
   const [form, setForm] = useState<ProfileInput>(DEFAULTS);
   const [levels, setLevels] = useState<ActivityLevelInfo[]>([]);
-  const [result, setResult] = useState<CalorieResult | null>(null);
+  const [result, setResult] = useState<MyCalories | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -46,7 +46,7 @@ export function ProfileScreen() {
           activity_level: p.activity_level,
           goal: p.goal,
         });
-        return apiGet<CalorieResult>("/calories/me");
+        return apiGet<MyCalories>("/calories/me");
       })
       .then((r) => r && setResult(r))
       .catch(() => undefined); // 404: no profile saved yet
@@ -61,7 +61,7 @@ export function ProfileScreen() {
     setError(null);
     try {
       await apiPut<Profile>("/profile", { ...form, age: Number(form.age) });
-      setResult(await apiGet<CalorieResult>("/calories/me"));
+      setResult(await apiGet<MyCalories>("/calories/me"));
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -215,7 +215,13 @@ export function ProfileScreen() {
                 </div>
               )}
 
+              <p className="muted results__basis">
+                {t("profile.results.weightBasis", { weight: oneDecimal(result.weight_kg) })} ·{" "}
+                {t(`profile.results.source.${result.weight_source}`)}
+              </p>
+
               <div className="results__links">
+                <Link to="/weight">{t("profile.results.logWeight")}</Link>
                 <Link to="/formula">{t("profile.results.learnFormula")}</Link>
                 <Link to="/activity">{t("profile.results.learnActivity")}</Link>
               </div>

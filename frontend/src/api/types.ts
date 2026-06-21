@@ -56,6 +56,13 @@ export interface CalorieResult {
   below_floor: boolean;
 }
 
+export type WeightSource = "weekly_average" | "latest_weigh_in" | "profile";
+
+export interface MyCalories extends CalorieResult {
+  weight_kg: string;
+  weight_source: WeightSource;
+}
+
 export interface ActivityLevelInfo {
   key: ActivityLevel;
   multiplier: string;
@@ -64,4 +71,31 @@ export interface ActivityLevelInfo {
 export interface Settings {
   language: Language;
   unit_system: UnitSystem;
+}
+
+// --- weight (Phase 2) ---
+
+export interface WeighIn {
+  date: string;
+  weight_kg: string;
+}
+
+export interface TrendPoint {
+  date: string;
+  trend: string;
+}
+
+export interface WeekAverage {
+  week_start: string;
+  average: string;
+  count: number;
+}
+
+export interface WeightTrend {
+  points: WeighIn[];
+  ewma: TrendPoint[];
+  weekly: WeekAverage[];
+  current_trend: string | null;
+  effective_weight: string | null;
+  effective_source: WeightSource | null;
 }

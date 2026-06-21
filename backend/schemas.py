@@ -2,10 +2,13 @@
 
 Decimals are serialized as JSON strings (Pydantic v2 default) to preserve precision — the
 frontend parses them as strings.
-"""
-from __future__ import annotations
 
+Note: the ``date`` type is imported as ``date_type``. A field literally named ``date`` with a
+default (``date: date | None = None``) makes ``date`` local to the class body, which would
+shadow the type in the annotation; the alias avoids that while keeping the JSON field ``date``.
+"""
 import uuid
+from datetime import date as date_type
 from datetime import datetime
 from decimal import Decimal
 
@@ -101,6 +104,47 @@ class CalorieResultOut(BaseModel):
     below_floor: bool
 
 
+class MyCaloriesOut(CalorieResultOut):
+    """The saved-profile calorie result, plus which weight fed it (Phase 2 feedback)."""
+
+    weight_kg: Decimal
+    weight_source: str
+
+
 class ActivityLevelOut(BaseModel):
     key: ActivityLevel
     multiplier: Decimal
+
+
+# --- weight (Phase 2) ---
+
+class WeighInIn(BaseModel):
+    date: date_type | None = None  # defaults to today on the server
+    weight_kg: Decimal = Field(gt=0, le=700)
+
+
+class WeighInOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    date: date_type
+    weight_kg: Decimal
+
+
+class TrendPointOut(BaseModel):
+    date: date_type
+    trend: Decimal
+
+
+class WeekAverageOut(BaseModel):
+    week_start: date_type
+    average: Decimal
+    count: int
+
+
+class WeightTrendOut(BaseModel):
+    points: list[WeighInOut]
+    ewma: list[TrendPointOut]
+    weekly: list[WeekAverageOut]
+    current_trend: Decimal | None = None
+    effective_weight: Decimal | None = None
+    effective_source: str | None = None

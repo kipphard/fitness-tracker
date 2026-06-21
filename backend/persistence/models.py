@@ -7,11 +7,20 @@ The calorie-domain enums (Gender, Goal, ActivityLevel) are owned by the pure eng
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from decimal import Decimal
 from enum import Enum as PyEnum
 
-from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, Integer, String
+from sqlalchemy import (
+    Boolean,
+    Date,
+    DateTime,
+    Enum,
+    ForeignKey,
+    Integer,
+    String,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from backend.calories.engine import ActivityLevel, Gender, Goal
@@ -49,6 +58,9 @@ class User(Base):
     )
     settings: Mapped["Settings | None"] = relationship(
         back_populates="user", uselist=False, cascade="all, delete-orphan"
+    )
+    weigh_ins: Mapped[list["WeighIn"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
     )
 
 
@@ -102,3 +114,24 @@ class Settings(Base):
     )
 
     user: Mapped["User"] = relationship(back_populates="settings")
+
+
+class WeighIn(Base):
+    """A single daily weigh-in. At most one per (user, date) — re-logging a day updates it."""
+
+    __tablename__ = "weigh_ins"
+    __table_args__ = (
+        UniqueConstraint("user_id", "date", name="uq_weigh_ins_user_date"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(GUID, primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        GUID, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    date: Mapped[date] = mapped_column(Date, nullable=False)
+    weight_kg: Mapped[Decimal] = mapped_column(Measure, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_now, nullable=False
+    )
+
+    user: Mapped["User"] = relationship(back_populates="weigh_ins")
