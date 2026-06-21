@@ -651,6 +651,15 @@ a:hover {
 .diary-total {
   margin-top: 0.75rem;
 }
+.diary-total__macros {
+  margin-top: 0.35rem;
+  justify-content: flex-end;
+}
+/* Per-meal macro subtotal under each slot's entries. */
+.meal-summary {
+  padding-top: 0.4rem;
+  font-size: 0.8rem;
+}
 .icon-btn--xs {
   width: 1.7rem;
   height: 1.7rem;

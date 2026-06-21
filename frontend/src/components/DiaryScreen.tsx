@@ -180,6 +180,16 @@ export function DiaryScreen() {
       fat: num(entry.fat_g) * f,
     };
   };
+  const sumMacros = (es: DiaryEntry[]) =>
+    es.reduce(
+      (a, e) => ({
+        kcal: a.kcal + num(e.kcal),
+        protein: a.protein + num(e.protein_g),
+        carbs: a.carbs + num(e.carbs_g),
+        fat: a.fat + num(e.fat_g),
+      }),
+      { kcal: 0, protein: 0, carbs: 0, fat: 0 },
+    );
 
   const removeEntry = (id: string) => apiDelete(`/diary/${id}`).catch(() => undefined);
   const copyYesterday = () =>
@@ -394,6 +404,7 @@ export function DiaryScreen() {
           {MEAL_SLOTS.map((s) => {
             const entries = (day.data?.entries ?? []).filter((e) => e.slot === s);
             if (entries.length === 0) return null;
+            const mt = sumMacros(entries);
             return (
               <div className="slot-group" key={s}>
                 <h3>{t(`diary.slots.${s}`)}</h3>
@@ -447,14 +458,27 @@ export function DiaryScreen() {
                     );
                   })}
                 </ul>
+                <div className="add-form__macros meal-summary">
+                  <span><strong className="tnum">{kcal(mt.kcal)}</strong> kcal</span>
+                  <span><strong className="tnum">{oneDecimal(mt.protein)} g</strong> {t("today.macros.protein")}</span>
+                  <span><strong className="tnum">{oneDecimal(mt.carbs)} g</strong> {t("today.macros.carbs")}</span>
+                  <span><strong className="tnum">{oneDecimal(mt.fat)} g</strong> {t("today.macros.fat")}</span>
+                </div>
               </div>
             );
           })}
           {(day.data?.entries.length ?? 0) === 0 && <p className="muted">{t("diary.empty")}</p>}
           {totals && (
-            <div className="result-row result-row--target diary-total">
-              <span>{t("diary.total")}</span>
-              <strong className="tnum">{kcal(totals.kcal)} kcal</strong>
+            <div className="diary-total">
+              <div className="result-row result-row--target">
+                <span>{t("diary.total")}</span>
+                <strong className="tnum">{kcal(totals.kcal)} kcal</strong>
+              </div>
+              <div className="add-form__macros diary-total__macros">
+                <span><strong className="tnum">{oneDecimal(totals.protein_g)} g</strong> {t("today.macros.protein")}</span>
+                <span><strong className="tnum">{oneDecimal(totals.carbs_g)} g</strong> {t("today.macros.carbs")}</span>
+                <span><strong className="tnum">{oneDecimal(totals.fat_g)} g</strong> {t("today.macros.fat")}</span>
+              </div>
             </div>
           )}
         </Card>
