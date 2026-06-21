@@ -9,6 +9,7 @@ import { ProfileScreen } from "./ProfileScreen";
 import { SettingsScreen } from "./SettingsScreen";
 import { TodayScreen } from "./TodayScreen";
 import { WeightScreen } from "./WeightScreen";
+import { WorkoutsScreen } from "./WorkoutsScreen";
 import { FormulaExplainer } from "./explainers/FormulaExplainer";
 import { ActivityExplainer } from "./explainers/ActivityExplainer";
 
@@ -36,6 +37,9 @@ export function AppShell() {
           </NavLink>
           <NavLink to="/weight" className={linkClass}>
             <span className="sidebar__icon">⚖️</span> {t("common.nav.weight")}
+          </NavLink>
+          <NavLink to="/workouts" className={linkClass}>
+            <span className="sidebar__icon">🏋️</span> {t("common.nav.workouts")}
           </NavLink>
           <NavLink to="/formula" className={linkClass}>
             <span className="sidebar__icon">📐</span> {t("common.nav.formula")}
@@ -74,6 +78,7 @@ export function AppShell() {
           <Route path="/diary" element={<DiaryScreen />} />
           <Route path="/calculator" element={<ProfileScreen />} />
           <Route path="/weight" element={<WeightScreen />} />
+          <Route path="/workouts" element={<WorkoutsScreen />} />
           <Route path="/formula" element={<FormulaExplainer />} />
           <Route path="/activity" element={<ActivityExplainer />} />
           <Route path="/settings" element={<SettingsScreen />} />

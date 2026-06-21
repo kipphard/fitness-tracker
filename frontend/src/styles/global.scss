@@ -741,6 +741,76 @@ a:hover {
   transform: translateX(1rem);
 }
 
+/* ── Workouts ──────────────────────────────────────────────────────────── */
+.workout-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.workout-head__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.rest-timer {
+  background: var(--warn-soft);
+  color: var(--warn);
+  border-color: var(--warn);
+}
+.last-time {
+  font-size: 0.85rem;
+  margin: 0 0 0.5rem;
+}
+.set-list {
+  margin-bottom: 0.6rem;
+}
+.set-input {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+}
+.set-input .input {
+  width: 6rem;
+}
+.set-input .select {
+  flex: 1;
+  min-width: 12rem;
+  width: auto;
+}
+.routine-list {
+  margin-top: 0.75rem;
+}
+.routine-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.routine-item:last-child {
+  border-bottom: none;
+}
+.routine-item__info {
+  overflow: hidden;
+}
+.routine-item__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+.pr-row {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin: 0.6rem 0;
+}
+
 /* ── Auth screen ───────────────────────────────────────────────────────── */
 .auth-screen {
   min-height: 100%;

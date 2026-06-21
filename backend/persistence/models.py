@@ -18,7 +18,9 @@ from sqlalchemy import (
     Enum,
     ForeignKey,
     Integer,
+    Numeric,
     String,
+    Text,
     UniqueConstraint,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -26,7 +28,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from backend.calories.engine import ActivityLevel, Gender, Goal
 from backend.macros.engine import DEFAULT_FAT_G_PER_KG, DEFAULT_PROTEIN_G_PER_KG
 from backend.persistence.database import Base
-from backend.persistence.types import GUID, Macro, Measure
+from backend.persistence.types import GUID, JSONType, Macro, Measure
 
 
 def _now() -> datetime:
@@ -257,3 +259,129 @@ class StepLog(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_now, nullable=False
     )
+
+
+class ExerciseSource(str, PyEnum):
+    lib = "lib"
+    custom = "custom"
+
+
+class SetType(str, PyEnum):
+    warmup = "warmup"
+    working = "working"
+
+
+class Exercise(Base):
+    """An exercise: a global library entry (owner_id NULL, source=lib) or a user's custom one."""
+
+    __tablename__ = "exercises"
+
+    id: Mapped[uuid.UUID] = mapped_column(GUID, primary_key=True, default=uuid.uuid4)
+    owner_id: Mapped[uuid.UUID | None] = mapped_column(
+        GUID, ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True
+    )
+    source: Mapped[ExerciseSource] = mapped_column(
+        Enum(ExerciseSource, name="exercise_source"), nullable=False
+    )
+    name: Mapped[str] = mapped_column(String(200), nullable=False)
+    primary_muscles: Mapped[list | None] = mapped_column(JSONType, nullable=True)
+    secondary_muscles: Mapped[list | None] = mapped_column(JSONType, nullable=True)
+    equipment: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    category: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    instructions: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_now, nullable=False
+    )
+
+
+class Routine(Base):
+    __tablename__ = "routines"
+
+    id: Mapped[uuid.UUID] = mapped_column(GUID, primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        GUID, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    name: Mapped[str] = mapped_column(String(200), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_now, nullable=False
+    )
+
+    exercises: Mapped[list["RoutineExercise"]] = relationship(
+        back_populates="routine",
+        cascade="all, delete-orphan",
+        order_by="RoutineExercise.position",
+    )
+
+
+class RoutineExercise(Base):
+    __tablename__ = "routine_exercises"
+
+    id: Mapped[uuid.UUID] = mapped_column(GUID, primary_key=True, default=uuid.uuid4)
+    routine_id: Mapped[uuid.UUID] = mapped_column(
+        GUID, ForeignKey("routines.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    exercise_id: Mapped[uuid.UUID] = mapped_column(
+        GUID, ForeignKey("exercises.id", ondelete="CASCADE"), nullable=False
+    )
+    position: Mapped[int] = mapped_column(Integer, nullable=False)
+    planned_sets: Mapped[int] = mapped_column(Integer, nullable=False, default=3)
+    planned_reps: Mapped[int | None] = mapped_column(Integer, nullable=True)
+
+    routine: Mapped["Routine"] = relationship(back_populates="exercises")
+    exercise: Mapped["Exercise"] = relationship()
+
+
+class WorkoutSession(Base):
+    __tablename__ = "workout_sessions"
+
+    id: Mapped[uuid.UUID] = mapped_column(GUID, primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        GUID, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    routine_id: Mapped[uuid.UUID | None] = mapped_column(
+        GUID, ForeignKey("routines.id", ondelete="SET NULL"), nullable=True
+    )
+    routine_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    started_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_now, nullable=False
+    )
+    ended_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_now, nullable=False
+    )
+
+    sets: Mapped[list["SetLog"]] = relationship(
+        back_populates="session",
+        cascade="all, delete-orphan",
+        order_by="SetLog.created_at",
+    )
+
+
+class SetLog(Base):
+    """One logged set. exercise_name is denormalized so history survives exercise deletion."""
+
+    __tablename__ = "set_logs"
+
+    id: Mapped[uuid.UUID] = mapped_column(GUID, primary_key=True, default=uuid.uuid4)
+    session_id: Mapped[uuid.UUID] = mapped_column(
+        GUID,
+        ForeignKey("workout_sessions.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    exercise_id: Mapped[uuid.UUID | None] = mapped_column(
+        GUID, ForeignKey("exercises.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    exercise_name: Mapped[str] = mapped_column(String(200), nullable=False)
+    set_index: Mapped[int] = mapped_column(Integer, nullable=False)
+    weight: Mapped[Decimal] = mapped_column(Measure, nullable=False)
+    reps: Mapped[int] = mapped_column(Integer, nullable=False)
+    set_type: Mapped[SetType] = mapped_column(
+        Enum(SetType, name="set_type"), nullable=False, default=SetType.working
+    )
+    rpe: Mapped[Decimal | None] = mapped_column(Numeric(3, 1), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_now, nullable=False
+    )
+
+    session: Mapped["WorkoutSession"] = relationship(back_populates="sets")

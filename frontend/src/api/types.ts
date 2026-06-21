@@ -202,3 +202,80 @@ export interface PhotoEstimate {
   questions: string[];
   notes: string;
 }
+
+// --- workouts (Phase 7) ---
+
+export type SetType = "warmup" | "working";
+
+export interface Exercise {
+  id: string;
+  source: "lib" | "custom";
+  name: string;
+  primary_muscles: string[] | null;
+  secondary_muscles: string[] | null;
+  equipment: string | null;
+  category: string | null;
+  instructions: string | null;
+}
+
+export interface RoutineExerciseRef {
+  exercise_id: string;
+  exercise_name: string;
+  position: number;
+  planned_sets: number;
+  planned_reps: number | null;
+}
+
+export interface Routine {
+  id: string;
+  name: string;
+  exercises: RoutineExerciseRef[];
+}
+
+export interface WorkoutSet {
+  id: string;
+  exercise_id: string | null;
+  exercise_name: string;
+  set_index: number;
+  weight: string;
+  reps: number;
+  set_type: SetType;
+  rpe: string | null;
+}
+
+export interface WorkoutSession {
+  id: string;
+  routine_id: string | null;
+  routine_name: string | null;
+  started_at: string;
+  ended_at: string | null;
+  sets: WorkoutSet[];
+}
+
+export interface WorkoutSummary {
+  id: string;
+  routine_name: string | null;
+  started_at: string;
+  ended_at: string | null;
+  set_count: number;
+  total_volume: string;
+}
+
+export interface ProgressionPoint {
+  date: string;
+  top_weight: string;
+  volume: string;
+  est_1rm: string;
+}
+
+export interface PRs {
+  best_weight: string;
+  best_est_1rm: string;
+}
+
+export interface Progression {
+  exercise_id: string;
+  exercise_name: string;
+  points: ProgressionPoint[];
+  prs: PRs | null;
+}

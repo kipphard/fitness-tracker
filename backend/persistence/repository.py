@@ -2,22 +2,29 @@
 from __future__ import annotations
 
 import uuid
-from datetime import date
+from datetime import date, datetime, timezone
 from typing import Any
 
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
 from backend.persistence.models import (
+    Exercise,
+    ExerciseSource,
     Food,
     FoodLog,
     MacroTarget,
     Profile,
+    Routine,
+    RoutineExercise,
+    SetLog,
     Settings,
     StepLog,
     User,
     WeighIn,
+    WorkoutSession,
 )
+from backend.workouts.seed import seed_library
 
 
 # --- users ---
@@ -252,3 +259,175 @@ def list_step_logs(session: Session, user_id: uuid.UUID) -> list[StepLog]:
             select(StepLog).where(StepLog.user_id == user_id).order_by(StepLog.date)
         )
     )
+
+
+# --- exercises (global library + per-user custom) ---
+
+def search_exercises(
+    session: Session, user_id: uuid.UUID, query: str = "", limit: int = 100
+) -> list[Exercise]:
+    seed_library(session)
+    stmt = select(Exercise).where(
+        or_(Exercise.owner_id.is_(None), Exercise.owner_id == user_id)
+    )
+    if query.strip():
+        stmt = stmt.where(Exercise.name.ilike(f"%{query.strip()}%"))
+    return list(session.scalars(stmt.order_by(Exercise.name).limit(limit)))
+
+
+def get_exercise(
+    session: Session, exercise_id: uuid.UUID, user_id: uuid.UUID
+) -> Exercise | None:
+    ex = session.get(Exercise, exercise_id)
+    if ex is None or (ex.owner_id is not None and ex.owner_id != user_id):
+        return None
+    return ex
+
+
+def create_custom_exercise(
+    session: Session, owner_id: uuid.UUID, **fields: Any
+) -> Exercise:
+    ex = Exercise(owner_id=owner_id, source=ExerciseSource.custom, **fields)
+    session.add(ex)
+    session.flush()
+    return ex
+
+
+# --- routines ---
+
+def create_routine(session: Session, user_id: uuid.UUID, name: str) -> Routine:
+    routine = Routine(user_id=user_id, name=name)
+    session.add(routine)
+    session.flush()
+    return routine
+
+
+def get_routine(
+    session: Session, routine_id: uuid.UUID, user_id: uuid.UUID
+) -> Routine | None:
+    routine = session.get(Routine, routine_id)
+    if routine is None or routine.user_id != user_id:
+        return None
+    return routine
+
+
+def list_routines(session: Session, user_id: uuid.UUID) -> list[Routine]:
+    return list(
+        session.scalars(
+            select(Routine).where(Routine.user_id == user_id).order_by(Routine.name)
+        )
+    )
+
+
+def delete_routine(session: Session, routine_id: uuid.UUID, user_id: uuid.UUID) -> bool:
+    routine = get_routine(session, routine_id, user_id)
+    if routine is None:
+        return False
+    session.delete(routine)
+    return True
+
+
+def add_routine_exercise(
+    session: Session, routine: Routine, exercise_id: uuid.UUID, **fields: Any
+) -> RoutineExercise:
+    re = RoutineExercise(routine_id=routine.id, exercise_id=exercise_id, **fields)
+    session.add(re)
+    session.flush()
+    return re
+
+
+# --- workout sessions + sets ---
+
+def create_workout_session(
+    session: Session, user_id: uuid.UUID, **fields: Any
+) -> WorkoutSession:
+    ws = WorkoutSession(user_id=user_id, **fields)
+    session.add(ws)
+    session.flush()
+    return ws
+
+
+def get_workout_session(
+    session: Session, session_id: uuid.UUID, user_id: uuid.UUID
+) -> WorkoutSession | None:
+    ws = session.get(WorkoutSession, session_id)
+    if ws is None or ws.user_id != user_id:
+        return None
+    return ws
+
+
+def list_workout_sessions(
+    session: Session, user_id: uuid.UUID, limit: int = 50
+) -> list[WorkoutSession]:
+    return list(
+        session.scalars(
+            select(WorkoutSession)
+            .where(WorkoutSession.user_id == user_id)
+            .order_by(WorkoutSession.started_at.desc())
+            .limit(limit)
+        )
+    )
+
+
+def finish_workout_session(ws: WorkoutSession) -> WorkoutSession:
+    ws.ended_at = datetime.now(timezone.utc)
+    return ws
+
+
+def add_set(session: Session, session_id: uuid.UUID, **fields: Any) -> SetLog:
+    log = SetLog(session_id=session_id, **fields)
+    session.add(log)
+    session.flush()
+    return log
+
+
+def get_set(session: Session, set_id: uuid.UUID, user_id: uuid.UUID) -> SetLog | None:
+    log = session.get(SetLog, set_id)
+    if log is None:
+        return None
+    ws = session.get(WorkoutSession, log.session_id)
+    if ws is None or ws.user_id != user_id:
+        return None
+    return log
+
+
+def last_sets_for_exercise(
+    session: Session,
+    user_id: uuid.UUID,
+    exercise_id: uuid.UUID,
+    exclude_session_id: uuid.UUID,
+) -> list[SetLog]:
+    """Sets for this exercise from the most recent *other* session (the 'last time')."""
+    prior = session.execute(
+        select(WorkoutSession.id)
+        .join(SetLog, SetLog.session_id == WorkoutSession.id)
+        .where(
+            WorkoutSession.user_id == user_id,
+            SetLog.exercise_id == exercise_id,
+            WorkoutSession.id != exclude_session_id,
+        )
+        .order_by(WorkoutSession.started_at.desc())
+        .limit(1)
+    ).scalar()
+    if prior is None:
+        return []
+    return list(
+        session.scalars(
+            select(SetLog)
+            .where(SetLog.session_id == prior, SetLog.exercise_id == exercise_id)
+            .order_by(SetLog.set_index)
+        )
+    )
+
+
+def exercise_sets_with_dates(
+    session: Session, user_id: uuid.UUID, exercise_id: uuid.UUID
+) -> list[tuple[SetLog, datetime]]:
+    """Every set for an exercise across the user's sessions, with the session start time."""
+    rows = session.execute(
+        select(SetLog, WorkoutSession.started_at)
+        .join(WorkoutSession, SetLog.session_id == WorkoutSession.id)
+        .where(WorkoutSession.user_id == user_id, SetLog.exercise_id == exercise_id)
+        .order_by(WorkoutSession.started_at, SetLog.set_index)
+    ).all()
+    return [(row[0], row[1]) for row in rows]

@@ -7,14 +7,17 @@ from backend.api import (
     auth,
     calories,
     diary,
+    exercises,
     food,
     health,
     macros,
     profile,
+    routines,
     settings,
     steps,
     today,
     weight,
+    workouts,
 )
 from backend.config import get_settings
 
@@ -43,6 +46,9 @@ app.include_router(food.router, prefix=API)
 app.include_router(diary.router, prefix=API)
 app.include_router(steps.router, prefix=API)
 app.include_router(today.router, prefix=API)
+app.include_router(exercises.router, prefix=API)
+app.include_router(routines.router, prefix=API)
+app.include_router(workouts.router, prefix=API)
 
 
 @app.get("/", tags=["root"])

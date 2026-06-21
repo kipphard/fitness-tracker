@@ -15,7 +15,7 @@ from decimal import Decimal
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 from backend.calories.engine import ActivityLevel, Gender, Goal
-from backend.persistence.models import Language, MealSlot, UnitSystem
+from backend.persistence.models import Language, MealSlot, SetType, UnitSystem
 
 
 # --- auth ---
@@ -319,3 +319,116 @@ class PhotoEstimateOut(BaseModel):
     confidence: str
     questions: list[str]
     notes: str
+
+
+# --- workouts (Phase 7) ---
+
+class ExerciseIn(BaseModel):
+    name: str = Field(min_length=1, max_length=200)
+    primary_muscles: list[str] = Field(default_factory=list)
+    secondary_muscles: list[str] = Field(default_factory=list)
+    equipment: str | None = Field(default=None, max_length=100)
+    category: str | None = Field(default=None, max_length=50)
+    instructions: str | None = None
+
+
+class ExerciseOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    source: str
+    name: str
+    primary_muscles: list[str] | None = None
+    secondary_muscles: list[str] | None = None
+    equipment: str | None = None
+    category: str | None = None
+    instructions: str | None = None
+
+
+class RoutineExerciseIn(BaseModel):
+    exercise_id: uuid.UUID
+    planned_sets: int = Field(default=3, ge=1, le=20)
+    planned_reps: int | None = Field(default=None, ge=1, le=100)
+
+
+class RoutineIn(BaseModel):
+    name: str = Field(min_length=1, max_length=200)
+    exercises: list[RoutineExerciseIn] = Field(default_factory=list)
+
+
+class RoutineExerciseOut(BaseModel):
+    exercise_id: uuid.UUID
+    exercise_name: str
+    position: int
+    planned_sets: int
+    planned_reps: int | None = None
+
+
+class RoutineOut(BaseModel):
+    id: uuid.UUID
+    name: str
+    exercises: list[RoutineExerciseOut]
+
+
+class SessionStartIn(BaseModel):
+    routine_id: uuid.UUID | None = None
+
+
+class SetIn(BaseModel):
+    exercise_id: uuid.UUID
+    weight: Decimal = Field(ge=0, le=2000)
+    reps: int = Field(ge=0, le=1000)
+    set_type: SetType = SetType.working
+    rpe: Decimal | None = Field(default=None, ge=0, le=10)
+
+
+class SetOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    exercise_id: uuid.UUID | None = None
+    exercise_name: str
+    set_index: int
+    weight: Decimal
+    reps: int
+    set_type: SetType
+    rpe: Decimal | None = None
+
+
+class WorkoutSessionOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    routine_id: uuid.UUID | None = None
+    routine_name: str | None = None
+    started_at: datetime
+    ended_at: datetime | None = None
+    sets: list[SetOut]
+
+
+class WorkoutSessionSummaryOut(BaseModel):
+    id: uuid.UUID
+    routine_name: str | None = None
+    started_at: datetime
+    ended_at: datetime | None = None
+    set_count: int
+    total_volume: Decimal
+
+
+class ProgressionPointOut(BaseModel):
+    date: datetime
+    top_weight: Decimal
+    volume: Decimal
+    est_1rm: Decimal
+
+
+class PRsOut(BaseModel):
+    best_weight: Decimal
+    best_est_1rm: Decimal
+
+
+class ProgressionOut(BaseModel):
+    exercise_id: uuid.UUID
+    exercise_name: str
+    points: list[ProgressionPointOut]
+    prs: PRsOut | None = None
