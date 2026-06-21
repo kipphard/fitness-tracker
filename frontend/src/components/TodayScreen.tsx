@@ -92,6 +92,8 @@ export function TodayScreen() {
   const { calories, macros, consumed, remaining_kcal, activity_kcal, net_deficit_kcal } =
     today.data;
   const weighedToday = (weighIns.data ?? []).some((w) => w.date === todayIso());
+  // The deliberate cut/bulk gap your goal targets, independent of what you've eaten.
+  const plannedDeficit = num(calories.maintenance) - num(calories.target);
   const donut = [
     { key: "protein", name: t("today.macros.protein"), value: num(macros.protein_kcal), color: MACRO_COLORS.protein },
     { key: "carbs", name: t("today.macros.carbs"), value: num(macros.carbs_kcal), color: MACRO_COLORS.carbs },
@@ -148,10 +150,18 @@ export function TodayScreen() {
             <span className="muted">{t("today.left")}</span>
           </div>
           <div className="result-row">
+            <span className="muted">{t("today.maintenance")}</span>
+            <span className="tnum">{kcal(calories.maintenance)}</span>
+          </div>
+          <div className="result-row">
             <span className="muted">{t("today.targetLabel")}</span>
             <span className="tnum">{kcal(calories.target)}</span>
           </div>
           <div className="result-row">
+            <span className="muted">{t("today.plannedDeficit")}</span>
+            <span className="tnum">{kcal(plannedDeficit)}</span>
+          </div>
+          <div className="result-row result-row--divider">
             <span className="muted">{t("today.eaten")}</span>
             <span className="tnum">{kcal(consumed.kcal)}</span>
           </div>
@@ -174,6 +184,7 @@ export function TodayScreen() {
             <span className="muted">{t("today.netDeficit")}</span>
             <span className="tnum">{kcal(net_deficit_kcal)}</span>
           </div>
+          <p className="muted result-hint">{t("today.netDeficitHint")}</p>
           {calories.below_floor && (
             <div className="alert alert--warn">
               {t("profile.results.floorWarning", { floor: kcal(calories.floor) })}

@@ -55,7 +55,10 @@
     "applyMacros": "Apply",
     "weighInTitle": "Today's weight",
     "weighInPrompt": "You haven't logged your weight today — add it to keep your target accurate.",
-    "logWeightBtn": "Log weight"
+    "logWeightBtn": "Log weight",
+    "maintenance": "Maintenance",
+    "plannedDeficit": "Planned deficit",
+    "netDeficitHint": "Maintenance + steps − eaten"
   },
   "diary": {
     "title": "Diary",

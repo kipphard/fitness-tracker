@@ -362,6 +362,17 @@ a:hover {
   padding-top: 0.75rem;
   font-size: 1.1rem;
 }
+/* Separates the "plan" rows (maintenance/target/planned deficit) from today's actuals. */
+.result-row--divider {
+  border-top: 1px solid var(--border);
+  padding-top: 0.6rem;
+  margin-top: 0.3rem;
+}
+.result-hint {
+  font-size: 0.78rem;
+  margin: 0.15rem 0 0;
+  text-align: right;
+}
 .result-row--target strong {
   color: var(--primary-strong);
   font-size: 1.4rem;

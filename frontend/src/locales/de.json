@@ -55,7 +55,10 @@
     "applyMacros": "Übernehmen",
     "weighInTitle": "Heutiges Gewicht",
     "weighInPrompt": "Du hast heute noch kein Gewicht eingetragen — trag es ein, damit dein Ziel genau bleibt.",
-    "logWeightBtn": "Gewicht eintragen"
+    "logWeightBtn": "Gewicht eintragen",
+    "maintenance": "Erhaltungsbedarf",
+    "plannedDeficit": "Geplantes Defizit",
+    "netDeficitHint": "Erhaltungsbedarf + Schritte − gegessen"
   },
   "diary": {
     "title": "Tagebuch",
