@@ -68,6 +68,8 @@ export function DiaryScreen() {
 
   const [showCustom, setShowCustom] = useState(false);
   const [showAllRecent, setShowAllRecent] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editAmount, setEditAmount] = useState("");
   const [custom, setCustom] = useState({ name: "", kcal: "", protein: "", fat: "", carbs: "" });
 
   const [selected, setSelected] = useState<Selectable | null>(null);
@@ -158,12 +160,25 @@ export function DiaryScreen() {
     }
   };
 
-  const editEntry = async (entry: DiaryEntry) => {
-    const value = window.prompt(t("diary.editAmount"), entry.amount_g);
-    if (value == null) return;
-    const n = Number(value);
-    if (!Number.isFinite(n) || n <= 0) return;
+  const startEdit = (entry: DiaryEntry) => {
+    setEditingId(entry.id);
+    setEditAmount(String(num(entry.amount_g)));
+  };
+  const saveEdit = async (entry: DiaryEntry) => {
+    const n = num(editAmount);
+    if (n <= 0) return;
+    setEditingId(null);
     await apiPatch(`/diary/${entry.id}`, { amount_g: String(n) }).catch(() => undefined);
+  };
+  // Scale a logged entry's stored macros (which are for its current amount) to a new amount.
+  const scaleEntry = (entry: DiaryEntry, newAmount: string) => {
+    const f = num(newAmount) / (num(entry.amount_g) || 1);
+    return {
+      kcal: num(entry.kcal) * f,
+      protein: num(entry.protein_g) * f,
+      carbs: num(entry.carbs_g) * f,
+      fat: num(entry.fat_g) * f,
+    };
   };
 
   const removeEntry = (id: string) => apiDelete(`/diary/${id}`).catch(() => undefined);
@@ -383,15 +398,54 @@ export function DiaryScreen() {
               <div className="slot-group" key={s}>
                 <h3>{t(`diary.slots.${s}`)}</h3>
                 <ul className="list">
-                  {entries.map((e) => (
-                    <li key={e.id} className="diary-entry">
-                      <span className="diary-entry__name">{e.food_name}</span>
-                      <span className="muted tnum">{oneDecimal(e.amount_g)} g</span>
-                      <span className="tnum">{kcal(e.kcal)}</span>
-                      <button className="icon-btn icon-btn--xs" onClick={() => editEntry(e)} aria-label={t("common.save")}>✎</button>
-                      <button className="icon-btn icon-btn--xs" onClick={() => removeEntry(e.id)} aria-label={t("weight.delete")}>✕</button>
-                    </li>
-                  ))}
+                  {entries.map((e) => {
+                    if (editingId === e.id) {
+                      const es = scaleEntry(e, editAmount);
+                      return (
+                        <li key={e.id} className="diary-entry diary-entry--edit">
+                          <span className="diary-entry__name">{e.food_name}</span>
+                          <div className="diary-entry__edit">
+                            <input
+                              className="input"
+                              type="number"
+                              step="1"
+                              min="1"
+                              inputMode="numeric"
+                              value={editAmount}
+                              onChange={(ev) => setEditAmount(ev.target.value)}
+                              autoFocus
+                            />
+                            <span className="muted">g</span>
+                            <button className="btn btn--primary btn--sm" onClick={() => saveEdit(e)}>
+                              {t("common.save")}
+                            </button>
+                            <button
+                              className="icon-btn icon-btn--xs"
+                              onClick={() => setEditingId(null)}
+                              aria-label={t("diary.cancel")}
+                            >
+                              ✕
+                            </button>
+                          </div>
+                          <div className="add-form__macros diary-entry__macros">
+                            <span><strong className="tnum">{kcal(es.kcal)}</strong> kcal</span>
+                            <span><strong className="tnum">{oneDecimal(es.protein)} g</strong> {t("today.macros.protein")}</span>
+                            <span><strong className="tnum">{oneDecimal(es.carbs)} g</strong> {t("today.macros.carbs")}</span>
+                            <span><strong className="tnum">{oneDecimal(es.fat)} g</strong> {t("today.macros.fat")}</span>
+                          </div>
+                        </li>
+                      );
+                    }
+                    return (
+                      <li key={e.id} className="diary-entry">
+                        <span className="diary-entry__name">{e.food_name}</span>
+                        <span className="muted tnum">{oneDecimal(e.amount_g)} g</span>
+                        <span className="tnum">{kcal(e.kcal)}</span>
+                        <button className="icon-btn icon-btn--xs" onClick={() => startEdit(e)} aria-label={t("common.save")}>✎</button>
+                        <button className="icon-btn icon-btn--xs" onClick={() => removeEntry(e.id)} aria-label={t("weight.delete")}>✕</button>
+                      </li>
+                    );
+                  })}
                 </ul>
               </div>
             );

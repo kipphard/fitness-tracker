@@ -632,6 +632,22 @@ a:hover {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* Inline amount editor for a logged entry — stacks below the name. */
+.diary-entry--edit {
+  display: block;
+}
+.diary-entry__edit {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.4rem 0;
+}
+.diary-entry__edit .input {
+  width: 6rem;
+}
+.diary-entry__edit .btn {
+  margin-left: auto;
+}
 .diary-total {
   margin-top: 0.75rem;
 }
