@@ -11,7 +11,7 @@ import {
   type MealSlot,
 } from "../api/types";
 import { useApi } from "../hooks/useApi";
-import { kcal, oneDecimal } from "../lib/format";
+import { kcal, num, oneDecimal } from "../lib/format";
 import { Card } from "./Card";
 import { PhotoEstimatePanel } from "./PhotoEstimatePanel";
 
@@ -175,6 +175,16 @@ export function DiaryScreen() {
   const COLLAPSED_RECENT = 3;
   const visibleResults =
     searching || showAllRecent ? results : results.slice(0, COLLAPSED_RECENT);
+  // Macros for the selected food, scaled to the amount being logged.
+  const factor = num(amount) / 100;
+  const scaledMacros = selected
+    ? {
+        kcal: num(selected.per100_kcal) * factor,
+        protein: num(selected.per100_protein_g) * factor,
+        carbs: num(selected.per100_carbs_g) * factor,
+        fat: num(selected.per100_fat_g) * factor,
+      }
+    : null;
   const totals = day.data?.totals;
 
   return (
@@ -344,6 +354,14 @@ export function DiaryScreen() {
                   </select>
                 </label>
               </div>
+              {scaledMacros && (
+                <div className="add-form__macros">
+                  <span><strong className="tnum">{kcal(scaledMacros.kcal)}</strong> kcal</span>
+                  <span><strong className="tnum">{oneDecimal(scaledMacros.protein)} g</strong> {t("today.macros.protein")}</span>
+                  <span><strong className="tnum">{oneDecimal(scaledMacros.carbs)} g</strong> {t("today.macros.carbs")}</span>
+                  <span><strong className="tnum">{oneDecimal(scaledMacros.fat)} g</strong> {t("today.macros.fat")}</span>
+                </div>
+              )}
               <div className="diary-actions">
                 <button className="btn btn--primary btn--sm" onClick={logSelected}>{t("diary.add")}</button>
                 <button className="btn btn--ghost btn--sm" onClick={() => setSelected(null)}>{t("diary.cancel")}</button>
