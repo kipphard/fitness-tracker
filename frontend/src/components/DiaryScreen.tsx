@@ -67,6 +67,7 @@ export function DiaryScreen() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [showCustom, setShowCustom] = useState(false);
+  const [showAllRecent, setShowAllRecent] = useState(false);
   const [custom, setCustom] = useState({ name: "", kcal: "", protein: "", fat: "", carbs: "" });
 
   const [selected, setSelected] = useState<Selectable | null>(null);
@@ -169,7 +170,11 @@ export function DiaryScreen() {
   const copyYesterday = () =>
     apiPost("/diary/copy", { from_date: addDays(date, -1), to_date: date }).catch(() => undefined);
 
-  const results = query.trim().length >= 2 ? saved : recent.data ?? [];
+  const searching = query.trim().length >= 2;
+  const results = searching ? saved : recent.data ?? [];
+  const COLLAPSED_RECENT = 3;
+  const visibleResults =
+    searching || showAllRecent ? results : results.slice(0, COLLAPSED_RECENT);
   const totals = day.data?.totals;
 
   return (
@@ -216,8 +221,12 @@ export function DiaryScreen() {
             onChange={(e) => setQuery(e.target.value)}
           />
 
+          {!searching && results.length > 0 && (
+            <div className="food-recent__head">{t("diary.recentTitle")}</div>
+          )}
+
           <ul className="food-results">
-            {results.map((f) => (
+            {visibleResults.map((f) => (
               <li key={f.id}>
                 <button className="food-results__item" onClick={() => setSelected(toSelectable(f))}>
                   <span>{f.name}</span>
@@ -233,10 +242,21 @@ export function DiaryScreen() {
                 </button>
               </li>
             ))}
-            {query.trim().length >= 2 && saved.length === 0 && off === null && (
+            {searching && saved.length === 0 && off === null && (
               <li className="muted food-results__empty">{t("diary.noSaved")}</li>
             )}
           </ul>
+
+          {!searching && results.length > COLLAPSED_RECENT && (
+            <button
+              className="btn btn--link btn--sm food-recent__toggle"
+              onClick={() => setShowAllRecent((s) => !s)}
+            >
+              {showAllRecent
+                ? t("diary.showLessRecent")
+                : t("diary.showMoreRecent", { count: results.length - COLLAPSED_RECENT })}
+            </button>
+          )}
 
           <div className="diary-actions">
             <button className="btn btn--ghost btn--sm" onClick={searchOff} disabled={offLoading || query.trim().length < 2}>
