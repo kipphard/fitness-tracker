@@ -648,12 +648,29 @@ a:hover {
   width: 100%;
   max-width: 460px;
 }
+.scanner__frame {
+  position: relative;
+  width: 100%;
+}
 .scanner__video {
   width: 100%;
   aspect-ratio: 4 / 3;
   object-fit: cover;
   background: #000;
   border-radius: var(--radius);
+  display: block;
+}
+/* Aiming guide overlaid on the video — line the barcode up inside it. */
+.scanner__reticle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 72%;
+  height: 34%;
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  border-radius: var(--radius-sm);
+  pointer-events: none;
 }
 .scanner__hint {
   color: #fff;
