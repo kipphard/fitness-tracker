@@ -227,6 +227,11 @@ a:hover {
 .card__body > p:last-child {
   margin-bottom: 0;
 }
+/* A standalone action button at the end of a card body needs separation from
+   the content above it (e.g. "Open diary", "Create routine"). */
+.card__body > .btn:last-child {
+  margin-top: 0.85rem;
+}
 
 .grid {
   display: grid;
@@ -504,6 +509,14 @@ a:hover {
 }
 .date-nav .input {
   width: auto;
+}
+/* Keep every control in the date nav the same height as the date field (44px). */
+.date-nav .icon-btn {
+  width: 2.75rem;
+  height: 2.75rem;
+}
+.date-nav .btn {
+  min-height: 2.75rem;
 }
 .food-results {
   list-style: none;
