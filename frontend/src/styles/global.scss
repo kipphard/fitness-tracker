@@ -713,6 +713,22 @@ a:hover {
   text-align: right;
   padding: 0.35rem 0.5rem;
 }
+.today-weigh__prompt {
+  margin: 0 0 0.6rem;
+}
+.today-weigh__row {
+  display: flex;
+  gap: 0.6rem;
+  align-items: stretch;
+}
+.today-weigh__row .input {
+  flex: 1;
+  min-width: 0;
+}
+.today-weigh__row .btn {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
 .toggle {
   position: relative;
   display: inline-flex;

@@ -52,7 +52,10 @@
     "fatPerKg": "Fat (g per kg)",
     "fatHint": "At least ~0.6 g/kg",
     "overTarget": "Protein and fat alone exceed your target by {{over}} kcal — lower them, or carbs hit zero.",
-    "applyMacros": "Apply"
+    "applyMacros": "Apply",
+    "weighInTitle": "Today's weight",
+    "weighInPrompt": "You haven't logged your weight today — add it to keep your target accurate.",
+    "logWeightBtn": "Log weight"
   },
   "diary": {
     "title": "Diary",

@@ -4,22 +4,30 @@ import { useTranslation } from "react-i18next";
 import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 
 import { apiPut } from "../api/client";
-import type { MacroPrefs, Today } from "../api/types";
+import type { MacroPrefs, Today, WeighIn } from "../api/types";
 import { useApi } from "../hooks/useApi";
 import { kcal, num, oneDecimal } from "../lib/format";
 import { Card } from "./Card";
 
 const MACRO_COLORS = { protein: "#6366f1", carbs: "#f59e0b", fat: "#10b981" };
 
+function todayIso(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
 export function TodayScreen() {
   const { t } = useTranslation();
   const today = useApi<Today>("/today");
   const prefs = useApi<MacroPrefs>("/macros");
+  const weighIns = useApi<WeighIn[]>("/weight");
 
   const [protein, setProtein] = useState("");
   const [fat, setFat] = useState("");
   const [saving, setSaving] = useState(false);
   const [stepsInput, setStepsInput] = useState("");
+  const [todayWeight, setTodayWeight] = useState("");
+  const [loggingWeight, setLoggingWeight] = useState(false);
+  const [weightError, setWeightError] = useState<string | null>(null);
 
   useEffect(() => {
     if (prefs.data) {
@@ -36,6 +44,22 @@ export function TodayScreen() {
     const n = Number(stepsInput);
     if (!Number.isFinite(n) || n < 0) return;
     await apiPut("/steps", { steps: Math.round(n) }).catch(() => undefined);
+  };
+
+  const logWeight = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoggingWeight(true);
+    setWeightError(null);
+    try {
+      // Saving fires "fit-data-changed", so /today and /weight refetch and this prompt
+      // disappears — and the calorie target picks up the new weigh-in.
+      await apiPut("/weight", { date: todayIso(), weight_kg: todayWeight });
+      setTodayWeight("");
+    } catch (err) {
+      setWeightError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setLoggingWeight(false);
+    }
   };
 
   const apply = async (e: React.FormEvent) => {
@@ -67,6 +91,7 @@ export function TodayScreen() {
 
   const { calories, macros, consumed, remaining_kcal, activity_kcal, net_deficit_kcal } =
     today.data;
+  const weighedToday = (weighIns.data ?? []).some((w) => w.date === todayIso());
   const donut = [
     { key: "protein", name: t("today.macros.protein"), value: num(macros.protein_kcal), color: MACRO_COLORS.protein },
     { key: "carbs", name: t("today.macros.carbs"), value: num(macros.carbs_kcal), color: MACRO_COLORS.carbs },
@@ -89,6 +114,32 @@ export function TodayScreen() {
         <h1>{t("today.title")}</h1>
         <p className="muted">{t("today.subtitle")}</p>
       </header>
+
+      {weighIns.data && !weighedToday && (
+        <Card title={t("today.weighInTitle")}>
+          <p className="muted today-weigh__prompt">{t("today.weighInPrompt")}</p>
+          <form className="form today-weigh" onSubmit={logWeight}>
+            <div className="today-weigh__row">
+              <input
+                className="input"
+                type="number"
+                step="0.1"
+                min="20"
+                max="400"
+                inputMode="decimal"
+                placeholder={t("weight.weight")}
+                value={todayWeight}
+                onChange={(e) => setTodayWeight(e.target.value)}
+                required
+              />
+              <button className="btn btn--primary" type="submit" disabled={loggingWeight}>
+                {loggingWeight ? t("common.saving") : t("today.logWeightBtn")}
+              </button>
+            </div>
+            {weightError && <div className="error">{weightError}</div>}
+          </form>
+        </Card>
+      )}
 
       <div className="grid grid--2">
         <Card title={t("today.targetTitle")}>

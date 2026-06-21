@@ -52,7 +52,10 @@
     "fatPerKg": "Fett (g pro kg)",
     "fatHint": "Mindestens ~0,6 g/kg",
     "overTarget": "Eiweiß und Fett allein überschreiten dein Ziel um {{over}} kcal — reduziere sie, sonst fallen die Kohlenhydrate auf null.",
-    "applyMacros": "Übernehmen"
+    "applyMacros": "Übernehmen",
+    "weighInTitle": "Heutiges Gewicht",
+    "weighInPrompt": "Du hast heute noch kein Gewicht eingetragen — trag es ein, damit dein Ziel genau bleibt.",
+    "logWeightBtn": "Gewicht eintragen"
   },
   "diary": {
     "title": "Tagebuch",
