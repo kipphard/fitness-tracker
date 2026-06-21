@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { Suspense, lazy, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { apiDelete, apiGet, apiPatch, apiPost } from "../api/client";
@@ -13,6 +13,12 @@ import {
 import { useApi } from "../hooks/useApi";
 import { kcal, oneDecimal } from "../lib/format";
 import { Card } from "./Card";
+import { PhotoEstimatePanel } from "./PhotoEstimatePanel";
+
+// Lazy so the ZXing barcode library only loads when the user opens the scanner.
+const BarcodeScanner = lazy(() =>
+  import("./BarcodeScanner").then((m) => ({ default: m.BarcodeScanner })),
+);
 
 interface Selectable {
   id?: string;
@@ -56,6 +62,9 @@ export function DiaryScreen() {
   const [offLoading, setOffLoading] = useState(false);
   const [barcode, setBarcode] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [showScanner, setShowScanner] = useState(false);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [showCustom, setShowCustom] = useState(false);
   const [custom, setCustom] = useState({ name: "", kcal: "", protein: "", fat: "", carbs: "" });
@@ -94,16 +103,20 @@ export function DiaryScreen() {
     }
   };
 
-  const lookupBarcode = async () => {
-    const code = barcode.trim();
-    if (!code) return;
+  const selectByBarcode = async (code: string) => {
+    if (!code.trim()) return;
     setError(null);
     try {
-      setSelected(toSelectable(await apiGet<Food>(`/food/barcode/${encodeURIComponent(code)}`)));
-      setBarcode("");
+      setSelected(
+        toSelectable(await apiGet<Food>(`/food/barcode/${encodeURIComponent(code.trim())}`)),
+      );
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     }
+  };
+  const lookupBarcode = async () => {
+    await selectByBarcode(barcode);
+    setBarcode("");
   };
 
   const useCustom = () => {
@@ -161,6 +174,17 @@ export function DiaryScreen() {
 
   return (
     <div className="screen">
+      {showScanner && (
+        <Suspense fallback={null}>
+          <BarcodeScanner
+            onScan={(code) => {
+              setShowScanner(false);
+              void selectByBarcode(code);
+            }}
+            onClose={() => setShowScanner(false)}
+          />
+        </Suspense>
+      )}
       <header className="screen__head diary-head">
         <h1>{t("diary.title")}</h1>
         <div className="date-nav">
@@ -221,6 +245,30 @@ export function DiaryScreen() {
             <button className="btn btn--ghost btn--sm" onClick={() => setShowCustom((s) => !s)}>
               {t("diary.custom")}
             </button>
+          </div>
+
+          <div className="diary-actions">
+            <button className="btn btn--ghost btn--sm" onClick={() => setShowScanner(true)}>
+              📷 {t("diary.scanBarcode")}
+            </button>
+            <button
+              className="btn btn--ghost btn--sm"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              🍽️ {t("diary.photo")}
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              hidden
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) setPhotoFile(f);
+                e.target.value = "";
+              }}
+            />
           </div>
 
           <div className="diary-barcode">
@@ -319,6 +367,15 @@ export function DiaryScreen() {
           )}
         </Card>
       </div>
+
+      {photoFile && (
+        <PhotoEstimatePanel
+          file={photoFile}
+          date={date}
+          defaultSlot={slot}
+          onClose={() => setPhotoFile(null)}
+        />
+      )}
     </div>
   );
 }

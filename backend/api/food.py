@@ -1,14 +1,20 @@
-"""Food catalogue endpoints (Phase 4): saved foods, custom foods, and Open Food Facts."""
+"""Food endpoints: saved foods, custom foods, Open Food Facts (Phase 4), and the Claude
+vision photo estimator (Phase 5)."""
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException
+import base64
 
-from backend.api.deps import CurrentUser, OffClientDep, SessionDep
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+
+from backend.api.deps import CurrentUser, OffClientDep, SessionDep, VisionClientDep
 from backend.persistence import repository
 from backend.persistence.models import FoodSource
-from backend.schemas import FoodDataOut, FoodIn, FoodOut
+from backend.schemas import FoodDataOut, FoodIn, FoodOut, PhotoEstimateOut
 
 router = APIRouter(prefix="/food", tags=["food"])
+
+_MAX_IMAGE_BYTES = 8 * 1024 * 1024  # 8 MB
+_ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
 
 
 @router.get("", response_model=list[FoodOut])
@@ -81,3 +87,31 @@ def lookup_barcode(
     )
     session.commit()
     return FoodOut.model_validate(food)
+
+
+@router.post("/photo", response_model=PhotoEstimateOut)
+def estimate_photo(
+    vision: VisionClientDep,
+    user: CurrentUser,
+    file: UploadFile = File(...),
+    context: str | None = Form(default=None),
+) -> PhotoEstimateOut:
+    """Estimate a meal's items + macros from a photo via Claude vision. The optional `context`
+    carries the user's answers to clarifying questions for a refined re-estimate."""
+    media_type = (file.content_type or "image/jpeg").split(";")[0].strip().lower()
+    if media_type not in _ALLOWED_IMAGE_TYPES:
+        raise HTTPException(status_code=415, detail="unsupported image type")
+    data = file.file.read()
+    if not data:
+        raise HTTPException(status_code=400, detail="empty file")
+    if len(data) > _MAX_IMAGE_BYTES:
+        raise HTTPException(status_code=413, detail="image too large (max 8 MB)")
+
+    image_b64 = base64.standard_b64encode(data).decode()
+    try:
+        estimate = vision.estimate(
+            image_b64=image_b64, media_type=media_type, context=context
+        )
+    except Exception as exc:  # noqa: BLE001 - upstream/model failure
+        raise HTTPException(status_code=502, detail="photo estimation failed") from exc
+    return PhotoEstimateOut.model_validate(estimate)

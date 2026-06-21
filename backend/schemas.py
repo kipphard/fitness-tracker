@@ -270,3 +270,35 @@ class TodayOut(BaseModel):
     macros: MacroResultOut
     consumed: ConsumedOut
     remaining_kcal: Decimal
+
+
+# --- photo estimation (Phase 5) ---
+
+class EstimateItemOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    name: str
+    amount_g: Decimal
+    kcal: Decimal
+    protein_g: Decimal
+    fat_g: Decimal
+    carbs_g: Decimal
+
+
+class MacroTotalOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    kcal: Decimal
+    protein_g: Decimal
+    fat_g: Decimal
+    carbs_g: Decimal
+
+
+class PhotoEstimateOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    items: list[EstimateItemOut]
+    total: MacroTotalOut
+    confidence: str
+    questions: list[str]
+    notes: str

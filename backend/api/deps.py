@@ -9,10 +9,12 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
 
 from backend.auth.security import decode_token
+from backend.config import get_settings
 from backend.food.off import OpenFoodFactsClient
 from backend.persistence import repository
 from backend.persistence.database import get_session
 from backend.persistence.models import User
+from backend.vision.estimator import AnthropicVisionClient
 
 SessionDep = Annotated[Session, Depends(get_session)]
 
@@ -47,3 +49,19 @@ def get_off_client() -> OpenFoodFactsClient:
 
 
 OffClientDep = Annotated[OpenFoodFactsClient, Depends(get_off_client)]
+
+
+def get_vision_client() -> AnthropicVisionClient:
+    """Claude vision client for photo estimation. 503 if no API key; faked in tests."""
+    settings = get_settings()
+    if not settings.anthropic_configured or settings.anthropic_api_key is None:
+        raise HTTPException(
+            status_code=503,
+            detail="photo estimation is not configured (set ANTHROPIC_API_KEY).",
+        )
+    return AnthropicVisionClient(
+        api_key=settings.anthropic_api_key, model=settings.anthropic_model
+    )
+
+
+VisionClientDep = Annotated[AnthropicVisionClient, Depends(get_vision_client)]

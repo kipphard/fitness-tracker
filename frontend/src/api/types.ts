@@ -172,3 +172,22 @@ export interface DiaryDay {
   entries: DiaryEntry[];
   totals: Consumed;
 }
+
+// --- photo estimation (Phase 5) ---
+
+export interface EstimateItem {
+  name: string;
+  amount_g: string;
+  kcal: string;
+  protein_g: string;
+  fat_g: string;
+  carbs_g: string;
+}
+
+export interface PhotoEstimate {
+  items: EstimateItem[];
+  total: Consumed;
+  confidence: "low" | "medium" | "high";
+  questions: string[];
+  notes: string;
+}

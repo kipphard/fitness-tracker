@@ -38,6 +38,16 @@ class Settings(BaseSettings):
     def effective_jwt_secret(self) -> str:
         return self.jwt_secret or self.fernet_key
 
+    # Anthropic (Claude vision) for photo meal estimation (Phase 5). Optional: the photo
+    # endpoint returns 503 until a key is set. Default to the most capable model; override
+    # with ANTHROPIC_MODEL (e.g. claude-sonnet-4-6) to lower cost.
+    anthropic_api_key: str | None = None
+    anthropic_model: str = "claude-opus-4-8"
+
+    @property
+    def anthropic_configured(self) -> bool:
+        return bool(self.anthropic_api_key)
+
     @field_validator("fernet_key")
     @classmethod
     def _validate_fernet_key(cls, value: str) -> str:

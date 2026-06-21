@@ -18,10 +18,11 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from backend.api.deps import get_off_client
+from backend.api.deps import get_off_client, get_vision_client
 from backend.food.off import FoodData
 from backend.main import app
 from backend.persistence.database import Base, get_session
+from backend.vision.estimator import EstimateItem, MacroTotal, PhotoEstimate
 
 
 class _FakeOFF:
@@ -52,6 +53,27 @@ class _FakeOFF:
                 serving_g=None,
             )
         ]
+
+
+class _FakeVision:
+    """Fake Claude vision client (no network / no API key) used in tests."""
+
+    def estimate(self, *, image_b64: str, media_type: str, context: str | None = None) -> PhotoEstimate:
+        if context:  # re-estimate with the user's answers → confident, no questions
+            return PhotoEstimate(
+                items=[EstimateItem("Chicken bowl", Decimal("400"), Decimal("600"), Decimal("45"), Decimal("18"), Decimal("55"))],
+                total=MacroTotal(Decimal("600"), Decimal("45"), Decimal("18"), Decimal("55")),
+                confidence="high",
+                questions=[],
+                notes="Refined with your notes.",
+            )
+        return PhotoEstimate(
+            items=[EstimateItem("Chicken bowl", Decimal("350"), Decimal("520"), Decimal("40"), Decimal("15"), Decimal("50"))],
+            total=MacroTotal(Decimal("520"), Decimal("40"), Decimal("15"), Decimal("50")),
+            confidence="medium",
+            questions=["Was any oil used?"],
+            notes="Approximate.",
+        )
 
 
 @pytest.fixture
@@ -100,6 +122,7 @@ def client(session_factory):
 
     app.dependency_overrides[get_session] = _override
     app.dependency_overrides[get_off_client] = lambda: _FakeOFF()
+    app.dependency_overrides[get_vision_client] = lambda: _FakeVision()
     with TestClient(app) as test_client:
         _register(test_client, "user-a@example.com")
         yield test_client

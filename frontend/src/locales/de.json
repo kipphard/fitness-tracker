@@ -72,7 +72,17 @@
     "empty": "Noch nichts eingetragen.",
     "total": "Gesamt",
     "noSaved": "Keine gespeicherten Lebensmittel — probiere Open Food Facts oder leg ein eigenes an.",
-    "editAmount": "Menge in Gramm:"
+    "editAmount": "Menge in Gramm:",
+    "scanBarcode": "Barcode scannen",
+    "photo": "Foto-Schätzung",
+    "scanHint": "Kamera auf den Barcode richten",
+    "photoTitle": "Foto-Schätzung",
+    "photoDisclaimer": "KI-Schätzung — ungefähr. Vor dem Eintragen prüfen.",
+    "estimating": "Schätzt…",
+    "confidence": { "low": "geringe Sicherheit", "medium": "mittlere Sicherheit", "high": "hohe Sicherheit" },
+    "answersPlaceholder": "Beantworte die Fragen zur Verfeinerung…",
+    "reestimate": "Neu schätzen",
+    "logAll": "Alle eintragen"
   },
   "profile": {
     "title": "Dein Kalorienbedarf",

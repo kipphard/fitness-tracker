@@ -72,7 +72,17 @@
     "empty": "Nothing logged yet.",
     "total": "Total",
     "noSaved": "No saved foods match — try Open Food Facts or add a custom food.",
-    "editAmount": "Amount in grams:"
+    "editAmount": "Amount in grams:",
+    "scanBarcode": "Scan barcode",
+    "photo": "Photo estimate",
+    "scanHint": "Point the camera at a barcode",
+    "photoTitle": "Photo estimate",
+    "photoDisclaimer": "AI estimate — approximate. Review before logging.",
+    "estimating": "Estimating…",
+    "confidence": { "low": "low confidence", "medium": "medium confidence", "high": "high confidence" },
+    "answersPlaceholder": "Answer the questions to refine the estimate…",
+    "reestimate": "Re-estimate",
+    "logAll": "Log all to diary"
   },
   "profile": {
     "title": "Your calorie needs",
