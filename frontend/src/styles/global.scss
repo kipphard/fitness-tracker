@@ -92,7 +92,12 @@ a:hover {
   appearance: none;
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
-  padding: 0.6rem 1rem;
+  padding: 0.55rem 1rem;
+  min-height: 2.75rem; /* comfortable touch target */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
   font-size: 0.92rem;
   font-weight: 600;
   cursor: pointer;
@@ -124,6 +129,7 @@ a:hover {
 }
 .btn--sm {
   padding: 0.4rem 0.7rem;
+  min-height: 2.1rem;
   font-size: 0.85rem;
 }
 .btn--link {
@@ -170,8 +176,9 @@ a:hover {
   border-radius: var(--radius-sm);
   background: var(--surface);
   color: var(--text);
-  padding: 0.6rem 0.7rem;
-  font-size: 0.95rem;
+  padding: 0.55rem 0.7rem;
+  min-height: 2.75rem; /* touch target */
+  font-size: 1rem; /* 16px avoids iOS zoom-on-focus */
 }
 .input:focus,
 .select:focus {
@@ -844,32 +851,103 @@ a:hover {
 }
 
 /* ── Responsive ────────────────────────────────────────────────────────── */
-@media (max-width: 760px) {
+/* ── Mobile bottom navigation + "More" sheet ───────────────────────────── */
+.bottom-nav {
+  display: none; /* desktop hides it; the mobile media query shows it */
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 40;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding-bottom: env(safe-area-inset-bottom);
+  box-shadow: 0 -1px 8px rgba(16, 22, 39, 0.06);
+}
+.bottom-nav__item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 3.5rem;
+  padding: 0.4rem 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 0.66rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+.bottom-nav__item.is-active {
+  color: var(--primary-strong);
+}
+.bottom-nav__icon {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+.more-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: flex-end;
+}
+.more-sheet__panel {
+  width: 100%;
+  background: var(--surface);
+  border-radius: var(--radius) var(--radius) 0 0;
+  padding: 0.75rem 1rem calc(1rem + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+.more-sheet__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.25rem 0.25rem 0.5rem;
+}
+.more-sheet__controls {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+
+/* ── Mobile layout ─────────────────────────────────────────────────────── */
+@media (max-width: 767px) {
   .app-shell {
     grid-template-columns: 1fr;
   }
   .sidebar {
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-items: center;
-    border-right: none;
-    border-bottom: 1px solid var(--border);
+    display: none;
   }
-  .sidebar__nav {
-    flex-direction: row;
-    flex-wrap: wrap;
-    flex-basis: 100%;
-    order: 3;
+  .bottom-nav {
+    display: flex;
   }
-  .sidebar__footer {
-    border-top: none;
-    padding-top: 0;
-    flex-direction: row;
-    align-items: center;
-    margin-left: auto;
+  .app-main {
+    padding: 1rem 1rem calc(4.75rem + env(safe-area-inset-bottom));
   }
   .grid--2,
   .form__row {
     grid-template-columns: 1fr;
+  }
+  h1 {
+    font-size: 1.35rem;
+  }
+  .target-hero strong {
+    font-size: 2.2rem;
+  }
+  .form > .btn {
+    width: 100%;
   }
 }

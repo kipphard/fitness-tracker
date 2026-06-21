@@ -16,7 +16,8 @@
       "body": "Körper",
       "formula": "BMR-Formel",
       "activity": "Aktivitätslevel",
-      "settings": "Einstellungen"
+      "settings": "Einstellungen",
+      "more": "Mehr"
     }
   },
   "auth": {
