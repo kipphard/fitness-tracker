@@ -58,7 +58,10 @@
     "logWeightBtn": "Log weight",
     "maintenance": "Maintenance",
     "plannedDeficit": "Planned deficit",
-    "netDeficitHint": "Planned deficit + steps"
+    "netDeficitHint": "Planned deficit + steps",
+    "weeklyLoss": "Weight loss",
+    "weeklyGain": "Weight gain",
+    "kgPerWeek": "kg/week"
   },
   "diary": {
     "title": "Diary",

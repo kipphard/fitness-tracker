@@ -95,6 +95,10 @@ export function TodayScreen() {
   const plannedDeficit = num(calories.maintenance) - num(calories.target);
   // The effective deficit for the day: the planned cut plus the extra burn from steps.
   const netDeficit = plannedDeficit + num(activity_kcal);
+  // ~7700 kcal per kg of body fat (Wishnofsky's 3500 kcal/lb). A first-order estimate —
+  // early loss also includes water/glycogen, and the body adapts over time.
+  const KCAL_PER_KG = 7700;
+  const weeklyChangeKg = (netDeficit * 7) / KCAL_PER_KG;
   const donut = [
     { key: "protein", name: t("today.macros.protein"), value: num(macros.protein_kcal), color: MACRO_COLORS.protein },
     { key: "carbs", name: t("today.macros.carbs"), value: num(macros.carbs_kcal), color: MACRO_COLORS.carbs },
@@ -184,6 +188,19 @@ export function TodayScreen() {
           <div className="result-row">
             <span className="muted">{t("today.netDeficit")}</span>
             <span className="tnum">{kcal(netDeficit)}</span>
+          </div>
+          <div className="result-row">
+            <span className="muted">
+              {weeklyChangeKg >= 0 ? t("today.weeklyLoss") : t("today.weeklyGain")}
+            </span>
+            <span className="tnum">
+              ~
+              {Math.abs(weeklyChangeKg).toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}{" "}
+              {t("today.kgPerWeek")}
+            </span>
           </div>
           <p className="muted result-hint">{t("today.netDeficitHint")}</p>
           {calories.below_floor && (

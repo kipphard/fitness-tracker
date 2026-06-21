@@ -58,7 +58,10 @@
     "logWeightBtn": "Gewicht eintragen",
     "maintenance": "Erhaltungsbedarf",
     "plannedDeficit": "Geplantes Defizit",
-    "netDeficitHint": "Geplantes Defizit + Schritte"
+    "netDeficitHint": "Geplantes Defizit + Schritte",
+    "weeklyLoss": "Gewichtsverlust",
+    "weeklyGain": "Gewichtszunahme",
+    "kgPerWeek": "kg/Woche"
   },
   "diary": {
     "title": "Tagebuch",
