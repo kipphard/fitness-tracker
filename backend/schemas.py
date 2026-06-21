@@ -148,3 +148,37 @@ class WeightTrendOut(BaseModel):
     current_trend: Decimal | None = None
     effective_weight: Decimal | None = None
     effective_source: str | None = None
+
+
+# --- macros + today (Phase 3) ---
+
+class MacroPrefIn(BaseModel):
+    protein_g_per_kg: Decimal | None = Field(default=None, gt=0, le=10)
+    fat_g_per_kg: Decimal | None = Field(default=None, gt=0, le=10)
+
+
+class MacroPrefOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    protein_g_per_kg: Decimal
+    fat_g_per_kg: Decimal
+
+
+class MacroResultOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    protein_g: Decimal
+    fat_g: Decimal
+    carbs_g: Decimal
+    protein_kcal: Decimal
+    fat_kcal: Decimal
+    carbs_kcal: Decimal
+    target_kcal: Decimal
+    reconciled: bool
+    over_kcal: Decimal
+
+
+class TodayOut(BaseModel):
+    date: date_type
+    calories: MyCaloriesOut
+    macros: MacroResultOut

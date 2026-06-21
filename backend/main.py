@@ -3,7 +3,16 @@ from __future__ import annotations
 
 from fastapi import FastAPI
 
-from backend.api import auth, calories, health, profile, settings, weight
+from backend.api import (
+    auth,
+    calories,
+    health,
+    macros,
+    profile,
+    settings,
+    today,
+    weight,
+)
 from backend.config import get_settings
 
 app_settings = get_settings()
@@ -26,6 +35,8 @@ app.include_router(profile.router, prefix=API)
 app.include_router(settings.router, prefix=API)
 app.include_router(calories.router, prefix=API)
 app.include_router(weight.router, prefix=API)
+app.include_router(macros.router, prefix=API)
+app.include_router(today.router, prefix=API)
 
 
 @app.get("/", tags=["root"])

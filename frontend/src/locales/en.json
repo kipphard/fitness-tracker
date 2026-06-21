@@ -7,6 +7,7 @@
     "logout": "Log out",
     "toggleTheme": "Toggle light / dark",
     "nav": {
+      "today": "Today",
       "calculator": "Calorie needs",
       "weight": "Weight",
       "formula": "BMR formula",
@@ -25,6 +26,23 @@
     "toLogin": "Have an account? Sign in",
     "passwordHint": "At least 8 characters",
     "tagline": "Your self-hosted fitness & nutrition tracker"
+  },
+  "today": {
+    "title": "Today",
+    "subtitle": "Your daily calorie and macro targets.",
+    "noProfile": "Set up your profile to see your daily targets.",
+    "setupProfile": "Set up profile",
+    "targetTitle": "Daily target",
+    "foodLogSoon": "Food logging (calories consumed / left) arrives in a later phase.",
+    "macrosTitle": "Macro targets",
+    "macros": { "protein": "Protein", "carbs": "Carbs", "fat": "Fat" },
+    "adjustTitle": "Adjust macros",
+    "proteinPerKg": "Protein (g per kg)",
+    "proteinHint": "Recommended 1.6–2.2 g/kg",
+    "fatPerKg": "Fat (g per kg)",
+    "fatHint": "At least ~0.6 g/kg",
+    "overTarget": "Protein and fat alone exceed your target by {{over}} kcal — lower them, or carbs hit zero.",
+    "applyMacros": "Apply"
   },
   "profile": {
     "title": "Your calorie needs",

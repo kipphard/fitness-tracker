@@ -8,7 +8,7 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from backend.persistence.models import Profile, Settings, User, WeighIn
+from backend.persistence.models import MacroTarget, Profile, Settings, User, WeighIn
 
 
 # --- users ---
@@ -98,3 +98,23 @@ def delete_weigh_in(session: Session, user_id: uuid.UUID, day: date) -> bool:
         return False
     session.delete(weigh_in)
     return True
+
+
+# --- macro targets (1:1) ---
+
+def get_macro_target(session: Session, user_id: uuid.UUID) -> MacroTarget | None:
+    return session.scalar(select(MacroTarget).where(MacroTarget.user_id == user_id))
+
+
+def upsert_macro_target(
+    session: Session, user_id: uuid.UUID, **fields: Any
+) -> MacroTarget:
+    macro = get_macro_target(session, user_id)
+    if macro is None:
+        macro = MacroTarget(user_id=user_id, **fields)
+        session.add(macro)
+    else:
+        for key, value in fields.items():
+            setattr(macro, key, value)
+    session.flush()
+    return macro

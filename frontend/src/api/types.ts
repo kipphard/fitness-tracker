@@ -99,3 +99,28 @@ export interface WeightTrend {
   effective_weight: string | null;
   effective_source: WeightSource | null;
 }
+
+// --- macros + today (Phase 3) ---
+
+export interface MacroPrefs {
+  protein_g_per_kg: string;
+  fat_g_per_kg: string;
+}
+
+export interface MacroResult {
+  protein_g: string;
+  fat_g: string;
+  carbs_g: string;
+  protein_kcal: string;
+  fat_kcal: string;
+  carbs_kcal: string;
+  target_kcal: string;
+  reconciled: boolean;
+  over_kcal: string;
+}
+
+export interface Today {
+  date: string;
+  calories: MyCalories;
+  macros: MacroResult;
+}

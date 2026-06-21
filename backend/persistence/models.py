@@ -24,6 +24,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from backend.calories.engine import ActivityLevel, Gender, Goal
+from backend.macros.engine import DEFAULT_FAT_G_PER_KG, DEFAULT_PROTEIN_G_PER_KG
 from backend.persistence.database import Base
 from backend.persistence.types import GUID, Measure
 
@@ -61,6 +62,9 @@ class User(Base):
     )
     weigh_ins: Mapped[list["WeighIn"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
+    )
+    macro_target: Mapped["MacroTarget | None"] = relationship(
+        back_populates="user", uselist=False, cascade="all, delete-orphan"
     )
 
 
@@ -135,3 +139,28 @@ class WeighIn(Base):
     )
 
     user: Mapped["User"] = relationship(back_populates="weigh_ins")
+
+
+class MacroTarget(Base):
+    """1:1 with a user. Protein and fat are set per kg of bodyweight; carbs fill the rest."""
+
+    __tablename__ = "macro_targets"
+
+    id: Mapped[uuid.UUID] = mapped_column(GUID, primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        GUID,
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        unique=True,
+    )
+    protein_g_per_kg: Mapped[Decimal] = mapped_column(
+        Measure, nullable=False, default=DEFAULT_PROTEIN_G_PER_KG
+    )
+    fat_g_per_kg: Mapped[Decimal] = mapped_column(
+        Measure, nullable=False, default=DEFAULT_FAT_G_PER_KG
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_now, nullable=False
+    )
+
+    user: Mapped["User"] = relationship(back_populates="macro_target")

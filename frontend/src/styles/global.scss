@@ -403,6 +403,50 @@ a:hover {
   background: var(--primary-soft);
   color: var(--primary-strong);
 }
+.alert--info {
+  background: var(--surface-2);
+  color: var(--muted);
+  border: 1px solid var(--border);
+}
+
+/* ── Today dashboard ───────────────────────────────────────────────────── */
+.target-hero {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+.target-hero strong {
+  font-size: 2.6rem;
+  line-height: 1;
+  color: var(--primary-strong);
+}
+.macro-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+.macro-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+}
+.macro-card__dot {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 50%;
+}
+.macro-card__name {
+  font-weight: 600;
+}
+.macro-card strong {
+  font-size: 1.05rem;
+}
 
 /* ── Prose / explainers ────────────────────────────────────────────────── */
 .formula {

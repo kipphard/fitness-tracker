@@ -6,6 +6,7 @@ import { useTheme } from "../theme";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { ProfileScreen } from "./ProfileScreen";
 import { SettingsScreen } from "./SettingsScreen";
+import { TodayScreen } from "./TodayScreen";
 import { WeightScreen } from "./WeightScreen";
 import { FormulaExplainer } from "./explainers/FormulaExplainer";
 import { ActivityExplainer } from "./explainers/ActivityExplainer";
@@ -24,6 +25,9 @@ export function AppShell() {
         <div className="sidebar__brand">💪 {t("common.appName")}</div>
         <nav className="sidebar__nav">
           <NavLink to="/" end className={linkClass}>
+            <span className="sidebar__icon">📅</span> {t("common.nav.today")}
+          </NavLink>
+          <NavLink to="/calculator" className={linkClass}>
             <span className="sidebar__icon">🔥</span> {t("common.nav.calculator")}
           </NavLink>
           <NavLink to="/weight" className={linkClass}>
@@ -62,7 +66,8 @@ export function AppShell() {
 
       <main className="app-main">
         <Routes>
-          <Route path="/" element={<ProfileScreen />} />
+          <Route path="/" element={<TodayScreen />} />
+          <Route path="/calculator" element={<ProfileScreen />} />
           <Route path="/weight" element={<WeightScreen />} />
           <Route path="/formula" element={<FormulaExplainer />} />
           <Route path="/activity" element={<ActivityExplainer />} />

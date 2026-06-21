@@ -7,6 +7,7 @@
     "logout": "Abmelden",
     "toggleTheme": "Hell / Dunkel umschalten",
     "nav": {
+      "today": "Heute",
       "calculator": "Kalorienbedarf",
       "weight": "Gewicht",
       "formula": "BMR-Formel",
@@ -25,6 +26,23 @@
     "toLogin": "Schon ein Konto? Anmelden",
     "passwordHint": "Mindestens 8 Zeichen",
     "tagline": "Dein selbstgehosteter Fitness- & Ernährungstracker"
+  },
+  "today": {
+    "title": "Heute",
+    "subtitle": "Deine täglichen Kalorien- und Makroziele.",
+    "noProfile": "Richte dein Profil ein, um deine Tagesziele zu sehen.",
+    "setupProfile": "Profil einrichten",
+    "targetTitle": "Tagesziel",
+    "foodLogSoon": "Das Ernährungstagebuch (verbrauchte / übrige Kalorien) folgt in einer späteren Phase.",
+    "macrosTitle": "Makroziele",
+    "macros": { "protein": "Eiweiß", "carbs": "Kohlenhydrate", "fat": "Fett" },
+    "adjustTitle": "Makros anpassen",
+    "proteinPerKg": "Eiweiß (g pro kg)",
+    "proteinHint": "Empfohlen 1,6–2,2 g/kg",
+    "fatPerKg": "Fett (g pro kg)",
+    "fatHint": "Mindestens ~0,6 g/kg",
+    "overTarget": "Eiweiß und Fett allein überschreiten dein Ziel um {{over}} kcal — reduziere sie, sonst fallen die Kohlenhydrate auf null.",
+    "applyMacros": "Übernehmen"
   },
   "profile": {
     "title": "Dein Kalorienbedarf",
