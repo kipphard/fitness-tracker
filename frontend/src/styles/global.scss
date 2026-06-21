@@ -579,7 +579,7 @@ a:hover {
 .custom-food {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.65rem;
   margin-top: 0.75rem;
   padding: 0.75rem;
   border: 1px solid var(--border);
@@ -1044,9 +1044,13 @@ a:hover {
   .app-main {
     padding: 1rem 1rem calc(5.5rem + env(safe-area-inset-bottom));
   }
-  .grid--2,
-  .form__row {
+  .grid--2 {
     grid-template-columns: 1fr;
+  }
+  /* Dissolve nested form rows on mobile so their fields inherit the container's
+     vertical gap — uniform spacing instead of the row's own grid gap. */
+  .form__row {
+    display: contents;
   }
   h1 {
     font-size: 1.35rem;
