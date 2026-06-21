@@ -89,11 +89,12 @@ export function TodayScreen() {
     );
   }
 
-  const { calories, macros, consumed, remaining_kcal, activity_kcal, net_deficit_kcal } =
-    today.data;
+  const { calories, macros, consumed, remaining_kcal, activity_kcal } = today.data;
   const weighedToday = (weighIns.data ?? []).some((w) => w.date === todayIso());
-  // The deliberate cut/bulk gap your goal targets, independent of what you've eaten.
+  // The deliberate cut/bulk gap your goal targets (maintenance − target), independent of intake.
   const plannedDeficit = num(calories.maintenance) - num(calories.target);
+  // The effective deficit for the day: the planned cut plus the extra burn from steps.
+  const netDeficit = plannedDeficit + num(activity_kcal);
   const donut = [
     { key: "protein", name: t("today.macros.protein"), value: num(macros.protein_kcal), color: MACRO_COLORS.protein },
     { key: "carbs", name: t("today.macros.carbs"), value: num(macros.carbs_kcal), color: MACRO_COLORS.carbs },
@@ -158,10 +159,6 @@ export function TodayScreen() {
             <span className="tnum">{kcal(calories.target)}</span>
           </div>
           <div className="result-row">
-            <span className="muted">{t("today.plannedDeficit")}</span>
-            <span className="tnum">{kcal(plannedDeficit)}</span>
-          </div>
-          <div className="result-row result-row--divider">
             <span className="muted">{t("today.eaten")}</span>
             <span className="tnum">{kcal(consumed.kcal)}</span>
           </div>
@@ -180,9 +177,13 @@ export function TodayScreen() {
               <span className="muted tnum">+{kcal(activity_kcal)}</span>
             </span>
           </div>
+          <div className="result-row result-row--divider">
+            <span className="muted">{t("today.plannedDeficit")}</span>
+            <span className="tnum">{kcal(plannedDeficit)}</span>
+          </div>
           <div className="result-row">
             <span className="muted">{t("today.netDeficit")}</span>
-            <span className="tnum">{kcal(net_deficit_kcal)}</span>
+            <span className="tnum">{kcal(netDeficit)}</span>
           </div>
           <p className="muted result-hint">{t("today.netDeficitHint")}</p>
           {calories.below_floor && (

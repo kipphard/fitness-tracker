@@ -58,7 +58,7 @@
     "logWeightBtn": "Log weight",
     "maintenance": "Maintenance",
     "plannedDeficit": "Planned deficit",
-    "netDeficitHint": "Maintenance + steps − eaten"
+    "netDeficitHint": "Planned deficit + steps"
   },
   "diary": {
     "title": "Diary",

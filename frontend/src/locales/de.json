@@ -58,7 +58,7 @@
     "logWeightBtn": "Gewicht eintragen",
     "maintenance": "Erhaltungsbedarf",
     "plannedDeficit": "Geplantes Defizit",
-    "netDeficitHint": "Erhaltungsbedarf + Schritte − gegessen"
+    "netDeficitHint": "Geplantes Defizit + Schritte"
   },
   "diary": {
     "title": "Tagebuch",
