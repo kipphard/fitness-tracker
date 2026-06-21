@@ -219,6 +219,14 @@ a:hover {
 .card__body {
   padding: 1.25rem;
 }
+/* Trim stray user-agent paragraph margins that leave loose gaps at the
+   top/bottom of card content (e.g. empty-state text). */
+.card__body > p:first-child {
+  margin-top: 0;
+}
+.card__body > p:last-child {
+  margin-bottom: 0;
+}
 
 .grid {
   display: grid;
@@ -231,12 +239,15 @@ a:hover {
 .screen {
   max-width: 980px;
   margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem; /* uniform vertical rhythm between header / cards / grids */
 }
 .screen--prose {
   max-width: 760px;
 }
 .screen__head {
-  margin-bottom: 1.25rem;
+  margin-bottom: 0; /* spacing now comes from the .screen gap */
 }
 
 /* ── App shell ─────────────────────────────────────────────────────────── */
@@ -951,7 +962,7 @@ a:hover {
     display: flex;
   }
   .app-main {
-    padding: 1rem 1rem calc(4.75rem + env(safe-area-inset-bottom));
+    padding: 1rem 1rem calc(5.5rem + env(safe-area-inset-bottom));
   }
   .grid--2,
   .form__row {
@@ -965,5 +976,26 @@ a:hover {
   }
   .form > .btn {
     width: 100%;
+  }
+  /* Stack macro tiles full-width and lay each one out as a row so the
+     "eaten / target g" value no longer wraps onto three lines. */
+  .macro-cards {
+    grid-template-columns: 1fr;
+  }
+  .macro-card {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    column-gap: 0.5rem;
+  }
+  .macro-card__name {
+    flex: 1;
+  }
+  .macro-card strong {
+    font-size: 1rem;
+  }
+  .macro-bar {
+    flex-basis: 100%;
+    margin-top: 0.1rem;
   }
 }

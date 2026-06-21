@@ -137,7 +137,7 @@
     "logBtn": "Wiegen speichern",
     "trendWeight": "Trendgewicht",
     "feedsTarget": "Fließt ins Ziel",
-    "trendTitle": "Verlauf",
+    "trendTitle": "Trend",
     "weighIns": "Wiegungen",
     "trendLine": "Trend",
     "historyTitle": "Verlauf",
@@ -251,7 +251,7 @@
       "thigh_cm": "Oberschenkel (cm)"
     },
     "notes": "Notizen",
-    "trendTitle": "Verlauf",
+    "trendTitle": "Trend",
     "historyTitle": "Verlauf",
     "empty": "Noch keine Maße."
   },
