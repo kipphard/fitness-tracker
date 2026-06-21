@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from dataclasses import asdict
 from datetime import date
+from decimal import Decimal
 
 from fastapi import APIRouter, HTTPException
 
@@ -16,6 +17,7 @@ from backend.calories import engine
 from backend.macros import engine as macro_engine
 from backend.persistence import repository
 from backend.schemas import MacroResultOut, MyCaloriesOut, TodayOut
+from backend.steps.convert import steps_to_kcal
 from backend.weight import trend as wtrend
 
 router = APIRouter(tags=["today"])
@@ -49,6 +51,14 @@ def today(session: SessionDep, user: CurrentUser) -> TodayOut:
 
     consumed = sum_consumed(repository.list_food_logs(session, user.id, date.today()))
 
+    step_log = repository.get_step_log(session, user.id, date.today())
+    steps = step_log.steps if step_log else 0
+    activity_kcal = steps_to_kcal(steps, weight_kg)
+
+    prefs = repository.get_settings(session, user.id)
+    eat_back = bool(prefs.eat_back_activity) if prefs else False
+    budget = cal.target + (activity_kcal if eat_back else Decimal(0))
+
     return TodayOut(
         date=date.today(),
         calories=MyCaloriesOut(
@@ -56,5 +66,9 @@ def today(session: SessionDep, user: CurrentUser) -> TodayOut:
         ),
         macros=MacroResultOut.model_validate(macros),
         consumed=consumed,
-        remaining_kcal=cal.target - consumed.kcal,
+        remaining_kcal=budget - consumed.kcal,
+        steps=steps,
+        activity_kcal=activity_kcal,
+        net_deficit_kcal=(cal.maintenance + activity_kcal) - consumed.kcal,
+        eat_back_activity=eat_back,
     )

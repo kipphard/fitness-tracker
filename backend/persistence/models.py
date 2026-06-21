@@ -113,6 +113,10 @@ class Settings(Base):
     unit_system: Mapped[UnitSystem] = mapped_column(
         Enum(UnitSystem, name="unit_system"), nullable=False, default=UnitSystem.metric
     )
+    # Whether step/workout activity calories are added back to the eating budget (Phase 6).
+    eat_back_activity: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_now, nullable=False
     )
@@ -229,6 +233,27 @@ class FoodLog(Base):
     protein_g: Mapped[Decimal] = mapped_column(Macro, nullable=False)
     fat_g: Mapped[Decimal] = mapped_column(Macro, nullable=False)
     carbs_g: Mapped[Decimal] = mapped_column(Macro, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_now, nullable=False
+    )
+
+
+class StepLog(Base):
+    """Daily step count (one per user+date). Calories are derived on read from the effective
+    weight, so they always reflect the current weight. A generic ingestion point — manual entry
+    now, Health Connect / HealthKit later."""
+
+    __tablename__ = "step_logs"
+    __table_args__ = (
+        UniqueConstraint("user_id", "date", name="uq_step_logs_user_date"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(GUID, primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        GUID, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    date: Mapped[date] = mapped_column(Date, nullable=False)
+    steps: Mapped[int] = mapped_column(Integer, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_now, nullable=False
     )

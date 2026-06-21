@@ -12,6 +12,7 @@ from backend.api import (
     macros,
     profile,
     settings,
+    steps,
     today,
     weight,
 )
@@ -40,6 +41,7 @@ app.include_router(weight.router, prefix=API)
 app.include_router(macros.router, prefix=API)
 app.include_router(food.router, prefix=API)
 app.include_router(diary.router, prefix=API)
+app.include_router(steps.router, prefix=API)
 app.include_router(today.router, prefix=API)
 
 

@@ -19,6 +19,7 @@ export function TodayScreen() {
   const [protein, setProtein] = useState("");
   const [fat, setFat] = useState("");
   const [saving, setSaving] = useState(false);
+  const [stepsInput, setStepsInput] = useState("");
 
   useEffect(() => {
     if (prefs.data) {
@@ -26,6 +27,16 @@ export function TodayScreen() {
       setFat(prefs.data.fat_g_per_kg);
     }
   }, [prefs.data]);
+
+  useEffect(() => {
+    if (today.data) setStepsInput(String(today.data.steps));
+  }, [today.data]);
+
+  const saveSteps = async () => {
+    const n = Number(stepsInput);
+    if (!Number.isFinite(n) || n < 0) return;
+    await apiPut("/steps", { steps: Math.round(n) }).catch(() => undefined);
+  };
 
   const apply = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,7 +65,8 @@ export function TodayScreen() {
     );
   }
 
-  const { calories, macros, consumed, remaining_kcal } = today.data;
+  const { calories, macros, consumed, remaining_kcal, activity_kcal, net_deficit_kcal } =
+    today.data;
   const donut = [
     { key: "protein", name: t("today.macros.protein"), value: num(macros.protein_kcal), color: MACRO_COLORS.protein },
     { key: "carbs", name: t("today.macros.carbs"), value: num(macros.carbs_kcal), color: MACRO_COLORS.carbs },
@@ -91,6 +103,25 @@ export function TodayScreen() {
           <div className="result-row">
             <span className="muted">{t("today.eaten")}</span>
             <span className="tnum">{kcal(consumed.kcal)}</span>
+          </div>
+          <div className="result-row">
+            <span className="muted">{t("today.steps")}</span>
+            <span className="steps-edit">
+              <input
+                className="input input--steps"
+                type="number"
+                min="0"
+                step="100"
+                value={stepsInput}
+                onChange={(e) => setStepsInput(e.target.value)}
+                onBlur={saveSteps}
+              />
+              <span className="muted tnum">+{kcal(activity_kcal)}</span>
+            </span>
+          </div>
+          <div className="result-row">
+            <span className="muted">{t("today.netDeficit")}</span>
+            <span className="tnum">{kcal(net_deficit_kcal)}</span>
           </div>
           {calories.below_floor && (
             <div className="alert alert--warn">

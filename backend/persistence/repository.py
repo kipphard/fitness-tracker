@@ -14,6 +14,7 @@ from backend.persistence.models import (
     MacroTarget,
     Profile,
     Settings,
+    StepLog,
     User,
     WeighIn,
 )
@@ -222,3 +223,32 @@ def recent_foods(
         return []
     by_id = {f.id: f for f in session.scalars(select(Food).where(Food.id.in_(ordered)))}
     return [by_id[fid] for fid in ordered if fid in by_id]
+
+
+# --- steps (one per user+date) ---
+
+def get_step_log(session: Session, user_id: uuid.UUID, day: date) -> StepLog | None:
+    return session.scalar(
+        select(StepLog).where(StepLog.user_id == user_id, StepLog.date == day)
+    )
+
+
+def upsert_step_log(
+    session: Session, user_id: uuid.UUID, day: date, steps: int
+) -> StepLog:
+    log = get_step_log(session, user_id, day)
+    if log is None:
+        log = StepLog(user_id=user_id, date=day, steps=steps)
+        session.add(log)
+    else:
+        log.steps = steps
+    session.flush()
+    return log
+
+
+def list_step_logs(session: Session, user_id: uuid.UUID) -> list[StepLog]:
+    return list(
+        session.scalars(
+            select(StepLog).where(StepLog.user_id == user_id).order_by(StepLog.date)
+        )
+    )

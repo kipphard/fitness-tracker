@@ -37,6 +37,8 @@
     "targetLabel": "Ziel",
     "eaten": "Gegessen",
     "left": "Übrig",
+    "steps": "Schritte",
+    "netDeficit": "Netto-Defizit",
     "openDiary": "Tagebuch öffnen →",
     "macrosTitle": "Makroziele",
     "macros": { "protein": "Eiweiß", "carbs": "Kohlenhydrate", "fat": "Fett" },
@@ -189,6 +191,8 @@
     "title": "Einstellungen",
     "language": "Sprache",
     "units": "Einheiten",
+    "eatBack": "Aktivitätskalorien zurückessen",
+    "eatBackHint": "Schritte/Training zum Essensbudget addieren",
     "unitOptions": {
       "metric": "Metrisch (kg, cm)",
       "imperial": "Imperial (lb, in)"

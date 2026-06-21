@@ -72,6 +72,7 @@ class ProfileOut(BaseModel):
 class SettingsIn(BaseModel):
     language: Language | None = None
     unit_system: UnitSystem | None = None
+    eat_back_activity: bool | None = None
 
 
 class SettingsOut(BaseModel):
@@ -79,6 +80,7 @@ class SettingsOut(BaseModel):
 
     language: Language
     unit_system: UnitSystem
+    eat_back_activity: bool
 
 
 # --- calories ---
@@ -264,12 +266,27 @@ class DiaryCopyIn(BaseModel):
     to_date: date_type | None = None
 
 
+class StepsIn(BaseModel):
+    date: date_type | None = None  # defaults to today
+    steps: int = Field(ge=0, le=200000)
+
+
+class StepsOut(BaseModel):
+    date: date_type
+    steps: int
+    kcal: Decimal  # derived from the effective weight
+
+
 class TodayOut(BaseModel):
     date: date_type
     calories: MyCaloriesOut
     macros: MacroResultOut
     consumed: ConsumedOut
     remaining_kcal: Decimal
+    steps: int
+    activity_kcal: Decimal
+    net_deficit_kcal: Decimal
+    eat_back_activity: bool
 
 
 # --- photo estimation (Phase 5) ---

@@ -37,6 +37,8 @@
     "targetLabel": "Target",
     "eaten": "Eaten",
     "left": "Left",
+    "steps": "Steps",
+    "netDeficit": "Net deficit",
     "openDiary": "Open diary →",
     "macrosTitle": "Macro targets",
     "macros": { "protein": "Protein", "carbs": "Carbs", "fat": "Fat" },
@@ -189,6 +191,8 @@
     "title": "Settings",
     "language": "Language",
     "units": "Units",
+    "eatBack": "Eat back activity calories",
+    "eatBackHint": "Add steps/workout calories to your eating budget",
     "unitOptions": {
       "metric": "Metric (kg, cm)",
       "imperial": "Imperial (lb, in)"

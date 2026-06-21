@@ -17,8 +17,8 @@ export function SettingsScreen() {
     apiGet<Settings>("/settings").then(setSettings).catch(() => undefined);
   }, []);
 
-  const updateUnits = async (unit_system: UnitSystem) => {
-    const next = await apiPut<Settings>("/settings", { unit_system });
+  const save = async (patch: Partial<Settings>) => {
+    const next = await apiPut<Settings>("/settings", patch);
     setSettings(next);
     setSaved(true);
     window.setTimeout(() => setSaved(false), 1500);
@@ -39,7 +39,7 @@ export function SettingsScreen() {
           <select
             className="select select--auto"
             value={settings?.unit_system ?? "metric"}
-            onChange={(e) => updateUnits(e.target.value as UnitSystem)}
+            onChange={(e) => save({ unit_system: e.target.value as UnitSystem })}
           >
             {UNIT_OPTIONS.map((u) => (
               <option key={u} value={u}>
@@ -47,6 +47,20 @@ export function SettingsScreen() {
               </option>
             ))}
           </select>
+        </div>
+        <div className="setting-row">
+          <span>
+            {t("settings.eatBack")}
+            <small className="muted setting-sub">{t("settings.eatBackHint")}</small>
+          </span>
+          <label className="toggle">
+            <input
+              type="checkbox"
+              checked={settings?.eat_back_activity ?? false}
+              onChange={(e) => save({ eat_back_activity: e.target.checked })}
+            />
+            <span className="toggle__track" />
+          </label>
         </div>
         <p className="muted setting-note">{t("settings.note")}</p>
         {saved && <div className="alert alert--ok">{t("settings.saved")}</div>}

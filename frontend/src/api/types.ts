@@ -71,6 +71,13 @@ export interface ActivityLevelInfo {
 export interface Settings {
   language: Language;
   unit_system: UnitSystem;
+  eat_back_activity: boolean;
+}
+
+export interface Steps {
+  date: string;
+  steps: number;
+  kcal: string;
 }
 
 // --- weight (Phase 2) ---
@@ -132,6 +139,10 @@ export interface Today {
   macros: MacroResult;
   consumed: Consumed;
   remaining_kcal: string;
+  steps: number;
+  activity_kcal: string;
+  net_deficit_kcal: string;
+  eat_back_activity: boolean;
 }
 
 // --- food + diary (Phase 4) ---

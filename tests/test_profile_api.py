@@ -65,9 +65,10 @@ def test_activity_levels_metadata(client):
 
 
 def test_settings_defaults_and_update(client):
-    got = client.get("/api/settings")
-    assert got.status_code == 200
-    assert got.json() == {"language": "en", "unit_system": "metric"}
+    got = client.get("/api/settings").json()
+    assert got["language"] == "en"
+    assert got["unit_system"] == "metric"
+    assert got["eat_back_activity"] is False
 
     upd = client.put("/api/settings", json={"language": "de"})
     assert upd.status_code == 200
