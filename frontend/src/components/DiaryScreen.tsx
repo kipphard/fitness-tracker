@@ -11,7 +11,7 @@ import {
   type MealSlot,
 } from "../api/types";
 import { useApi } from "../hooks/useApi";
-import { kcal, num, oneDecimal } from "../lib/format";
+import { addDays, kcal, num, oneDecimal, todayIso } from "../lib/format";
 import { Card } from "./Card";
 import { PhotoEstimatePanel } from "./PhotoEstimatePanel";
 
@@ -30,14 +30,6 @@ interface Selectable {
   barcode?: string | null;
 }
 
-function todayIso(): string {
-  return new Date().toISOString().slice(0, 10);
-}
-function addDays(iso: string, n: number): string {
-  const d = new Date(iso + "T00:00:00");
-  d.setDate(d.getDate() + n);
-  return d.toISOString().slice(0, 10);
-}
 function toSelectable(f: Food | FoodData): Selectable {
   return {
     id: "id" in f ? f.id : undefined,
