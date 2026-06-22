@@ -6,18 +6,16 @@ import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from "recha
 import { apiPut } from "../api/client";
 import type { MacroPrefs, Today, WeighIn } from "../api/types";
 import { useApi } from "../hooks/useApi";
-import { kcal, num, oneDecimal } from "../lib/format";
+import { addDays, kcal, num, oneDecimal, todayIso } from "../lib/format";
 import { Card } from "./Card";
 
 const MACRO_COLORS = { protein: "#6366f1", carbs: "#f59e0b", fat: "#10b981" };
 
-function todayIso(): string {
-  return new Date().toISOString().slice(0, 10);
-}
-
 export function TodayScreen() {
   const { t } = useTranslation();
-  const today = useApi<Today>("/today");
+  const [date, setDate] = useState(todayIso());
+  const isToday = date === todayIso();
+  const today = useApi<Today>(`/today?date=${date}`);
   const prefs = useApi<MacroPrefs>("/macros");
   const weighIns = useApi<WeighIn[]>("/weight");
 
@@ -43,7 +41,7 @@ export function TodayScreen() {
   const saveSteps = async () => {
     const n = Number(stepsInput);
     if (!Number.isFinite(n) || n < 0) return;
-    await apiPut("/steps", { steps: Math.round(n) }).catch(() => undefined);
+    await apiPut("/steps", { steps: Math.round(n), date }).catch(() => undefined);
   };
 
   const logWeight = async (e: React.FormEvent) => {
@@ -118,12 +116,28 @@ export function TodayScreen() {
 
   return (
     <div className="screen">
-      <header className="screen__head">
+      <header className="screen__head diary-head">
         <h1>{t("today.title")}</h1>
-        <p className="muted">{t("today.subtitle")}</p>
+        <div className="date-nav">
+          <button className="icon-btn" onClick={() => setDate(addDays(date, -1))} aria-label={t("diary.prev")}>
+            ‹
+          </button>
+          <input className="input" type="date" value={date} max={todayIso()} onChange={(e) => setDate(e.target.value)} />
+          <button
+            className="icon-btn"
+            onClick={() => setDate(addDays(date, 1))}
+            aria-label={t("diary.next")}
+            disabled={isToday}
+          >
+            ›
+          </button>
+          <button className="btn btn--ghost btn--sm" onClick={() => setDate(todayIso())} disabled={isToday}>
+            {t("diary.todayBtn")}
+          </button>
+        </div>
       </header>
 
-      {weighIns.data && !weighedToday && (
+      {isToday && weighIns.data && !weighedToday && (
         <Card title={t("today.weighInTitle")}>
           <p className="muted today-weigh__prompt">{t("today.weighInPrompt")}</p>
           <form className="form today-weigh" onSubmit={logWeight}>

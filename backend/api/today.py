@@ -9,7 +9,7 @@ from dataclasses import asdict
 from datetime import date
 from decimal import Decimal
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 
 from backend.api.deps import CurrentUser, SessionDep
 from backend.api.diary import sum_consumed
@@ -24,13 +24,18 @@ router = APIRouter(tags=["today"])
 
 
 @router.get("/today", response_model=TodayOut)
-def today(session: SessionDep, user: CurrentUser) -> TodayOut:
+def today(
+    session: SessionDep,
+    user: CurrentUser,
+    on: date | None = Query(default=None, alias="date"),
+) -> TodayOut:
+    day = on or date.today()
     profile = repository.get_profile(session, user.id)
     if profile is None:
         raise HTTPException(status_code=404, detail="profile not set")
 
     points = [(w.date, w.weight_kg) for w in repository.list_weigh_ins(session, user.id)]
-    weight_kg, source = wtrend.effective_weight(points, date.today(), profile.weight_kg)
+    weight_kg, source = wtrend.effective_weight(points, day, profile.weight_kg)
     cal = engine.compute(
         gender=profile.gender,
         weight_kg=weight_kg,
@@ -49,9 +54,9 @@ def today(session: SessionDep, user: CurrentUser) -> TodayOut:
         cal.target, weight_kg, protein_g_per_kg, fat_g_per_kg
     )
 
-    consumed = sum_consumed(repository.list_food_logs(session, user.id, date.today()))
+    consumed = sum_consumed(repository.list_food_logs(session, user.id, day))
 
-    step_log = repository.get_step_log(session, user.id, date.today())
+    step_log = repository.get_step_log(session, user.id, day)
     steps = step_log.steps if step_log else 0
     activity_kcal = steps_to_kcal(steps, weight_kg)
 
@@ -60,7 +65,7 @@ def today(session: SessionDep, user: CurrentUser) -> TodayOut:
     budget = cal.target + (activity_kcal if eat_back else Decimal(0))
 
     return TodayOut(
-        date=date.today(),
+        date=day,
         calories=MyCaloriesOut(
             **asdict(cal), weight_kg=weight_kg, weight_source=source.value
         ),
