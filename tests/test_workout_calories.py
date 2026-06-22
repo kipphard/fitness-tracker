@@ -51,5 +51,22 @@ def test_custom_met():
     assert kcal == Decimal("600")
 
 
+def test_short_recorded_duration_floors_to_set_estimate():
+    # Regression: 14 sets "finished" 3 min after start (logged fast / backfilled) must not
+    # collapse to a 3-min burn — fall back to the set-count estimate (14 × 3.5 min = 49 min).
+    kcal = session_kcal(
+        Decimal("95"), started_at=START, ended_at=START + timedelta(minutes=3), set_count=14
+    )
+    assert kcal == DEFAULT_MET * Decimal("95") * (Decimal("49") / Decimal("60"))
+
+
 def test_empty_unfinished_session_is_zero():
     assert session_kcal(Decimal("80"), started_at=START, ended_at=None, set_count=0) == Decimal("0")
+
+
+def test_empty_finished_session_is_zero():
+    # A session with no sets burns nothing even if it was left open and then finished.
+    kcal = session_kcal(
+        Decimal("80"), started_at=START, ended_at=START + timedelta(hours=1), set_count=0
+    )
+    assert kcal == Decimal("0")

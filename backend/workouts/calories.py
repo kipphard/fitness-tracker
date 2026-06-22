@@ -1,9 +1,12 @@
 """Pure workout → calorie estimation (issue #3).
 
 MET-based: ``kcal = MET × weight(kg) × hours``. Strength training sits around 3.5 (light) to
-6.0 (vigorous) MET; we default to 5.0. Duration comes from ``started_at → ended_at``; sessions
-the user never "finished" have no end time, so we fall back to a rough estimate from set count
-(~3.5 min per set, including rest). A manual ``kcal_override`` short-circuits everything.
+6.0 (vigorous) MET; we default to 5.0. Duration is estimated from set count (~3.5 min per set,
+including rest) — the reliable signal for lifting. Recorded wall-clock (``started_at →
+ended_at``) is used only when it's *longer* than that estimate: it's frequently implausibly
+short (all sets tapped in quickly, or a past workout backfilled), so it must never drag the burn
+below the set-count floor. An empty session (no sets) burns nothing; a manual ``kcal_override``
+short-circuits everything.
 
 Like step burn, this is a first-order estimate — the adaptive-TDEE correction (issue #4) absorbs
 the systematic error. No I/O; Decimal only.
@@ -32,11 +35,16 @@ def _dec(value: Decimal | int | float | str) -> Decimal:
 def _duration_hours(
     started_at: datetime | None, ended_at: datetime | None, set_count: int
 ) -> Decimal:
-    """Workout hours: measured (started→ended) if finished, else estimated from set count."""
+    """Workout hours, capped at MAX_HOURS.
+
+    The set-count estimate (~MIN_PER_SET each, incl. rest) is the floor. Recorded wall-clock is
+    used only when it's longer — a too-short recorded time (fast logging / backfill) never lowers
+    the burn below what the logged sets imply.
+    """
+    hours = _dec(set_count) * MIN_PER_SET / Decimal(60)
     if started_at is not None and ended_at is not None and ended_at > started_at:
-        hours = _dec(str((ended_at - started_at).total_seconds())) / Decimal(3600)
-    else:
-        hours = _dec(set_count) * MIN_PER_SET / Decimal(60)
+        measured = _dec(str((ended_at - started_at).total_seconds())) / Decimal(3600)
+        hours = max(measured, hours)
     return min(hours, MAX_HOURS)
 
 
@@ -52,4 +60,6 @@ def session_kcal(
     """Calories burned in one workout session."""
     if kcal_override is not None:
         return _dec(kcal_override)
+    if set_count <= 0:  # a session started then abandoned (no sets logged) burns nothing
+        return Decimal(0)
     return _dec(met) * _dec(weight_kg) * _duration_hours(started_at, ended_at, set_count)
