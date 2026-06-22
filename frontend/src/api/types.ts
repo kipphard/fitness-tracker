@@ -141,6 +141,7 @@ export interface Today {
   remaining_kcal: string;
   steps: number;
   activity_kcal: string;
+  workout_kcal: string;
   net_deficit_kcal: string;
   eat_back_activity: boolean;
 }

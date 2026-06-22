@@ -370,6 +370,26 @@ def list_workout_sessions(
     )
 
 
+def list_workout_sessions_between(
+    session: Session,
+    user_id: uuid.UUID,
+    start: datetime,
+    end: datetime,
+) -> list[WorkoutSession]:
+    """Sessions started in the half-open UTC window [start, end) — for one calendar day."""
+    return list(
+        session.scalars(
+            select(WorkoutSession)
+            .where(
+                WorkoutSession.user_id == user_id,
+                WorkoutSession.started_at >= start,
+                WorkoutSession.started_at < end,
+            )
+            .order_by(WorkoutSession.started_at)
+        )
+    )
+
+
 def finish_workout_session(ws: WorkoutSession) -> WorkoutSession:
     ws.ended_at = datetime.now(timezone.utc)
     return ws

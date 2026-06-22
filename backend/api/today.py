@@ -6,7 +6,7 @@ derived from the profile, the self-correcting weight (Phase 2), and macro prefer
 from __future__ import annotations
 
 from dataclasses import asdict
-from datetime import date
+from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 
 from fastapi import APIRouter, HTTPException, Query
@@ -19,6 +19,7 @@ from backend.persistence import repository
 from backend.schemas import MacroResultOut, MyCaloriesOut, TodayOut
 from backend.steps.convert import steps_to_kcal
 from backend.weight import trend as wtrend
+from backend.workouts.calories import session_kcal
 
 router = APIRouter(tags=["today"])
 
@@ -28,6 +29,7 @@ def today(
     session: SessionDep,
     user: CurrentUser,
     on: date | None = Query(default=None, alias="date"),
+    tz: int = Query(default=0, alias="tz", description="minutes east of UTC (e.g. Berlin DST = 120)"),
 ) -> TodayOut:
     day = on or date.today()
     profile = repository.get_profile(session, user.id)
@@ -58,7 +60,29 @@ def today(
 
     step_log = repository.get_step_log(session, user.id, day)
     steps = step_log.steps if step_log else 0
-    activity_kcal = steps_to_kcal(steps, weight_kg)
+
+    # Workout burn: sessions whose local calendar day is `day`. `tz` (minutes east of UTC)
+    # turns the local day into a UTC window so a session is counted on the day it happened.
+    local_midnight = datetime(day.year, day.month, day.day, tzinfo=timezone.utc)
+    start_utc = local_midnight - timedelta(minutes=tz)
+    sessions = repository.list_workout_sessions_between(
+        session, user.id, start_utc, start_utc + timedelta(days=1)
+    )
+    workout_kcal = sum(
+        (
+            session_kcal(
+                weight_kg,
+                started_at=s.started_at,
+                ended_at=s.ended_at,
+                set_count=len(s.sets),
+            )
+            for s in sessions
+        ),
+        Decimal(0),
+    )
+
+    # activity_kcal = steps + workouts → flows into net deficit and (with eat-back) the budget.
+    activity_kcal = steps_to_kcal(steps, weight_kg) + workout_kcal
 
     prefs = repository.get_settings(session, user.id)
     eat_back = bool(prefs.eat_back_activity) if prefs else False
@@ -74,6 +98,7 @@ def today(
         remaining_kcal=budget - consumed.kcal,
         steps=steps,
         activity_kcal=activity_kcal,
+        workout_kcal=workout_kcal,
         net_deficit_kcal=(cal.maintenance + activity_kcal) - consumed.kcal,
         eat_back_activity=eat_back,
     )

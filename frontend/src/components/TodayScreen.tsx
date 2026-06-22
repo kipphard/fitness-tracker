@@ -15,7 +15,9 @@ export function TodayScreen() {
   const { t } = useTranslation();
   const [date, setDate] = useState(todayIso());
   const isToday = date === todayIso();
-  const today = useApi<Today>(`/today?date=${date}`);
+  // tz = minutes east of UTC, so workout sessions land on the right local day.
+  const tz = -new Date().getTimezoneOffset();
+  const today = useApi<Today>(`/today?date=${date}&tz=${tz}`);
   const prefs = useApi<MacroPrefs>("/macros");
   const weighIns = useApi<WeighIn[]>("/weight");
 
@@ -87,7 +89,11 @@ export function TodayScreen() {
     );
   }
 
-  const { calories, macros, consumed, remaining_kcal, activity_kcal } = today.data;
+  const { calories, macros, consumed, remaining_kcal, activity_kcal, workout_kcal } =
+    today.data;
+  // activity_kcal = step burn + workout burn; split them back out for the breakdown rows.
+  const stepKcal = num(activity_kcal) - num(workout_kcal);
+  const hasWorkout = num(workout_kcal) > 0;
   const weighedToday = (weighIns.data ?? []).some((w) => w.date === todayIso());
   // The deliberate cut/bulk gap your goal targets (maintenance − target), independent of intake.
   const plannedDeficit = num(calories.maintenance) - num(calories.target);
@@ -193,9 +199,15 @@ export function TodayScreen() {
                 onChange={(e) => setStepsInput(e.target.value)}
                 onBlur={saveSteps}
               />
-              <span className="muted tnum">+{kcal(activity_kcal)}</span>
+              <span className="muted tnum">+{kcal(stepKcal)}</span>
             </span>
           </div>
+          {hasWorkout && (
+            <div className="result-row">
+              <span className="muted">{t("today.workout")}</span>
+              <span className="muted tnum">+{kcal(workout_kcal)}</span>
+            </div>
+          )}
           <div className="result-row result-row--divider">
             <span className="muted">{t("today.plannedDeficit")}</span>
             <span className="tnum">{kcal(plannedDeficit)}</span>

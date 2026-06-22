@@ -285,6 +285,7 @@ class TodayOut(BaseModel):
     remaining_kcal: Decimal
     steps: int
     activity_kcal: Decimal
+    workout_kcal: Decimal
     net_deficit_kcal: Decimal
     eat_back_activity: bool
 

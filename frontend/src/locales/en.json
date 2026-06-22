@@ -42,6 +42,7 @@
     "eaten": "Eaten",
     "left": "Left",
     "steps": "Steps",
+    "workout": "Workout",
     "netDeficit": "Net deficit",
     "openDiary": "Open diary →",
     "macrosTitle": "Macro targets",
@@ -58,7 +59,7 @@
     "logWeightBtn": "Log weight",
     "maintenance": "Maintenance",
     "plannedDeficit": "Planned deficit",
-    "netDeficitHint": "Maintenance − eaten + steps",
+    "netDeficitHint": "Maintenance − eaten + steps + workouts",
     "weeklyLoss": "Weight loss",
     "weeklyGain": "Weight gain",
     "kgPerWeek": "kg/week"

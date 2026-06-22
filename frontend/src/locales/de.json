@@ -42,6 +42,7 @@
     "eaten": "Gegessen",
     "left": "Übrig",
     "steps": "Schritte",
+    "workout": "Training",
     "netDeficit": "Netto-Defizit",
     "openDiary": "Tagebuch öffnen →",
     "macrosTitle": "Makroziele",
@@ -58,7 +59,7 @@
     "logWeightBtn": "Gewicht eintragen",
     "maintenance": "Erhaltungsbedarf",
     "plannedDeficit": "Geplantes Defizit",
-    "netDeficitHint": "Erhaltungsbedarf − gegessen + Schritte",
+    "netDeficitHint": "Erhaltungsbedarf − gegessen + Schritte + Training",
     "weeklyLoss": "Gewichtsverlust",
     "weeklyGain": "Gewichtszunahme",
     "kgPerWeek": "kg/Woche"

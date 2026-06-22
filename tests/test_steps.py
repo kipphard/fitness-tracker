@@ -67,6 +67,32 @@ def test_today_net_deficit_and_eat_back(client):
     assert Decimal(t2["remaining_kcal"]) == Decimal("2036")
 
 
+def test_today_includes_workout_calories(client):
+    from datetime import datetime, timezone
+
+    client.put("/api/profile", json=PROFILE)  # maintenance = 2136, weight 80
+    utc_today = datetime.now(timezone.utc).date().isoformat()
+    client.put("/api/steps", json={"date": utc_today, "steps": 10000})  # 400 kcal
+
+    # A workout today with two logged sets (unfinished → estimated from set count).
+    ex = client.get("/api/exercises").json()[0]["id"]
+    sid = client.post("/api/workouts", json={}).json()["id"]
+    for _ in range(2):
+        client.post(f"/api/workouts/{sid}/sets", json={"exercise_id": ex, "weight": "60", "reps": 8})
+
+    # tz=0 so the UTC-stamped session lands on the UTC calendar day we query.
+    t = client.get("/api/today", params={"date": utc_today, "tz": 0}).json()
+    workout = Decimal(t["workout_kcal"])
+    assert workout > 0
+    # activity = steps (400) + workout; net deficit = maintenance + activity − consumed (0).
+    assert Decimal(t["activity_kcal"]) == Decimal("400") + workout
+    assert Decimal(t["net_deficit_kcal"]) == Decimal("2136") + Decimal("400") + workout
+
+    # The workout doesn't bleed into another day.
+    other = client.get("/api/today", params={"date": "2026-01-01", "tz": 0}).json()
+    assert Decimal(other["workout_kcal"]) == Decimal("0")
+
+
 def test_steps_isolated_per_user(client, second_client):
     client.put("/api/steps", json={"steps": 12000})
     assert second_client.get("/api/steps").json()["steps"] == 0
