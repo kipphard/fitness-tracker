@@ -4,8 +4,10 @@ import { useTranslation } from "react-i18next";
 import { apiDelete, apiGet, apiPost } from "../api/client";
 import type { Exercise, WorkoutSession, WorkoutSet } from "../api/types";
 import { useApi } from "../hooks/useApi";
+import { localizedExerciseName } from "../lib/exercise";
 import { oneDecimal } from "../lib/format";
 import { Card } from "./Card";
+import { ExercisePicker } from "./ExercisePicker";
 
 interface ExRef {
   id: string;
@@ -27,11 +29,11 @@ export function LiveSession({
   initialExercises: ExRef[];
   onFinish: () => void;
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const detail = useApi<WorkoutSession>(`/workouts/${sessionId}`);
   const [exercises, setExercises] = useState<ExRef[]>(initialExercises);
   const [library, setLibrary] = useState<Exercise[]>([]);
-  const [addPick, setAddPick] = useState("");
+  const [showPicker, setShowPicker] = useState(false);
   const [last, setLast] = useState<Record<string, WorkoutSet[]>>({});
   const [inputs, setInputs] = useState<Record<string, { weight: string; reps: string }>>({});
   const [rest, setRest] = useState(0);
@@ -74,12 +76,11 @@ export function LiveSession({
     setRest(REST_SECONDS);
   };
 
-  const addExercise = () => {
-    const ex = library.find((e) => e.id === addPick);
-    if (!ex || exercises.some((x) => x.id === ex.id)) return;
-    setExercises((p) => [...p, { id: ex.id, name: ex.name }]);
+  const addExercise = (ex: Exercise) => {
+    setShowPicker(false);
+    if (exercises.some((x) => x.id === ex.id)) return;
+    setExercises((p) => [...p, { id: ex.id, name: localizedExerciseName(ex, i18n.language) }]);
     void fetchLast(ex.id);
-    setAddPick("");
   };
 
   const finish = async () => {
@@ -163,20 +164,19 @@ export function LiveSession({
       })}
 
       <Card title={t("workouts.addExercise")}>
-        <div className="set-input">
-          <select className="select" value={addPick} onChange={(e) => setAddPick(e.target.value)}>
-            <option value="">{t("workouts.pickExercise")}</option>
-            {library.map((e) => (
-              <option key={e.id} value={e.id}>
-                {e.name}
-              </option>
-            ))}
-          </select>
-          <button className="btn btn--ghost btn--sm" onClick={addExercise} disabled={!addPick}>
-            {t("workouts.add")}
-          </button>
-        </div>
+        <button className="btn btn--ghost btn--add-exercise" onClick={() => setShowPicker(true)}>
+          + {t("workouts.pickExercise")}
+        </button>
       </Card>
+
+      {showPicker && (
+        <ExercisePicker
+          exercises={library}
+          excludeIds={exercises.map((x) => x.id)}
+          onClose={() => setShowPicker(false)}
+          onPick={addExercise}
+        />
+      )}
     </div>
   );
 }

@@ -2,7 +2,7 @@
 from decimal import Decimal
 
 
-def _exercise(client, name="Barbell Bench Press"):
+def _exercise(client, name="Barbell Bench Press - Medium Grip"):
     return next(e for e in client.get("/api/exercises").json() if e["name"] == name)
 
 
@@ -27,7 +27,7 @@ def test_create_custom_exercise(client):
 
 def test_routine_crud(client):
     bench = _exercise(client)
-    squat = _exercise(client, "Barbell Back Squat")
+    squat = _exercise(client, "Barbell Squat")
     routine = client.post(
         "/api/routines",
         json={
@@ -40,7 +40,7 @@ def test_routine_crud(client):
     ).json()
     assert routine["name"] == "Upper"
     assert len(routine["exercises"]) == 2
-    assert routine["exercises"][0]["exercise_name"] == "Barbell Bench Press"
+    assert routine["exercises"][0]["exercise_name"] == "Barbell Bench Press - Medium Grip"
     assert routine["exercises"][0]["planned_reps"] == 8
 
     assert any(x["id"] == routine["id"] for x in client.get("/api/routines").json())

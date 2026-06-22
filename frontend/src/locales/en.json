@@ -166,6 +166,12 @@
     "addSet": "Add set",
     "addExercise": "Add an exercise",
     "pickExercise": "Pick an exercise…",
+    "pickExerciseTitle": "Pick an exercise",
+    "searchExercise": "Search exercise",
+    "allEquipment": "All equipment",
+    "allMuscles": "All muscles",
+    "noExerciseMatch": "No matching exercise.",
+    "refineSearch": "Showing {{shown}} of {{total}} — refine your search.",
     "add": "Add",
     "start": "Start a workout",
     "startEmpty": "Start empty workout",
@@ -184,6 +190,41 @@
     "history": "History",
     "setsShort": "sets",
     "noHistory": "No workouts yet."
+  },
+  "exercise": {
+    "muscles": {
+      "abdominals": "Abs",
+      "abductors": "Abductors",
+      "adductors": "Adductors",
+      "biceps": "Biceps",
+      "calves": "Calves",
+      "chest": "Chest",
+      "forearms": "Forearms",
+      "glutes": "Glutes",
+      "hamstrings": "Hamstrings",
+      "lats": "Lats",
+      "lowerback": "Lower back",
+      "middleback": "Upper back",
+      "neck": "Neck",
+      "quadriceps": "Quads",
+      "shoulders": "Shoulders",
+      "traps": "Traps",
+      "triceps": "Triceps"
+    },
+    "equipment": {
+      "barbell": "Barbell",
+      "dumbbell": "Dumbbell",
+      "cable": "Cable",
+      "machine": "Machine",
+      "bodyonly": "Bodyweight",
+      "kettlebells": "Kettlebell",
+      "bands": "Bands",
+      "medicineball": "Medicine ball",
+      "exerciseball": "Exercise ball",
+      "ezcurlbar": "EZ bar",
+      "foamroll": "Foam roll",
+      "other": "Other"
+    }
   },
   "calories": {
     "levels": {

@@ -31,6 +31,20 @@ export default defineConfig({
       workbox: {
         navigateFallback: "/index.html",
         globPatterns: ["**/*.{js,css,html,svg,png,woff2}"],
+        // Exercise illustrations live on the jsDelivr CDN. We don't precache ~870
+        // images (too large); instead cache each lazily the first time it's viewed
+        // online, so the picker's thumbnails work offline afterwards.
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/cdn\.jsdelivr\.net\/gh\/yuhonas\/free-exercise-db/,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "exercise-images",
+              expiration: { maxEntries: 1000, maxAgeSeconds: 60 * 60 * 24 * 60 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+        ],
       },
     }),
   ],

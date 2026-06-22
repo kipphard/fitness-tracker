@@ -13,6 +13,7 @@ from backend.persistence import repository
 from backend.persistence.models import SetType
 from backend.schemas import (
     ExerciseIn,
+    ExerciseListOut,
     ExerciseOut,
     PRsOut,
     ProgressionOut,
@@ -26,12 +27,14 @@ router = APIRouter(prefix="/exercises", tags=["exercises"])
 _ZERO_UUID = uuid.UUID(int=0)
 
 
-@router.get("", response_model=list[ExerciseOut])
+@router.get("", response_model=list[ExerciseListOut])
 def list_exercises(
     session: SessionDep, user: CurrentUser, q: str = ""
-) -> list[ExerciseOut]:
+) -> list[ExerciseListOut]:
+    # The library is large (~870); the picker doesn't render instructions, so the
+    # lightweight ExerciseListOut omits them to keep the list payload small.
     return [
-        ExerciseOut.model_validate(e)
+        ExerciseListOut.model_validate(e)
         for e in repository.search_exercises(session, user.id, q)
     ]
 

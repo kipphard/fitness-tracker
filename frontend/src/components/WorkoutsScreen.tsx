@@ -13,9 +13,11 @@ import {
 import { apiDelete, apiGet, apiPost } from "../api/client";
 import type { Exercise, Progression, Routine, WorkoutSummary } from "../api/types";
 import { useApi } from "../hooks/useApi";
+import { localizedExerciseName } from "../lib/exercise";
 import { num, oneDecimal, shortDate } from "../lib/format";
 import { useTheme } from "../theme";
 import { Card } from "./Card";
+import { ExercisePicker } from "./ExercisePicker";
 import { LiveSession } from "./LiveSession";
 
 interface BuilderItem {
@@ -25,7 +27,7 @@ interface BuilderItem {
 }
 
 export function WorkoutsScreen() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { chart } = useTheme();
   const [active, setActive] = useState<{ id: string; exercises: { id: string; name: string }[] } | null>(null);
 
@@ -35,7 +37,7 @@ export function WorkoutsScreen() {
 
   const [name, setName] = useState("");
   const [items, setItems] = useState<BuilderItem[]>([]);
-  const [pick, setPick] = useState("");
+  const [picker, setPicker] = useState<"routine" | "progression" | null>(null);
 
   const [progId, setProgId] = useState("");
   const [prog, setProg] = useState<Progression | null>(null);
@@ -59,6 +61,13 @@ export function WorkoutsScreen() {
     );
   }
 
+  // Library entries carry the German name; routine/session payloads only carry the
+  // canonical English name, so localize by exercise id where we have the library.
+  const exName = (id: string, fallback: string) => {
+    const e = library.data?.find((x) => x.id === id);
+    return e ? localizedExerciseName(e, i18n.language) : fallback;
+  };
+
   const startEmpty = async () => {
     const s = await apiPost<{ id: string }>("/workouts", {});
     setActive({ id: s.id, exercises: [] });
@@ -67,15 +76,16 @@ export function WorkoutsScreen() {
     const s = await apiPost<{ id: string }>("/workouts", { routine_id: r.id });
     setActive({
       id: s.id,
-      exercises: r.exercises.map((e) => ({ id: e.exercise_id, name: e.exercise_name })),
+      exercises: r.exercises.map((e) => ({ id: e.exercise_id, name: exName(e.exercise_id, e.exercise_name) })),
     });
   };
 
-  const addItem = () => {
-    const ex = (library.data ?? []).find((e) => e.id === pick);
-    if (!ex || items.some((i) => i.exercise_id === ex.id)) return;
-    setItems((p) => [...p, { exercise_id: ex.id, name: ex.name, planned_sets: 3 }]);
-    setPick("");
+  const addItem = (ex: Exercise) => {
+    if (items.some((i) => i.exercise_id === ex.id)) return;
+    setItems((p) => [
+      ...p,
+      { exercise_id: ex.id, name: localizedExerciseName(ex, i18n.language), planned_sets: 3 },
+    ]);
   };
   const createRoutine = async () => {
     if (!name.trim() || items.length === 0) return;
@@ -87,6 +97,7 @@ export function WorkoutsScreen() {
     setItems([]);
   };
 
+  const progExercise = (library.data ?? []).find((e) => e.id === progId);
   const progData = (prog?.points ?? []).map((p) => ({
     label: shortDate(p.date),
     est: num(p.est_1rm),
@@ -111,7 +122,7 @@ export function WorkoutsScreen() {
                   <strong>{r.name}</strong>
                   <span className="muted">
                     {" "}
-                    · {r.exercises.map((e) => e.exercise_name).join(", ") || t("workouts.noExercises")}
+                    · {r.exercises.map((e) => exName(e.exercise_id, e.exercise_name)).join(", ") || t("workouts.noExercises")}
                   </span>
                 </div>
                 <div className="routine-item__actions">
@@ -173,19 +184,9 @@ export function WorkoutsScreen() {
               ))}
             </ul>
           )}
-          <div className="set-input">
-            <select className="select" value={pick} onChange={(e) => setPick(e.target.value)}>
-              <option value="">{t("workouts.pickExercise")}</option>
-              {(library.data ?? []).map((e) => (
-                <option key={e.id} value={e.id}>
-                  {e.name}
-                </option>
-              ))}
-            </select>
-            <button className="btn btn--ghost btn--sm" onClick={addItem} disabled={!pick}>
-              {t("workouts.add")}
-            </button>
-          </div>
+          <button className="btn btn--ghost btn--add-exercise" onClick={() => setPicker("routine")}>
+            + {t("workouts.pickExercise")}
+          </button>
           <button
             className="btn btn--primary"
             onClick={createRoutine}
@@ -196,14 +197,9 @@ export function WorkoutsScreen() {
         </Card>
 
         <Card title={t("workouts.progression")}>
-          <select className="select" value={progId} onChange={(e) => setProgId(e.target.value)}>
-            <option value="">{t("workouts.pickExercise")}</option>
-            {(library.data ?? []).map((e) => (
-              <option key={e.id} value={e.id}>
-                {e.name}
-              </option>
-            ))}
-          </select>
+          <button className="btn btn--ghost btn--add-exercise" onClick={() => setPicker("progression")}>
+            {progExercise ? localizedExerciseName(progExercise, i18n.language) : t("workouts.pickExercise")}
+          </button>
           {prog && prog.points.length > 0 ? (
             <>
               {prog.prs && (
@@ -259,6 +255,19 @@ export function WorkoutsScreen() {
           <p className="muted">{t("workouts.noHistory")}</p>
         )}
       </Card>
+
+      {picker && (
+        <ExercisePicker
+          exercises={library.data ?? []}
+          excludeIds={picker === "routine" ? items.map((i) => i.exercise_id) : []}
+          onClose={() => setPicker(null)}
+          onPick={(ex) => {
+            if (picker === "routine") addItem(ex);
+            else setProgId(ex.id);
+            setPicker(null);
+          }}
+        />
+      )}
     </div>
   );
 }

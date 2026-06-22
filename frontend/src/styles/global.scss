@@ -1092,3 +1092,112 @@ a:hover {
     margin-top: 0.1rem;
   }
 }
+
+/* ── Exercise picker (Hevy-style) ──────────────────────────────────────── */
+.btn--add-exercise {
+  width: 100%;
+  justify-content: center;
+  border: 1px dashed var(--border);
+  margin-top: 0.5rem;
+}
+.picker {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+}
+.picker__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+.picker__head h2 {
+  font-size: 1rem;
+  margin: 0;
+}
+.picker__head .btn--link {
+  padding: 0;
+}
+.picker__spacer {
+  /* balances the cancel button so the title stays centered */
+  min-width: 3.5rem;
+}
+.picker__filters {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+.picker__selects {
+  display: flex;
+  gap: 0.5rem;
+}
+.picker__selects .select {
+  flex: 1;
+  min-width: 0;
+}
+.picker__list {
+  flex: 1;
+  overflow-y: auto;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  -webkit-overflow-scrolling: touch;
+}
+.picker__row {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  width: 100%;
+  padding: 0.6rem 1rem;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  color: var(--text);
+  cursor: pointer;
+}
+.picker__row:active {
+  background: var(--surface-2);
+}
+.exercise-thumb {
+  flex: 0 0 auto;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #fff;
+  border: 1px solid var(--border);
+}
+.exercise-thumb--ph {
+  display: grid;
+  place-items: center;
+  font-size: 1.25rem;
+  background: var(--surface-2);
+}
+.picker__row-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.picker__row-name {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.picker__row-sub {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+.picker__empty,
+.picker__more {
+  padding: 1rem;
+  text-align: center;
+}

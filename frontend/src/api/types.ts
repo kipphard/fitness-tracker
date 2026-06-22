@@ -211,11 +211,13 @@ export interface Exercise {
   id: string;
   source: "lib" | "custom";
   name: string;
+  name_de: string | null;
   primary_muscles: string[] | null;
   secondary_muscles: string[] | null;
   equipment: string | null;
   category: string | null;
   instructions: string | null;
+  image_url: string | null;
 }
 
 export interface RoutineExerciseRef {

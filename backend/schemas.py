@@ -332,17 +332,36 @@ class ExerciseIn(BaseModel):
     instructions: str | None = None
 
 
+class ExerciseListOut(BaseModel):
+    """Lightweight library row for the picker — omits ``instructions`` (the library
+    is ~870 exercises, so the full-text instructions would bloat the list payload)."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    source: str
+    name: str
+    name_de: str | None = None
+    primary_muscles: list[str] | None = None
+    secondary_muscles: list[str] | None = None
+    equipment: str | None = None
+    category: str | None = None
+    image_url: str | None = None
+
+
 class ExerciseOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID
     source: str
     name: str
+    name_de: str | None = None
     primary_muscles: list[str] | None = None
     secondary_muscles: list[str] | None = None
     equipment: str | None = None
     category: str | None = None
     instructions: str | None = None
+    image_url: str | None = None
 
 
 class RoutineExerciseIn(BaseModel):

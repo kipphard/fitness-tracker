@@ -284,11 +284,15 @@ class Exercise(Base):
         Enum(ExerciseSource, name="exercise_source"), nullable=False
     )
     name: Mapped[str] = mapped_column(String(200), nullable=False)
+    name_de: Mapped[str | None] = mapped_column(String(200), nullable=True)
     primary_muscles: Mapped[list | None] = mapped_column(JSONType, nullable=True)
     secondary_muscles: Mapped[list | None] = mapped_column(JSONType, nullable=True)
     equipment: Mapped[str | None] = mapped_column(String(100), nullable=True)
     category: Mapped[str | None] = mapped_column(String(50), nullable=True)
     instructions: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # Relative free-exercise-db image path (e.g. "Barbell_Squat/0.jpg"); the frontend
+    # prefixes a CDN/self-host base. NULL for user-created custom exercises.
+    image_url: Mapped[str | None] = mapped_column(String(300), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_now, nullable=False
     )

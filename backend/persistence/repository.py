@@ -265,7 +265,7 @@ def list_step_logs(session: Session, user_id: uuid.UUID) -> list[StepLog]:
 # --- exercises (global library + per-user custom) ---
 
 def search_exercises(
-    session: Session, user_id: uuid.UUID, query: str = "", limit: int = 100
+    session: Session, user_id: uuid.UUID, query: str = "", limit: int = 2000
 ) -> list[Exercise]:
     seed_library(session)
     stmt = select(Exercise).where(

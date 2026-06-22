@@ -166,6 +166,12 @@
     "addSet": "Satz hinzufügen",
     "addExercise": "Übung hinzufügen",
     "pickExercise": "Übung wählen…",
+    "pickExerciseTitle": "Übung wählen",
+    "searchExercise": "Übung suchen",
+    "allEquipment": "Gesamte Ausrüstung",
+    "allMuscles": "Alle Muskeln",
+    "noExerciseMatch": "Keine passende Übung.",
+    "refineSearch": "{{shown}} von {{total}} angezeigt – Suche verfeinern.",
     "add": "Hinzufügen",
     "start": "Training starten",
     "startEmpty": "Leeres Training starten",
@@ -184,6 +190,41 @@
     "history": "Verlauf",
     "setsShort": "Sätze",
     "noHistory": "Noch kein Training."
+  },
+  "exercise": {
+    "muscles": {
+      "abdominals": "Bauch",
+      "abductors": "Abduktoren",
+      "adductors": "Adduktoren",
+      "biceps": "Bizeps",
+      "calves": "Waden",
+      "chest": "Brust",
+      "forearms": "Unterarme",
+      "glutes": "Gesäß",
+      "hamstrings": "Beinbizeps",
+      "lats": "Latissimus",
+      "lowerback": "Unterer Rücken",
+      "middleback": "Oberer Rücken",
+      "neck": "Nacken",
+      "quadriceps": "Quadrizeps",
+      "shoulders": "Schultern",
+      "traps": "Trapez",
+      "triceps": "Trizeps"
+    },
+    "equipment": {
+      "barbell": "Langhantel",
+      "dumbbell": "Kurzhantel",
+      "cable": "Kabelzug",
+      "machine": "Maschine",
+      "bodyonly": "Körpergewicht",
+      "kettlebells": "Kettlebell",
+      "bands": "Bänder",
+      "medicineball": "Medizinball",
+      "exerciseball": "Gymnastikball",
+      "ezcurlbar": "SZ-Stange",
+      "foamroll": "Faszienrolle",
+      "other": "Sonstiges"
+    }
   },
   "calories": {
     "levels": {
