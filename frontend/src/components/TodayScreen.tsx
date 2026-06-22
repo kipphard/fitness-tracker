@@ -179,6 +179,15 @@ export function TodayScreen() {
             <span className="muted">{t("today.maintenance")}</span>
             <span className="tnum">{kcal(calories.maintenance)}</span>
           </div>
+          {calories.measured_maintenance && (
+            <p className="muted result-hint">
+              {t("today.adaptiveMaintenance", {
+                measured: kcal(calories.measured_maintenance),
+                formula: kcal(calories.formula_maintenance),
+                pct: Math.round(num(calories.tdee_confidence) * 100),
+              })}
+            </p>
+          )}
           <div className="result-row">
             <span className="muted">{t("today.targetLabel")}</span>
             <span className="tnum">{kcal(calories.target)}</span>

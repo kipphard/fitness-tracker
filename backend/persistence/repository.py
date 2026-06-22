@@ -3,9 +3,10 @@ from __future__ import annotations
 
 import uuid
 from datetime import date, datetime, timezone
+from decimal import Decimal
 from typing import Any
 
-from sqlalchemy import or_, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
 from backend.persistence.models import (
@@ -193,6 +194,18 @@ def list_food_logs(
             .order_by(FoodLog.created_at)
         )
     )
+
+
+def daily_intake(
+    session: Session, user_id: uuid.UUID, start: date, end: date
+) -> dict[date, Decimal]:
+    """Total kcal logged per day over [start, end] (only days with logs). For adaptive TDEE."""
+    rows = session.execute(
+        select(FoodLog.date, func.sum(FoodLog.kcal))
+        .where(FoodLog.user_id == user_id, FoodLog.date >= start, FoodLog.date <= end)
+        .group_by(FoodLog.date)
+    ).all()
+    return {d: Decimal(total) for d, total in rows}
 
 
 def get_food_log(

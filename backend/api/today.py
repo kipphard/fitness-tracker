@@ -13,7 +13,7 @@ from fastapi import APIRouter, HTTPException, Query
 
 from backend.api.deps import CurrentUser, SessionDep
 from backend.api.diary import sum_consumed
-from backend.calories import engine
+from backend.calories import adaptive, engine
 from backend.macros import engine as macro_engine
 from backend.persistence import repository
 from backend.schemas import MacroResultOut, MyCaloriesOut, TodayOut
@@ -47,13 +47,28 @@ def today(
         goal=profile.goal,
     )
 
+    # Adaptive TDEE (#4): correct the formula maintenance toward the value measured from intake
+    # vs. weight change, once enough recent data exists. Everything downstream (target, net
+    # deficit, weekly-loss prediction) then uses this self-correcting maintenance.
+    adapt = adaptive.adaptive_maintenance(
+        formula=cal.maintenance,
+        weigh_points=points,
+        intake_by_day=repository.daily_intake(
+            session, user.id, day - timedelta(days=adaptive.WINDOW_DAYS), day
+        ),
+        today=day,
+    )
+    maintenance = adapt.maintenance
+    target = engine.goal_target(maintenance, profile.gender, profile.goal)
+    below_floor = (maintenance + engine.GOAL_ADJUSTMENT[profile.goal]) < cal.floor
+
     prefs = repository.get_macro_target(session, user.id)
     protein_g_per_kg = (
         prefs.protein_g_per_kg if prefs else macro_engine.DEFAULT_PROTEIN_G_PER_KG
     )
     fat_g_per_kg = prefs.fat_g_per_kg if prefs else macro_engine.DEFAULT_FAT_G_PER_KG
     macros = macro_engine.compute_macros(
-        cal.target, weight_kg, protein_g_per_kg, fat_g_per_kg
+        target, weight_kg, protein_g_per_kg, fat_g_per_kg
     )
 
     consumed = sum_consumed(repository.list_food_logs(session, user.id, day))
@@ -86,12 +101,20 @@ def today(
 
     prefs = repository.get_settings(session, user.id)
     eat_back = bool(prefs.eat_back_activity) if prefs else False
-    budget = cal.target + (activity_kcal if eat_back else Decimal(0))
+    budget = target + (activity_kcal if eat_back else Decimal(0))
+
+    cal_data = asdict(cal)
+    cal_data.update(maintenance=maintenance, target=target, below_floor=below_floor)
 
     return TodayOut(
         date=day,
         calories=MyCaloriesOut(
-            **asdict(cal), weight_kg=weight_kg, weight_source=source.value
+            **cal_data,
+            weight_kg=weight_kg,
+            weight_source=source.value,
+            formula_maintenance=adapt.formula,
+            measured_maintenance=adapt.measured,
+            tdee_confidence=adapt.confidence,
         ),
         macros=MacroResultOut.model_validate(macros),
         consumed=consumed,
@@ -99,6 +122,6 @@ def today(
         steps=steps,
         activity_kcal=activity_kcal,
         workout_kcal=workout_kcal,
-        net_deficit_kcal=(cal.maintenance + activity_kcal) - consumed.kcal,
+        net_deficit_kcal=(maintenance + activity_kcal) - consumed.kcal,
         eat_back_activity=eat_back,
     )

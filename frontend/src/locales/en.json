@@ -58,6 +58,7 @@
     "weighInPrompt": "You haven't logged your weight today — add it to keep your target accurate.",
     "logWeightBtn": "Log weight",
     "maintenance": "Maintenance",
+    "adaptiveMaintenance": "Adjusted from your data: measured ≈ {{measured}} (formula {{formula}}) · {{pct}}% confidence",
     "plannedDeficit": "Planned deficit",
     "netDeficitHint": "Maintenance − eaten + steps + workouts",
     "weeklyLoss": "Weight loss",
@@ -288,7 +289,12 @@
     "weightTrend": "Weight trend",
     "weeklyChange": "Change vs last week",
     "weeklyAvg": "Weekly average",
-    "noWeight": "Log weigh-ins to see your weight trend."
+    "noWeight": "Log weigh-ins to see your weight trend.",
+    "maintenanceTitle": "Maintenance (measured vs. formula)",
+    "measuredMaintenance": "Measured maintenance",
+    "formulaMaintenance": "Formula estimate",
+    "maintenanceHint": "Learned from {{days}} days of intake vs. weight change · {{pct}}% confidence",
+    "maintenanceLearning": "Keep logging food and weight — after ~2 weeks your real maintenance is measured here and feeds your target."
   },
   "body": {
     "title": "Body measurements",
