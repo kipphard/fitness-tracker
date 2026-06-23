@@ -415,6 +415,15 @@
   "ai": {
     "unavailable": "AI features are currently unavailable — showing standard results."
   },
+  "demo": {
+    "or": "or",
+    "tryDemo": "Try the live demo",
+    "starting": "Starting demo…",
+    "tryHint": "No sign-up — a private sandbox with sample data that resets automatically.",
+    "banner": "Live demo — your changes are private and reset automatically",
+    "builtBy": "Built by André Kipphard",
+    "dismiss": "Dismiss"
+  },
   "pantry": {
     "title": "Pantry",
     "hint": "Foods you have at home. Suggestions and day plans prefer these first.",

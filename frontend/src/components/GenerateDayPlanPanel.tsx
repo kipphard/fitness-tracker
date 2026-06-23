@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
 import { apiGet, apiPost } from "../api/client";
+import { useAuth } from "../auth";
 import type {
   DayPlanResponse,
   PlanMeal,
@@ -29,6 +30,7 @@ export function GenerateDayPlanPanel({
   onClose: () => void;
 }) {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const [data, setData] = useState<DayPlanResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [aiLoading, setAiLoading] = useState(false);
@@ -266,7 +268,7 @@ export function GenerateDayPlanPanel({
           {data.notes && data.source === "ai" && <p className="muted">{data.notes}</p>}
           <p className="muted setting-note">{t("plan.disclaimer")}</p>
 
-          {data.ai_available ? (
+          {data.ai_available && !user?.is_demo ? (
             <div className="suggest-ai">
               {planContext && (
                 <p className="muted">{t("plan.using", { context: planContext })}</p>

@@ -2,6 +2,7 @@ import { Suspense, lazy, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { apiDelete, apiGet, apiPatch, apiPost } from "../api/client";
+import { useAuth } from "../auth";
 import {
   MEAL_SLOTS,
   type DiaryDay,
@@ -52,6 +53,7 @@ const EMPTY_CUSTOM = { name: "", kcal: "", protein: "", fat: "", carbs: "", serv
 
 export function DiaryScreen() {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const [date, setDate] = useState(todayIso());
   const day = useApi<DiaryDay>(`/diary?date=${date}`);
   const recent = useApi<Food[]>("/diary/recent");
@@ -579,7 +581,7 @@ export function DiaryScreen() {
             file={photoFile}
             date={date}
             defaultSlot={slot}
-            aiAvailable={todayInfo.data?.ai_available ?? true}
+            aiAvailable={(todayInfo.data?.ai_available ?? true) && !user?.is_demo}
             onClose={() => setPhotoFile(null)}
           />
         </Modal>

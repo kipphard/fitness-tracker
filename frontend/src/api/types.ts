@@ -4,6 +4,7 @@ export interface UserOut {
   id: string;
   email: string;
   created_at: string;
+  is_demo?: boolean;
 }
 
 export interface TokenResponse {

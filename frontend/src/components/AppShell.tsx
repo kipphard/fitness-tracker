@@ -7,6 +7,7 @@ import { useTheme } from "../theme";
 import { ActivityExplainer } from "./explainers/ActivityExplainer";
 import { FormulaExplainer } from "./explainers/FormulaExplainer";
 import { BodyScreen } from "./BodyScreen";
+import { DemoBanner } from "./DemoBanner";
 import { DiaryScreen } from "./DiaryScreen";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { PantryScreen } from "./PantryScreen";
@@ -86,6 +87,7 @@ export function AppShell() {
       </aside>
 
       <main className="app-main">
+        <DemoBanner />
         <Routes>
           <Route path="/" element={<TodayScreen />} />
           <Route path="/diary" element={<DiaryScreen />} />

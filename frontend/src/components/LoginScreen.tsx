@@ -5,21 +5,20 @@ import { useAuth } from "../auth";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 
 export function LoginScreen() {
-  const { login, register } = useAuth();
+  const { login, demoLogin } = useAuth();
   const { t } = useTranslation();
-  const [mode, setMode] = useState<"login" | "register">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [demoBusy, setDemoBusy] = useState(false);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true);
     setError(null);
     try {
-      if (mode === "login") await login(email, password);
-      else await register(email, password);
+      await login(email, password);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -27,7 +26,16 @@ export function LoginScreen() {
     }
   };
 
-  const title = mode === "login" ? t("auth.signInTitle") : t("auth.registerTitle");
+  const startDemo = async () => {
+    setDemoBusy(true);
+    setError(null);
+    try {
+      await demoLogin();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+      setDemoBusy(false);
+    }
+  };
 
   return (
     <div className="auth-screen">
@@ -37,7 +45,7 @@ export function LoginScreen() {
           <LanguageSwitcher />
         </div>
         <p className="muted auth-card__tagline">{t("auth.tagline")}</p>
-        <h1>{title}</h1>
+        <h1>{t("auth.signInTitle")}</h1>
 
         <label className="field">
           <span>{t("auth.email")}</span>
@@ -56,31 +64,31 @@ export function LoginScreen() {
           <input
             className="input"
             type="password"
-            autoComplete={mode === "login" ? "current-password" : "new-password"}
+            autoComplete="current-password"
             required
             minLength={8}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
-          {mode === "register" && <small className="muted">{t("auth.passwordHint")}</small>}
         </label>
 
         {error && <div className="error">{error}</div>}
 
-        <button className="btn btn--primary" type="submit" disabled={busy}>
-          {mode === "login" ? t("auth.signIn") : t("auth.register")}
+        <button className="btn btn--primary" type="submit" disabled={busy || demoBusy}>
+          {t("auth.signIn")}
         </button>
 
+        <div className="auth-divider"><span>{t("demo.or")}</span></div>
+
         <button
-          className="btn btn--link"
+          className="btn btn--ghost"
           type="button"
-          onClick={() => {
-            setMode(mode === "login" ? "register" : "login");
-            setError(null);
-          }}
+          onClick={startDemo}
+          disabled={busy || demoBusy}
         >
-          {mode === "login" ? t("auth.toRegister") : t("auth.toLogin")}
+          {demoBusy ? t("demo.starting") : `🎬 ${t("demo.tryDemo")}`}
         </button>
+        <small className="muted auth-card__demo-hint">{t("demo.tryHint")}</small>
       </form>
     </div>
   );

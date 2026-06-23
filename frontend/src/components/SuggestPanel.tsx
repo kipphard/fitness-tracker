@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { apiPost } from "../api/client";
+import { useAuth } from "../auth";
 import {
   MEAL_SLOTS,
   type MealSlot,
@@ -27,6 +28,7 @@ export function SuggestPanel({
   onClose: () => void;
 }) {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const [data, setData] = useState<SuggestResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -264,9 +266,9 @@ export function SuggestPanel({
 
           {data.notes && data.source === "ai" && <p className="muted">{data.notes}</p>}
 
-          {!data.ai_available && <AiUnavailableNote />}
+          {!(data.ai_available && !user?.is_demo) && <AiUnavailableNote />}
 
-          {data.ai_available && (
+          {data.ai_available && !user?.is_demo && (
             <div className="suggest-ai">
               {showPrefs && (
                 <textarea

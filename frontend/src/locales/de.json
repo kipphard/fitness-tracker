@@ -415,6 +415,15 @@
   "ai": {
     "unavailable": "KI-Funktionen sind derzeit nicht verfügbar — Standardergebnisse werden angezeigt."
   },
+  "demo": {
+    "or": "oder",
+    "tryDemo": "Live-Demo ausprobieren",
+    "starting": "Demo wird gestartet…",
+    "tryHint": "Keine Anmeldung — eine private Sandbox mit Beispieldaten, die sich automatisch zurücksetzt.",
+    "banner": "Live-Demo — deine Änderungen sind privat und werden automatisch zurückgesetzt",
+    "builtBy": "Erstellt von André Kipphard",
+    "dismiss": "Schließen"
+  },
   "pantry": {
     "title": "Vorrat",
     "hint": "Lebensmittel, die du zu Hause hast. Vorschläge und Tagespläne bevorzugen diese.",
