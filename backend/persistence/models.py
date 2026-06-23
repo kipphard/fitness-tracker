@@ -245,6 +245,30 @@ class FoodLog(Base):
     )
 
 
+class PantryItem(Base):
+    """A food the user has at home (issue #5 §2). Suggestions and day plans prefer these
+    ("use what you have first"). References a saved Food so the macros are reusable."""
+
+    __tablename__ = "pantry_items"
+    __table_args__ = (
+        UniqueConstraint("user_id", "food_id", name="uq_pantry_user_food"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(GUID, primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        GUID, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    food_id: Mapped[uuid.UUID] = mapped_column(
+        GUID, ForeignKey("foods.id", ondelete="CASCADE"), nullable=False
+    )
+    note: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_now, nullable=False
+    )
+
+    food: Mapped["Food"] = relationship("Food", lazy="joined")
+
+
 class StepLog(Base):
     """Daily step count (one per user+date). Calories are derived on read from the effective
     weight, so they always reflect the current weight. A generic ingestion point — manual entry

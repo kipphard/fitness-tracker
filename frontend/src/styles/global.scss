@@ -801,6 +801,30 @@ a:hover {
   gap: 0.75rem;
   margin-bottom: 0.45rem;
 }
+// Pantry (issue #5 §2): food rows with an add/remove control, and the Diary "have at home" star.
+.food-results__rowwrap {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  .food-results__item {
+    flex: 1;
+  }
+}
+.pantry-star {
+  font-size: 1.05rem;
+  line-height: 1;
+}
+.pantry-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.pantry-row__name {
+  flex: 1;
+  font-weight: 500;
+}
 .serving-edit {
   display: flex;
   align-items: flex-end;

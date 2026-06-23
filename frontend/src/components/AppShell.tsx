@@ -9,6 +9,7 @@ import { FormulaExplainer } from "./explainers/FormulaExplainer";
 import { BodyScreen } from "./BodyScreen";
 import { DiaryScreen } from "./DiaryScreen";
 import { LanguageSwitcher } from "./LanguageSwitcher";
+import { PantryScreen } from "./PantryScreen";
 import { ProfileScreen } from "./ProfileScreen";
 import { SettingsScreen } from "./SettingsScreen";
 import { TodayScreen } from "./TodayScreen";
@@ -31,6 +32,7 @@ const PRIMARY: NavItem[] = [
   { to: "/trends", icon: "📈", key: "trends" },
 ];
 const SECONDARY: NavItem[] = [
+  { to: "/pantry", icon: "🥫", key: "pantry" },
   { to: "/calculator", icon: "🔥", key: "calculator" },
   { to: "/weight", icon: "⚖️", key: "weight" },
   { to: "/body", icon: "📏", key: "body" },
@@ -85,6 +87,7 @@ export function AppShell() {
         <Routes>
           <Route path="/" element={<TodayScreen />} />
           <Route path="/diary" element={<DiaryScreen />} />
+          <Route path="/pantry" element={<PantryScreen />} />
           <Route path="/calculator" element={<ProfileScreen />} />
           <Route path="/weight" element={<WeightScreen />} />
           <Route path="/workouts" element={<WorkoutsScreen />} />

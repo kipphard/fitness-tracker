@@ -166,6 +166,7 @@ def _suggest_context(
     carbs_gap = today.macros.carbs_g - today.consumed.carbs_g
 
     affinity = repository.food_slot_counts(session, user.id, slot) if slot else {}
+    pantry_ids = repository.pantry_food_ids(session, user.id)
     recents = repository.recent_foods(session, user.id, limit=30)
     seen = {f.id for f in recents}
     pool = recents + [
@@ -181,6 +182,7 @@ def _suggest_context(
             per100_carbs_g=f.per100_carbs_g,
             serving_g=f.serving_g,
             slot_affinity=affinity.get(f.id, 0),
+            in_pantry=f.id in pantry_ids,
         )
         for f in pool
         if f.id not in exclude_ids
@@ -330,7 +332,9 @@ def _plan_candidate_pool(session: SessionDep, user: User) -> list[Food]:
     ]
 
 
-def _to_candidate(f: Food, affinity: int = 0) -> "suggest_engine.Candidate":
+def _to_candidate(
+    f: Food, affinity: int = 0, in_pantry: bool = False
+) -> "suggest_engine.Candidate":
     return suggest_engine.Candidate(
         food_id=f.id,
         name=f.name,
@@ -340,6 +344,7 @@ def _to_candidate(f: Food, affinity: int = 0) -> "suggest_engine.Candidate":
         per100_carbs_g=f.per100_carbs_g,
         serving_g=f.serving_g,
         slot_affinity=affinity,
+        in_pantry=in_pantry,
     )
 
 
@@ -396,11 +401,12 @@ def plan_rule(payload: PlanIn, session: SessionDep, user: CurrentUser) -> PlanOu
     kcal, protein, fat, carbs = _plan_basis(today, payload.scope)
 
     foods = _plan_candidate_pool(session, user)
+    pantry_ids = repository.pantry_food_ids(session, user.id)
     by_slot: dict[str, list[suggest_engine.Candidate]] = {}
     for slot, _pct in plan_engine.meal_split(payload.meals):
         affinity = repository.food_slot_counts(session, user.id, MealSlot(slot))
         by_slot[slot] = suggest_engine.dedup_candidates(
-            [_to_candidate(f, affinity.get(f.id, 0)) for f in foods]
+            [_to_candidate(f, affinity.get(f.id, 0), f.id in pantry_ids) for f in foods]
         )
 
     planned = plan_engine.plan_day(
@@ -436,7 +442,10 @@ def plan_ai(
     kcal, protein, fat, carbs = _plan_basis(today, payload.scope)
 
     foods = _plan_candidate_pool(session, user)
-    candidates = suggest_engine.dedup_candidates([_to_candidate(f) for f in foods])
+    pantry_ids = repository.pantry_food_ids(session, user.id)
+    candidates = suggest_engine.dedup_candidates(
+        [_to_candidate(f, in_pantry=f.id in pantry_ids) for f in foods]
+    )
     settings = repository.get_settings(session, user.id)
 
     try:

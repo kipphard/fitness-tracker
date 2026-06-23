@@ -3,7 +3,7 @@ import uuid
 from decimal import Decimal
 
 from backend.food.plan import DEFAULT_MEALS, PlannedMeal, meal_split, plan_day
-from backend.food.suggest import Candidate
+from backend.food.suggest import Candidate, suggest_basket
 from backend.food.suggest_ai import parse_plan
 
 
@@ -90,6 +90,22 @@ def test_plan_day_empty_pool_returns_empty_meals():
 
 def test_plan_day_unknown_meal_count_falls_back_to_default():
     assert meal_split(99) == meal_split(DEFAULT_MEALS)
+
+
+# --- pantry preference ---
+
+
+def test_pantry_bonus_flips_an_otherwise_better_pick():
+    # Protein-heavy gap: pure-protein A is the better macro fit than A+carbs B...
+    a = Candidate(uuid.uuid4(), "A", Decimal("120"), Decimal("30"), Decimal("0"), Decimal("0"))
+    b = Candidate(uuid.uuid4(), "B", Decimal("140"), Decimal("25"), Decimal("0"), Decimal("10"))
+    gaps = dict(remaining_kcal=Decimal("400"), protein_gap=Decimal("40"),
+                fat_gap=Decimal("0"), carbs_gap=Decimal("0"))
+    assert suggest_basket(candidates=[a, b], max_items=1, **gaps)[0].name == "A"
+    # ...but once B is in the pantry, its bonus tips the single pick to B.
+    b_home = Candidate(b.food_id, "B", Decimal("140"), Decimal("25"), Decimal("0"),
+                       Decimal("10"), in_pantry=True)
+    assert suggest_basket(candidates=[a, b_home], max_items=1, **gaps)[0].name == "B"
 
 
 # --- parse_plan ---

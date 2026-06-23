@@ -16,6 +16,7 @@ from backend.persistence.models import (
     Food,
     FoodLog,
     MacroTarget,
+    PantryItem,
     Profile,
     Routine,
     RoutineExercise,
@@ -193,6 +194,60 @@ def list_foods(session: Session, owner_id: uuid.UUID, limit: int = 200) -> list[
             .limit(limit)
         )
     )
+
+
+# --- pantry (foods the user has at home) ---
+
+def list_pantry(session: Session, user_id: uuid.UUID) -> list[PantryItem]:
+    """The user's pantry, newest first. The related Food is eager-loaded (lazy="joined")."""
+    return list(
+        session.scalars(
+            select(PantryItem)
+            .where(PantryItem.user_id == user_id)
+            .order_by(PantryItem.created_at.desc())
+        )
+    )
+
+
+def pantry_food_ids(session: Session, user_id: uuid.UUID) -> set[uuid.UUID]:
+    """Just the food ids in the pantry — for flagging suggestion/plan candidates cheaply."""
+    return set(
+        session.scalars(select(PantryItem.food_id).where(PantryItem.user_id == user_id))
+    )
+
+
+def add_pantry_item(
+    session: Session, user_id: uuid.UUID, food_id: uuid.UUID, note: str | None = None
+) -> PantryItem:
+    """Add a food to the pantry (idempotent: updates the note if it's already there)."""
+    existing = session.scalar(
+        select(PantryItem).where(
+            PantryItem.user_id == user_id, PantryItem.food_id == food_id
+        )
+    )
+    if existing is not None:
+        if note is not None:
+            existing.note = note
+        session.flush()
+        return existing
+    item = PantryItem(user_id=user_id, food_id=food_id, note=note)
+    session.add(item)
+    session.flush()
+    return item
+
+
+def remove_pantry_by_food(
+    session: Session, user_id: uuid.UUID, food_id: uuid.UUID
+) -> bool:
+    item = session.scalar(
+        select(PantryItem).where(
+            PantryItem.user_id == user_id, PantryItem.food_id == food_id
+        )
+    )
+    if item is None:
+        return False
+    session.delete(item)
+    return True
 
 
 # --- diary (food logs) ---

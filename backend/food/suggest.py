@@ -42,6 +42,9 @@ VARIETY_COS = Decimal("0.97")
 # and away from treat-like foods (energy-dense, barely any protein) for real meals.
 AFFINITY_BONUS_PER = Decimal("0.02")
 AFFINITY_BONUS_MAX = Decimal("0.10")
+# "Use what you have first": a food in the user's pantry gets a strong, slot-independent boost
+# (larger than the max slot-affinity bonus) so it's preferred whenever it fits the macro gap.
+PANTRY_BONUS = Decimal("0.15")
 TREAT_PENALTY = Decimal("0.25")
 TREAT_KCAL = Decimal(350)
 TREAT_PROTEIN_FRACTION = Decimal("0.10")
@@ -62,6 +65,7 @@ class Candidate:
     per100_carbs_g: Decimal
     serving_g: Decimal | None = None
     slot_affinity: int = 0  # times the user has logged this food in the target meal slot
+    in_pantry: bool = False  # the user has this at home → prefer it (issue #5 §2)
 
 
 @dataclass(frozen=True)
@@ -259,6 +263,8 @@ def suggest_basket(
             if kcal < MIN_ITEM_KCAL:
                 continue
             score = _cosine(vec, gaps)
+            if c.in_pantry:
+                score += PANTRY_BONUS
             if slot is not None:
                 if c.slot_affinity > 0:
                     score += min(AFFINITY_BONUS_MAX, AFFINITY_BONUS_PER * c.slot_affinity)

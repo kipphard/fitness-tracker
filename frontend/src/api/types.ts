@@ -176,6 +176,13 @@ export interface Food {
 // A transient OFF search result (no id yet).
 export type FoodData = Omit<Food, "id" | "source">;
 
+// --- pantry: foods the user has at home (issue #5 §2) ---
+export interface PantryItem {
+  id: string;
+  note: string | null;
+  food: Food;
+}
+
 export interface DiaryEntry {
   id: string;
   date: string;

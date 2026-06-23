@@ -321,6 +321,21 @@ class TodayOut(BaseModel):
     ai_available: bool = False  # whether Claude features are configured (no API key → False)
 
 
+# --- pantry (issue #5 §2) ---
+
+class PantryItemIn(BaseModel):
+    food_id: uuid.UUID
+    note: str | None = Field(default=None, max_length=200)
+
+
+class PantryItemOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    note: str | None = None
+    food: FoodOut
+
+
 # --- photo estimation (Phase 5) ---
 
 class EstimateItemOut(BaseModel):

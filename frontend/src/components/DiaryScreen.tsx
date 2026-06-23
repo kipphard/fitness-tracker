@@ -9,6 +9,7 @@ import {
   type Food,
   type FoodData,
   type MealSlot,
+  type PantryItem,
   type Today,
 } from "../api/types";
 import { useApi } from "../hooks/useApi";
@@ -51,8 +52,16 @@ export function DiaryScreen() {
   const [date, setDate] = useState(todayIso());
   const day = useApi<DiaryDay>(`/diary?date=${date}`);
   const recent = useApi<Food[]>("/diary/recent");
+  const pantry = useApi<PantryItem[]>("/pantry");
   // tz set below; the flag tells the photo panel whether Claude is configured.
   const todayInfo = useApi<Today>(`/today?date=${date}&tz=${-new Date().getTimezoneOffset()}`);
+
+  const pantrySet = new Set((pantry.data ?? []).map((i) => i.food.id));
+  const togglePantry = (f: Food) =>
+    (pantrySet.has(f.id)
+      ? apiDelete(`/pantry/${f.id}`)
+      : apiPost("/pantry", { food_id: f.id })
+    ).catch(() => undefined);
 
   const [query, setQuery] = useState("");
   const [saved, setSaved] = useState<Food[]>([]);
@@ -285,10 +294,18 @@ export function DiaryScreen() {
 
           <ul className="food-results">
             {visibleResults.map((f) => (
-              <li key={f.id}>
+              <li key={f.id} className="food-results__rowwrap">
                 <button className="food-results__item" onClick={() => setSelected(toSelectable(f))}>
                   <span>{f.name}</span>
                   <span className="muted tnum">{kcal(f.per100_kcal)} / 100g</span>
+                </button>
+                <button
+                  className="icon-btn pantry-star"
+                  onClick={() => togglePantry(f)}
+                  aria-label={t("pantry.toggle")}
+                  title={t("pantry.toggle")}
+                >
+                  {pantrySet.has(f.id) ? "⭐" : "☆"}
                 </button>
               </li>
             ))}

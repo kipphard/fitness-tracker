@@ -62,9 +62,9 @@ Given the remaining calories, the remaining macro targets (how many grams of pro
 are still needed), a list of foods the user already has/eats, and optional preferences, \
 suggest 3-5 single foods with realistic portions that together would help close the gap.
 
-Prefer foods from the user's list (use their exact name and per-100g values when you do). You \
-may also add common, realistic foods when they balance the macros better — especially to hit a \
-protein gap.
+Prefer foods from the user's list (use their exact name and per-100g values when you do), and \
+prefer items marked [at home] first — those are in the user's pantry. You may also add common, \
+realistic foods when they balance the macros better — especially to hit a protein gap.
 
 Use REALISTIC portions: respect normal serving sizes and never suggest absurd amounts (e.g. \
 not 400 g of protein powder — a scoop is ~30 g). Spread a large remaining budget across a few \
@@ -146,8 +146,9 @@ def _format_candidates(candidates: list[Candidate], limit: int = 40) -> str:
     lines = []
     for c in candidates[:limit]:
         serving = f", serving {c.serving_g} g" if c.serving_g else ""
+        home = " [at home]" if c.in_pantry else ""
         lines.append(
-            f"- {c.name} (per 100 g: {c.per100_kcal} kcal, "
+            f"- {c.name}{home} (per 100 g: {c.per100_kcal} kcal, "
             f"{c.per100_protein_g} P / {c.per100_fat_g} F / {c.per100_carbs_g} C{serving})"
         )
     return "\n".join(lines)
@@ -214,8 +215,9 @@ Plan exactly the requested number of meals using the standard slots in order \
 
 Constrain every item to a REALISTIC product the user can actually buy in their country and \
 store (use concrete, common product names). Prefer foods from the user's list (use their exact \
-name and per-100g values when you do). Respect dietary preferences strictly. Use realistic \
-portions and normal serving sizes — never absurd amounts.
+name and per-100g values when you do), and prefer items marked [at home] first — those are in \
+the user's pantry. Respect dietary preferences strictly. Use realistic portions and normal \
+serving sizes — never absurd amounts.
 
 Respond with ONLY a JSON object (no markdown, no prose) of exactly this shape:
 {

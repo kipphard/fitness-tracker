@@ -9,6 +9,7 @@
     "nav": {
       "today": "Today",
       "diary": "Diary",
+      "pantry": "Pantry",
       "calculator": "Calorie needs",
       "weight": "Weight",
       "workouts": "Workouts",
@@ -382,5 +383,17 @@
   },
   "ai": {
     "unavailable": "AI features are currently unavailable — showing standard results."
+  },
+  "pantry": {
+    "title": "Pantry",
+    "hint": "Foods you have at home. Suggestions and day plans prefer these first.",
+    "addTitle": "Add to pantry",
+    "searchPlaceholder": "Search your saved foods…",
+    "add": "Add",
+    "added": "In pantry",
+    "listTitle": "At home ({{count}})",
+    "empty": "Nothing here yet — add foods you have at home, or tap ☆ on a food in the Diary.",
+    "remove": "Remove",
+    "toggle": "Toggle 'have at home'"
   }
 }

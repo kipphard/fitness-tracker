@@ -9,6 +9,7 @@
     "nav": {
       "today": "Heute",
       "diary": "Tagebuch",
+      "pantry": "Vorrat",
       "calculator": "Kalorienbedarf",
       "weight": "Gewicht",
       "workouts": "Training",
@@ -382,5 +383,17 @@
   },
   "ai": {
     "unavailable": "KI-Funktionen sind derzeit nicht verfügbar — Standardergebnisse werden angezeigt."
+  },
+  "pantry": {
+    "title": "Vorrat",
+    "hint": "Lebensmittel, die du zu Hause hast. Vorschläge und Tagespläne bevorzugen diese.",
+    "addTitle": "Zum Vorrat hinzufügen",
+    "searchPlaceholder": "Deine gespeicherten Lebensmittel suchen…",
+    "add": "Hinzufügen",
+    "added": "Im Vorrat",
+    "listTitle": "Zu Hause ({{count}})",
+    "empty": "Noch nichts — füge Lebensmittel hinzu, die du da hast, oder tippe ☆ bei einem Lebensmittel im Tagebuch.",
+    "remove": "Entfernen",
+    "toggle": "„Habe ich zu Hause“ umschalten"
   }
 }
