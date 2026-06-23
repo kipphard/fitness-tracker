@@ -14,6 +14,7 @@ import { useApi } from "../hooks/useApi";
 import { addDays, kcal, num, oneDecimal, todayIso } from "../lib/format";
 import { Card } from "./Card";
 import { PhotoEstimatePanel } from "./PhotoEstimatePanel";
+import { SuggestPanel } from "./SuggestPanel";
 
 // Lazy so the ZXing barcode library only loads when the user opens the scanner.
 const BarcodeScanner = lazy(() =>
@@ -56,7 +57,10 @@ export function DiaryScreen() {
   const [error, setError] = useState<string | null>(null);
   const [showScanner, setShowScanner] = useState(false);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [showSuggest, setShowSuggest] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // tz = minutes east of UTC, so the suggestion's day budget matches the local calendar day.
+  const tz = -new Date().getTimezoneOffset();
 
   const [showCustom, setShowCustom] = useState(false);
   const [showAllRecent, setShowAllRecent] = useState(false);
@@ -316,6 +320,12 @@ export function DiaryScreen() {
                 e.target.value = "";
               }}
             />
+            <button
+              className="btn btn--ghost btn--sm"
+              onClick={() => setShowSuggest((s) => !s)}
+            >
+              ✨ {t("suggest.fillRemaining")}
+            </button>
           </div>
 
           <div className="diary-barcode">
@@ -475,6 +485,15 @@ export function DiaryScreen() {
           )}
         </Card>
       </div>
+
+      {showSuggest && (
+        <SuggestPanel
+          date={date}
+          tz={tz}
+          defaultSlot={slot}
+          onClose={() => setShowSuggest(false)}
+        />
+      )}
 
       {photoFile && (
         <PhotoEstimatePanel

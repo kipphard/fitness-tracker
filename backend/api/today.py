@@ -10,12 +10,14 @@ from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 
 from fastapi import APIRouter, HTTPException, Query
+from sqlalchemy.orm import Session
 
 from backend.api.deps import CurrentUser, SessionDep
 from backend.api.diary import sum_consumed
 from backend.calories import adaptive, engine
 from backend.macros import engine as macro_engine
 from backend.persistence import repository
+from backend.persistence.models import User
 from backend.schemas import MacroResultOut, MyCaloriesOut, TodayOut
 from backend.steps.convert import steps_to_kcal
 from backend.weight import trend as wtrend
@@ -31,7 +33,15 @@ def today(
     on: date | None = Query(default=None, alias="date"),
     tz: int = Query(default=0, alias="tz", description="minutes east of UTC (e.g. Berlin DST = 120)"),
 ) -> TodayOut:
-    day = on or date.today()
+    return compute_today(session, user, on or date.today(), tz)
+
+
+def compute_today(session: Session, user: User, day: date, tz: int = 0) -> TodayOut:
+    """The Today snapshot for ``day`` — targets, consumed, remaining, activity, net deficit.
+
+    Extracted from the route so other endpoints (e.g. "fill remaining calories" suggestions)
+    reuse the exact same remaining-kcal and macro math. Raises 404 if the profile isn't set.
+    """
     profile = repository.get_profile(session, user.id)
     if profile is None:
         raise HTTPException(status_code=404, detail="profile not set")

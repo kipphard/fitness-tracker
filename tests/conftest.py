@@ -18,8 +18,9 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from backend.api.deps import get_off_client, get_vision_client
+from backend.api.deps import get_off_client, get_suggest_client, get_vision_client
 from backend.food.off import FoodData
+from backend.food.suggest_ai import AiSuggestion, AiSuggestResult
 from backend.main import app
 from backend.persistence.database import Base, get_session
 from backend.vision.estimator import EstimateItem, MacroTotal, PhotoEstimate
@@ -76,6 +77,28 @@ class _FakeVision:
         )
 
 
+class _FakeSuggest:
+    """Fake Claude suggestion client (no network / no API key) used in tests."""
+
+    def suggest(
+        self, *, remaining_kcal, protein_gap, fat_gap, carbs_gap, candidates, preferences=None
+    ) -> AiSuggestResult:
+        return AiSuggestResult(
+            suggestions=[
+                AiSuggestion(
+                    name="Greek yogurt",
+                    amount_g=Decimal("200"),
+                    per100_kcal=Decimal("59"),
+                    per100_protein_g=Decimal("10"),
+                    per100_fat_g=Decimal("0.4"),
+                    per100_carbs_g=Decimal("3.6"),
+                    reason="High protein to close your gap.",
+                )
+            ],
+            notes="A protein-forward option.",
+        )
+
+
 @pytest.fixture
 def engine():
     """In-memory SQLite engine for tests."""
@@ -123,6 +146,7 @@ def client(session_factory):
     app.dependency_overrides[get_session] = _override
     app.dependency_overrides[get_off_client] = lambda: _FakeOFF()
     app.dependency_overrides[get_vision_client] = lambda: _FakeVision()
+    app.dependency_overrides[get_suggest_client] = lambda: _FakeSuggest()
     with TestClient(app) as test_client:
         _register(test_client, "user-a@example.com")
         yield test_client

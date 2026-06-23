@@ -724,6 +724,55 @@ a:hover {
   background: var(--surface-2);
 }
 
+/* ── Fill remaining calories (issue #5) ────────────────────────────────── */
+.suggest-gaps {
+  margin: 0.35rem 0 0.75rem;
+  font-size: 0.85rem;
+}
+.suggest-slot {
+  max-width: 14rem;
+  margin-bottom: 0.5rem;
+}
+.suggest-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.suggest-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+.suggest-item__main {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.75rem;
+}
+.suggest-item__name {
+  font-weight: 600;
+}
+.suggest-item__reason {
+  margin: 0;
+  font-size: 0.82rem;
+  font-style: italic;
+}
+.suggest-item__add {
+  align-self: flex-start;
+}
+.suggest-ai {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.9rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--border);
+}
+
 /* ── Prose / explainers ────────────────────────────────────────────────── */
 .formula {
   display: flex;

@@ -209,6 +209,35 @@ export interface PhotoEstimate {
   notes: string;
 }
 
+// --- fill remaining calories (issue #5) ---
+
+export interface Suggestion {
+  food_id: string | null;
+  name: string;
+  amount_g: string;
+  kcal: string;
+  protein_g: string;
+  fat_g: string;
+  carbs_g: string;
+  per100_kcal: string;
+  per100_protein_g: string;
+  per100_fat_g: string;
+  per100_carbs_g: string;
+  reason: string;
+}
+
+export interface SuggestResponse {
+  date: string;
+  remaining_kcal: string;
+  protein_gap_g: string;
+  fat_gap_g: string;
+  carbs_gap_g: string;
+  suggestions: Suggestion[];
+  ai_available: boolean;
+  source: "rule" | "ai";
+  notes: string;
+}
+
 // --- workouts (Phase 7) ---
 
 export type SetType = "warmup" | "working";

@@ -324,5 +324,21 @@
     },
     "saved": "Saved",
     "note": "Imperial input arrives in a later phase; the engine always computes in metric."
+  },
+  "suggest": {
+    "title": "Fill remaining calories",
+    "fillRemaining": "Fill remaining",
+    "loading": "Finding foods to fill your day…",
+    "remaining": "Remaining",
+    "stillNeed": "Still need:",
+    "add": "Add",
+    "added": "Added",
+    "onTarget": "You're on target for today — nothing to fill.",
+    "noCandidates": "Log a few foods first so I can suggest from your own list.",
+    "smarter": "Smarter suggestions",
+    "thinking": "Thinking…",
+    "addPrefs": "Add preferences",
+    "prefsPlaceholder": "e.g. vegetarian, I have chicken and rice at home…",
+    "backToYours": "Back to your foods"
   }
 }

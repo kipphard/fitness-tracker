@@ -324,5 +324,21 @@
     },
     "saved": "Gespeichert",
     "note": "Imperiale Eingabe folgt in einer späteren Phase; die Berechnung erfolgt immer metrisch."
+  },
+  "suggest": {
+    "title": "Restkalorien füllen",
+    "fillRemaining": "Rest füllen",
+    "loading": "Suche Lebensmittel für deinen Tag…",
+    "remaining": "Übrig",
+    "stillNeed": "Noch nötig:",
+    "add": "Hinzufügen",
+    "added": "Hinzugefügt",
+    "onTarget": "Du bist heute auf Kurs — nichts zu füllen.",
+    "noCandidates": "Trag erst ein paar Lebensmittel ein, dann kann ich aus deiner Liste vorschlagen.",
+    "smarter": "Smartere Vorschläge",
+    "thinking": "Denkt nach…",
+    "addPrefs": "Vorlieben angeben",
+    "prefsPlaceholder": "z. B. vegetarisch, ich habe Hähnchen und Reis da…",
+    "backToYours": "Zurück zu deinen Lebensmitteln"
   }
 }

@@ -175,6 +175,19 @@ def search_foods(
     )
 
 
+def list_foods(session: Session, owner_id: uuid.UUID, limit: int = 200) -> list[Food]:
+    """The user's whole food catalogue (custom + cached OFF), newest first. Used as the
+    candidate pool for "fill remaining calories" suggestions."""
+    return list(
+        session.scalars(
+            select(Food)
+            .where(Food.owner_id == owner_id)
+            .order_by(Food.created_at.desc())
+            .limit(limit)
+        )
+    )
+
+
 # --- diary (food logs) ---
 
 def create_food_log(session: Session, user_id: uuid.UUID, **fields: Any) -> FoodLog:

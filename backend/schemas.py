@@ -327,6 +327,49 @@ class PhotoEstimateOut(BaseModel):
     notes: str
 
 
+# --- fill remaining calories (issue #5, section 1) ---
+
+class SuggestIn(BaseModel):
+    date: date_type | None = None  # defaults to today
+    tz: int = Field(default=0, ge=-720, le=840)  # minutes east of UTC
+
+
+class SuggestAiIn(SuggestIn):
+    preferences: str | None = Field(default=None, max_length=500)
+
+
+class SuggestionOut(BaseModel):
+    """A suggested food + portion. ``food_id`` is set for the user's saved foods (log by
+    reference); novel AI foods carry per-100g values so the diary can log them inline."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    food_id: uuid.UUID | None = None
+    name: str
+    amount_g: Decimal
+    kcal: Decimal
+    protein_g: Decimal
+    fat_g: Decimal
+    carbs_g: Decimal
+    per100_kcal: Decimal
+    per100_protein_g: Decimal
+    per100_fat_g: Decimal
+    per100_carbs_g: Decimal
+    reason: str = ""
+
+
+class SuggestOut(BaseModel):
+    date: date_type
+    remaining_kcal: Decimal
+    protein_gap_g: Decimal
+    fat_gap_g: Decimal
+    carbs_gap_g: Decimal
+    suggestions: list[SuggestionOut]
+    ai_available: bool  # whether the AI path is configured (frontend shows the ✨ button)
+    source: str  # "rule" | "ai"
+    notes: str = ""
+
+
 # --- workouts (Phase 7) ---
 
 class ExerciseIn(BaseModel):

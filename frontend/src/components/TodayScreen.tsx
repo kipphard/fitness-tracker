@@ -8,6 +8,7 @@ import type { MacroPrefs, Today, WeighIn } from "../api/types";
 import { useApi } from "../hooks/useApi";
 import { addDays, kcal, num, oneDecimal, todayIso } from "../lib/format";
 import { Card } from "./Card";
+import { SuggestPanel } from "./SuggestPanel";
 
 const MACRO_COLORS = { protein: "#6366f1", carbs: "#f59e0b", fat: "#10b981" };
 
@@ -28,6 +29,7 @@ export function TodayScreen() {
   const [todayWeight, setTodayWeight] = useState("");
   const [loggingWeight, setLoggingWeight] = useState(false);
   const [weightError, setWeightError] = useState<string | null>(null);
+  const [showSuggest, setShowSuggest] = useState(false);
 
   useEffect(() => {
     if (prefs.data) {
@@ -248,9 +250,19 @@ export function TodayScreen() {
             {t("profile.results.weightBasis", { weight: oneDecimal(calories.weight_kg) })} ·{" "}
             {t(`profile.results.source.${calories.weight_source}`)}
           </p>
-          <Link className="btn btn--ghost btn--sm" to="/diary">
-            {t("today.openDiary")}
-          </Link>
+          <div className="diary-actions">
+            {num(remaining_kcal) >= 50 && (
+              <button
+                className="btn btn--primary btn--sm"
+                onClick={() => setShowSuggest((s) => !s)}
+              >
+                {t("suggest.fillRemaining")}
+              </button>
+            )}
+            <Link className="btn btn--ghost btn--sm" to="/diary">
+              {t("today.openDiary")}
+            </Link>
+          </div>
         </Card>
 
         <Card title={t("today.macrosTitle")}>
@@ -292,6 +304,15 @@ export function TodayScreen() {
           </div>
         </Card>
       </div>
+
+      {showSuggest && (
+        <SuggestPanel
+          date={date}
+          tz={tz}
+          defaultSlot="dinner"
+          onClose={() => setShowSuggest(false)}
+        />
+      )}
 
       <Card title={t("today.adjustTitle")}>
         <form className="form macro-adjust" onSubmit={apply}>
