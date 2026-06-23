@@ -1,9 +1,9 @@
 name: Deploy
 
-# Push-to-deploy: build the SPA, rsync the repo to the Hetzner box, run migrations and
-# restart the systemd service. Requires repo secret DEPLOY_SSH_KEY (the deploy key that
-# authorizes root@REDACTED). The server keeps its own /opt/fitness-tracker/.env
-# (excluded from rsync) and .venv. GitHub Actions billing must be active for this to run.
+# Push-to-deploy: build the SPA, rsync the repo to the server, run migrations and restart the
+# systemd service. Requires repo secrets DEPLOY_SSH_KEY (the deploy key) and DEPLOY_HOST (the
+# server IP/hostname). The server keeps its own /opt/fitness-tracker/.env (excluded from rsync)
+# and .venv. GitHub Actions billing must be active for this to run.
 
 on:
   push:
@@ -34,7 +34,7 @@ jobs:
           mkdir -p ~/.ssh
           printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H REDACTED >> ~/.ssh/known_hosts 2>/dev/null
+          ssh-keyscan -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
 
       - name: Rsync code to server
         run: |
@@ -43,11 +43,11 @@ jobs:
             --exclude '.git/' --exclude '.venv/' --exclude '__pycache__/' \
             --exclude '.pytest_cache/' --exclude '.env' --exclude '*.egg-info/' \
             --exclude '.ruff_cache/' --exclude 'frontend/node_modules/' \
-            ./ root@REDACTED:/opt/fitness-tracker/
+            ./ "root@${{ secrets.DEPLOY_HOST }}:/opt/fitness-tracker/"
 
       - name: Install deps, migrate, restart
         run: |
-          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=accept-new root@REDACTED 'bash -se' <<'EOS'
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=accept-new "root@${{ secrets.DEPLOY_HOST }}" 'bash -se' <<'EOS'
           set -euo pipefail
           cd /opt/fitness-tracker
           .venv/bin/pip install --quiet -e .

@@ -1,12 +1,20 @@
 # Fitness Tracker
 
-A self-hosted fitness & nutrition tracker. **Phase 0 (scaffold) + Phase 1 (calorie engine)**:
-user accounts, a profile, settings, and a Kalorienbedarf calculator built on Mifflin-St Jeor
-BMR × an occupational activity factor, with in-app explainer screens (EN/DE). Food logging and
-workout tracking come in later phases.
+A self-hosted fitness & nutrition tracker: adaptive calorie + macro targets (Mifflin-St Jeor BMR
+× activity, with a self-correcting TDEE), food logging (Open Food Facts, barcode scanning,
+serving-aware portions), weight trends, body measurements, a Hevy-style workout tracker (routines,
+live sessions, progression), and optional Claude-assisted meal planning — all as an installable
+PWA in English + German.
 
 > **Not medical or nutrition advice.** The calorie engine includes a safety floor and an
 > excessive-deficit warning, but it is an engineering tool, not a coach.
+
+## Live demo
+
+Try it with no sign-up: open the app and click **"Try the live demo"** (or append `?demo=1` to the
+URL). You get a private, throwaway sandbox seeded with ~45 days of sample data; your changes never
+touch anyone else's data, and the sandbox auto-expires. Paid AI features (the Claude photo
+estimator and meal suggestions) are disabled in the demo.
 
 ## Stack
 
@@ -82,9 +90,24 @@ nginx, against the host's **system PostgreSQL** (a dedicated `fitness` role + DB
 - **Push-to-deploy:** `.github/workflows/deploy.yml` builds the SPA, rsyncs to the server and
   restarts the service on push to `main`. Needs repo secret `DEPLOY_SSH_KEY`; GitHub Actions
   billing must be active. The frontend is built in CI (no Node on the server).
-- **Manual deploy:** run **`./deploy.sh`** — it builds the SPA, rsyncs the repo to
-  `/opt/fitness-tracker` (excluding `.git/.venv/__pycache__/.env/node_modules`), then on the
-  server runs `pip install -e . && alembic upgrade head && systemctl restart fitness-tracker`
-  and checks `/health`. (Override the key with `DEPLOY_KEY=...`.) This is the deploy path until
-  GitHub Actions billing is active. Validate any new migration on a throwaway `fitness_migtest`
-  DB first.
+- **Manual deploy:** copy `deploy.env.example` → `deploy.env` (gitignored) and fill in your host,
+  SSH key, and health URL, then run **`./deploy.sh`** — it builds the SPA, rsyncs the repo to the
+  server (excluding `.git/.venv/__pycache__/.env/node_modules`), then runs
+  `pip install -e . && alembic upgrade head && systemctl restart fitness-tracker` and checks
+  `/health`. Validate any new migration on a throwaway `fitness_migtest` DB first.
+
+## Demo ops
+
+- Public sign-up is disabled by default (`REGISTRATION_ENABLED=false`); create users with
+  `python -m backend.create_user <email> <password>`. The `POST /api/auth/demo` sandbox endpoint
+  stays public.
+- Expired demo sandboxes are pruned by `python -m backend.cleanup_demos` (deletes `is_demo` users
+  older than `DEMO_TTL_HOURS` and all their rows). Cron, every 30 min:
+  ```
+  */30 * * * * cd /opt/fitness-tracker && set -a && . ./.env && set +a && \
+      .venv/bin/python -m backend.cleanup_demos >> /var/log/demo-cleanup.log 2>&1
+  ```
+
+## License
+
+MIT — see [LICENSE](LICENSE).
