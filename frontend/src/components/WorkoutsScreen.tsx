@@ -25,7 +25,10 @@ import { RoutineEditModal } from "./RoutineEditModal";
 export function WorkoutsScreen() {
   const { t, i18n } = useTranslation();
   const { chart } = useTheme();
-  const [active, setActive] = useState<{ id: string; exercises: { id: string; name: string }[] } | null>(null);
+  const [active, setActive] = useState<{
+    id: string;
+    exercises: { id: string; name: string; planned_sets?: number; planned_reps?: number | null }[];
+  } | null>(null);
 
   const routines = useApi<Routine[]>("/routines");
   const history = useApi<WorkoutSummary[]>("/workouts");
@@ -72,7 +75,12 @@ export function WorkoutsScreen() {
     const s = await apiPost<{ id: string }>("/workouts", { routine_id: r.id });
     setActive({
       id: s.id,
-      exercises: r.exercises.map((e) => ({ id: e.exercise_id, name: exName(e.exercise_id, e.exercise_name) })),
+      exercises: r.exercises.map((e) => ({
+        id: e.exercise_id,
+        name: exName(e.exercise_id, e.exercise_name),
+        planned_sets: e.planned_sets,
+        planned_reps: e.planned_reps,
+      })),
     });
   };
 

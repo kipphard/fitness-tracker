@@ -1136,6 +1136,112 @@ a:hover {
   min-width: 12rem;
   width: auto;
 }
+
+/* ── Hevy-style live session: stats header + set table with check-off ── */
+.session-stats {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 0.25rem;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+.session-stats strong {
+  color: var(--text);
+}
+.ex-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.set-table {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.set-table__head,
+.set-row {
+  display: grid;
+  grid-template-columns: 2.2rem 1fr 4.5rem 4.5rem 2.6rem;
+  align-items: center;
+  gap: 0.4rem;
+}
+.set-table__head {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--muted);
+  padding: 0 0.1rem 0.2rem;
+}
+.set-table__head span:nth-child(3),
+.set-table__head span:nth-child(4),
+.set-table__head span:last-child {
+  text-align: center;
+}
+.set-row {
+  padding: 0.15rem 0;
+  border-radius: var(--radius-sm);
+}
+.set-row--done {
+  background: var(--surface-2);
+}
+.set-row__idx {
+  display: grid;
+  place-items: center;
+  height: 1.7rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-weight: 700;
+  color: var(--text);
+}
+.set-row__idx.is-warmup {
+  color: var(--warn);
+}
+.set-row__idx.is-draft {
+  color: var(--muted);
+}
+.set-row__prev {
+  font-size: 0.8rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.set-row__num {
+  width: 100%;
+  text-align: center;
+  padding: 0.3rem 0.2rem;
+}
+.set-check {
+  display: grid;
+  place-items: center;
+  height: 1.9rem;
+  width: 1.9rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+.set-check.is-done {
+  background: #16a34a;
+  border-color: #16a34a;
+  color: #fff;
+}
+.finish-stats {
+  display: flex;
+  gap: 1rem;
+  justify-content: space-around;
+  text-align: center;
+}
+.finish-stats__item {
+  display: flex;
+  flex-direction: column;
+}
+.finish-stats__item strong {
+  font-size: 1.3rem;
+}
 .routine-list {
   margin-top: 0.75rem;
 }

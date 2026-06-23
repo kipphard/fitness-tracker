@@ -12,6 +12,7 @@ from backend.schemas import (
     SessionStartIn,
     SetIn,
     SetOut,
+    SetUpdateIn,
     WorkoutSessionOut,
     WorkoutSessionSummaryOut,
 )
@@ -111,6 +112,23 @@ def log_set(
         set_type=payload.set_type,
         rpe=payload.rpe,
     )
+    session.commit()
+    return SetOut.model_validate(log)
+
+
+@router.patch("/{session_id}/sets/{set_id}", response_model=SetOut)
+def update_set(
+    session_id: uuid.UUID,
+    set_id: uuid.UUID,
+    payload: SetUpdateIn,
+    session: SessionDep,
+    user: CurrentUser,
+) -> SetOut:
+    """Edit a logged set (weight/reps/set_type/rpe) — only the sent fields are applied."""
+    log = repository.get_set(session, set_id, user.id)
+    if log is None or log.session_id != session_id:
+        raise HTTPException(status_code=404, detail="set not found")
+    repository.update_set(session, log, **payload.model_dump(exclude_unset=True))
     session.commit()
     return SetOut.model_validate(log)
 

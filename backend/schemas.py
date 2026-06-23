@@ -572,6 +572,14 @@ class SetIn(BaseModel):
     rpe: Decimal | None = Field(default=None, ge=0, le=10)
 
 
+class SetUpdateIn(BaseModel):
+    # All optional so a PATCH can change weight, reps, set_type, and/or rpe.
+    weight: Decimal | None = Field(default=None, ge=0, le=2000)
+    reps: int | None = Field(default=None, ge=0, le=1000)
+    set_type: SetType | None = None
+    rpe: Decimal | None = Field(default=None, ge=0, le=10)
+
+
 class SetOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

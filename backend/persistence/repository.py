@@ -622,6 +622,13 @@ def add_set(session: Session, session_id: uuid.UUID, **fields: Any) -> SetLog:
     return log
 
 
+def update_set(session: Session, log: SetLog, **fields: Any) -> SetLog:
+    for key, value in fields.items():
+        setattr(log, key, value)
+    session.flush()
+    return log
+
+
 def get_set(session: Session, set_id: uuid.UUID, user_id: uuid.UUID) -> SetLog | None:
     log = session.get(SetLog, set_id)
     if log is None:

@@ -121,6 +121,16 @@ def test_session_log_sets_and_finish(client):
     fin = client.post(f"/api/workouts/{sid}/finish").json()
     assert fin["ended_at"] is not None
 
+    # Edit a logged set (weight/reps); only the sent fields change.
+    patched = client.patch(
+        f"/api/workouts/{sid}/sets/{s1['id']}", json={"weight": "105", "reps": 6}
+    )
+    assert patched.status_code == 200, patched.text
+    assert Decimal(patched.json()["weight"]) == Decimal("105") and patched.json()["reps"] == 6
+    # A set id that isn't in this session → 404.
+    import uuid as _uuid
+    assert client.patch(f"/api/workouts/{sid}/sets/{_uuid.uuid4()}", json={"reps": 7}).status_code == 404
+
     assert client.delete(f"/api/workouts/sets/{s2['id']}").status_code == 204
     assert len(client.get(f"/api/workouts/{sid}").json()["sets"]) == 1
 
