@@ -609,11 +609,82 @@ a:hover {
   color: var(--text);
   font-weight: 700;
 }
+.slot-group {
+  padding: 0.4rem 0 0.6rem;
+  border-bottom: 1px solid var(--border);
+}
+.slot-group:last-of-type {
+  border-bottom: none;
+}
 .slot-group h3 {
   margin: 0.9rem 0 0.4rem;
 }
 .slot-group:first-child h3 {
   margin-top: 0;
+}
+.slot-group__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.slot-group__head h3 {
+  margin: 0.6rem 0 0.3rem;
+}
+.slot-group__add {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: 0.25rem;
+  padding: 0.4rem 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--primary-strong);
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+// Tappable logged-entry row (opens the edit modal).
+.diary-row {
+  list-style: none;
+  border-bottom: 1px solid var(--border);
+}
+.diary-row:last-child {
+  border-bottom: none;
+}
+.diary-entry__row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.55rem 0.25rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text);
+  text-align: left;
+  font-size: 0.9rem;
+  border-radius: var(--radius-sm);
+}
+.diary-entry__row:hover {
+  background: var(--surface-2);
+}
+.diary-entry__kcal {
+  font-weight: 700;
+}
+.diary-actions--split {
+  width: 100%;
+  justify-content: space-between;
+}
+.btn--danger {
+  background: #dc2626;
+  border-color: #dc2626;
+  color: #fff;
+}
+.btn--danger:hover {
+  background: #b91c1c;
+  border-color: #b91c1c;
 }
 .diary-entry {
   display: grid;
@@ -1128,6 +1199,72 @@ a:hover {
 }
 
 /* ── Responsive ────────────────────────────────────────────────────────── */
+/* ── Reusable Modal (bottom sheet on mobile, centered dialog on desktop) ── */
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+.modal__panel {
+  width: 100%;
+  max-width: 30rem;
+  max-height: 90vh;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+}
+.modal__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+.modal__title {
+  font-size: 1.02rem;
+  font-weight: 600;
+}
+.modal__body {
+  padding: 1rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+.modal__body--bare {
+  padding: 0;
+  gap: 0;
+}
+.modal__footer {
+  padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--border);
+}
+@media (max-width: 767px) {
+  .modal {
+    align-items: flex-end;
+    padding: 0;
+  }
+  .modal__panel {
+    max-width: none;
+    max-height: 92vh;
+    border-radius: var(--radius) var(--radius) 0 0;
+    border-bottom: none;
+  }
+  .modal__body {
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+  }
+}
+
 /* ── Mobile bottom navigation + "More" sheet ───────────────────────────── */
 .bottom-nav {
   display: none; /* desktop hides it; the mobile media query shows it */

@@ -15,6 +15,7 @@ import {
 import { useApi } from "../hooks/useApi";
 import { addDays, kcal, num, oneDecimal, todayIso } from "../lib/format";
 import { Card } from "./Card";
+import { Modal } from "./Modal";
 import { PhotoEstimatePanel } from "./PhotoEstimatePanel";
 import { SuggestPanel } from "./SuggestPanel";
 
@@ -47,14 +48,16 @@ function toSelectable(f: Food | FoodData): Selectable {
   };
 }
 
+const EMPTY_CUSTOM = { name: "", kcal: "", protein: "", fat: "", carbs: "", serving: "" };
+
 export function DiaryScreen() {
   const { t } = useTranslation();
   const [date, setDate] = useState(todayIso());
   const day = useApi<DiaryDay>(`/diary?date=${date}`);
   const recent = useApi<Food[]>("/diary/recent");
   const pantry = useApi<PantryItem[]>("/pantry");
-  // tz set below; the flag tells the photo panel whether Claude is configured.
-  const todayInfo = useApi<Today>(`/today?date=${date}&tz=${-new Date().getTimezoneOffset()}`);
+  const tz = -new Date().getTimezoneOffset();
+  const todayInfo = useApi<Today>(`/today?date=${date}&tz=${tz}`);
 
   const pantrySet = new Set((pantry.data ?? []).map((i) => i.food.id));
   const togglePantry = (f: Food) =>
@@ -63,6 +66,8 @@ export function DiaryScreen() {
       : apiPost("/pantry", { food_id: f.id })
     ).catch(() => undefined);
 
+  // Which meal's "add food" sheet is open (null = closed). Drives the whole add flow.
+  const [addSlot, setAddSlot] = useState<MealSlot | null>(null);
   const [query, setQuery] = useState("");
   const [saved, setSaved] = useState<Food[]>([]);
   const [off, setOff] = useState<FoodData[] | null>(null);
@@ -72,22 +77,22 @@ export function DiaryScreen() {
   const [showScanner, setShowScanner] = useState(false);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [showSuggest, setShowSuggest] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  // tz = minutes east of UTC, so the suggestion's day budget matches the local calendar day.
-  const tz = -new Date().getTimezoneOffset();
-
-  const [showCustom, setShowCustom] = useState(false);
   const [showAllRecent, setShowAllRecent] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editAmount, setEditAmount] = useState("");
-  const [custom, setCustom] = useState({ name: "", kcal: "", protein: "", fat: "", carbs: "", serving: "" });
-  const [servingEdit, setServingEdit] = useState("");
+  const [showCustom, setShowCustom] = useState(false);
+  const [custom, setCustom] = useState(EMPTY_CUSTOM);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Food detail modal (a picked food being portioned) + the meal it goes to.
   const [selected, setSelected] = useState<Selectable | null>(null);
   const [amount, setAmount] = useState("100");
   const [slot, setSlot] = useState<MealSlot>("breakfast");
+  const [servingEdit, setServingEdit] = useState("");
 
-  // Search the user's saved foods as they type.
+  // Edit-entry modal.
+  const [editing, setEditing] = useState<DiaryEntry | null>(null);
+  const [editAmount, setEditAmount] = useState("");
+
+  // Search the user's saved foods as they type (only while the add sheet is open).
   useEffect(() => {
     const q = query.trim();
     if (q.length < 2) {
@@ -102,6 +107,27 @@ export function DiaryScreen() {
       active = false;
     };
   }, [query]);
+
+  useEffect(() => {
+    setServingEdit(selected?.serving_g ?? "");
+  }, [selected]);
+
+  const openAdd = (s: MealSlot) => {
+    setAddSlot(s);
+    setSlot(s);
+    setQuery("");
+    setOff(null);
+    setShowCustom(false);
+    setSelected(null);
+    setError(null);
+  };
+  const closeAdd = () => {
+    setAddSlot(null);
+    setSelected(null);
+    setShowCustom(false);
+    setQuery("");
+    setOff(null);
+  };
 
   const searchOff = async () => {
     const q = query.trim();
@@ -144,7 +170,7 @@ export function DiaryScreen() {
       serving_g: custom.serving && num(custom.serving) > 0 ? custom.serving : null,
     });
     setShowCustom(false);
-    setCustom({ name: "", kcal: "", protein: "", fat: "", carbs: "", serving: "" });
+    setCustom(EMPTY_CUSTOM);
   };
 
   const logSelected = async () => {
@@ -165,21 +191,13 @@ export function DiaryScreen() {
       };
     try {
       await apiPost("/diary", body);
-      setSelected(null);
+      setSelected(null); // back to the add sheet so they can add more to this meal
       setAmount("100");
-      setQuery("");
-      setOff(null);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     }
   };
 
-  // Keep the serving editor in sync with the selected saved food.
-  useEffect(() => {
-    setServingEdit(selected?.serving_g ?? "");
-  }, [selected]);
-
-  // Set a serving size on a saved food (helps "fill remaining calories" pick natural portions).
   const saveServing = async () => {
     if (!selected?.id) return;
     const v = num(servingEdit);
@@ -192,17 +210,25 @@ export function DiaryScreen() {
     }
   };
 
-  const startEdit = (entry: DiaryEntry) => {
-    setEditingId(entry.id);
+  const openEdit = (entry: DiaryEntry) => {
+    setEditing(entry);
     setEditAmount(String(num(entry.amount_g)));
   };
-  const saveEdit = async (entry: DiaryEntry) => {
+  const saveEdit = async () => {
+    if (!editing) return;
     const n = num(editAmount);
     if (n <= 0) return;
-    setEditingId(null);
+    const entry = editing;
+    setEditing(null);
     await apiPatch(`/diary/${entry.id}`, { amount_g: String(n) }).catch(() => undefined);
   };
-  // Scale a logged entry's stored macros (which are for its current amount) to a new amount.
+  const deleteEditing = async () => {
+    if (!editing) return;
+    const id = editing.id;
+    setEditing(null);
+    await apiDelete(`/diary/${id}`).catch(() => undefined);
+  };
+
   const scaleEntry = (entry: DiaryEntry, newAmount: string) => {
     const f = num(newAmount) / (num(entry.amount_g) || 1);
     return {
@@ -223,16 +249,14 @@ export function DiaryScreen() {
       { kcal: 0, protein: 0, carbs: 0, fat: 0 },
     );
 
-  const removeEntry = (id: string) => apiDelete(`/diary/${id}`).catch(() => undefined);
   const copyYesterday = () =>
     apiPost("/diary/copy", { from_date: addDays(date, -1), to_date: date }).catch(() => undefined);
 
   const searching = query.trim().length >= 2;
   const results = searching ? saved : recent.data ?? [];
-  const COLLAPSED_RECENT = 3;
-  const visibleResults =
-    searching || showAllRecent ? results : results.slice(0, COLLAPSED_RECENT);
-  // Macros for the selected food, scaled to the amount being logged.
+  const COLLAPSED_RECENT = 6;
+  const visibleResults = searching || showAllRecent ? results : results.slice(0, COLLAPSED_RECENT);
+
   const factor = num(amount) / 100;
   const scaledMacros = selected
     ? {
@@ -243,6 +267,7 @@ export function DiaryScreen() {
       }
     : null;
   const totals = day.data?.totals;
+  const editScaled = editing ? scaleEntry(editing, editAmount) : null;
 
   return (
     <div className="screen">
@@ -257,6 +282,7 @@ export function DiaryScreen() {
           />
         </Suspense>
       )}
+
       <header className="screen__head diary-head">
         <h1>{t("diary.title")}</h1>
         <div className="date-nav">
@@ -278,20 +304,117 @@ export function DiaryScreen() {
         </div>
       </header>
 
-      <div className="grid grid--2">
-        <Card title={t("diary.addTitle")}>
+      <Card
+        title={t("diary.dayTitle")}
+        action={
+          <button className="btn btn--ghost btn--sm" onClick={copyYesterday}>{t("diary.copyYesterday")}</button>
+        }
+      >
+        {MEAL_SLOTS.map((s) => {
+          const entries = (day.data?.entries ?? []).filter((e) => e.slot === s);
+          const mt = sumMacros(entries);
+          return (
+            <div className="slot-group" key={s}>
+              <div className="slot-group__head">
+                <h3>{t(`diary.slots.${s}`)}</h3>
+                {entries.length > 0 && <span className="muted tnum">{kcal(mt.kcal)} kcal</span>}
+              </div>
+              {entries.length > 0 && (
+                <ul className="list">
+                  {entries.map((e) => (
+                    <li key={e.id} className="diary-row">
+                      <button className="diary-entry__row" onClick={() => openEdit(e)}>
+                        <span className="diary-entry__name">{e.food_name}</span>
+                        <span className="muted tnum">{oneDecimal(e.amount_g)} g</span>
+                        <span className="tnum diary-entry__kcal">{kcal(e.kcal)}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <button className="slot-group__add" onClick={() => openAdd(s)}>
+                + {t("diary.addFood")}
+              </button>
+            </div>
+          );
+        })}
+
+        {totals && (day.data?.entries.length ?? 0) > 0 && (
+          <div className="diary-total">
+            <div className="result-row result-row--target">
+              <span>{t("diary.total")}</span>
+              <strong className="tnum">{kcal(totals.kcal)} kcal</strong>
+            </div>
+            <div className="add-form__macros diary-total__macros">
+              <span><strong className="tnum">{oneDecimal(totals.protein_g)} g</strong> {t("today.macros.protein")}</span>
+              <span><strong className="tnum">{oneDecimal(totals.carbs_g)} g</strong> {t("today.macros.carbs")}</span>
+              <span><strong className="tnum">{oneDecimal(totals.fat_g)} g</strong> {t("today.macros.fat")}</span>
+            </div>
+          </div>
+        )}
+      </Card>
+
+      {/* ── Add-food sheet (per meal) ─────────────────────────────────────── */}
+      {addSlot && (
+        <Modal title={t("diary.addToMeal", { meal: t(`diary.slots.${addSlot}`) })} onClose={closeAdd}>
           <input
             className="input"
             type="search"
             placeholder={t("diary.searchPlaceholder")}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
+            autoFocus
           />
+
+          <div className="diary-actions diary-actions--wrap">
+            <button className="btn btn--ghost btn--sm" onClick={searchOff} disabled={offLoading || query.trim().length < 2}>
+              {offLoading ? t("common.loading") : t("diary.searchOff")}
+            </button>
+            <button className="btn btn--ghost btn--sm" onClick={() => setShowCustom(true)}>
+              {t("diary.custom")}
+            </button>
+            <button className="btn btn--ghost btn--sm" onClick={() => setShowScanner(true)}>
+              📷 {t("diary.scanBarcode")}
+            </button>
+            <button className="btn btn--ghost btn--sm" onClick={() => fileInputRef.current?.click()}>
+              🍽️ {t("diary.photo")}
+            </button>
+            <button className="btn btn--ghost btn--sm" onClick={() => setShowSuggest(true)}>
+              ✨ {t("suggest.fillRemaining")}
+            </button>
+          </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            hidden
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) setPhotoFile(f);
+              e.target.value = "";
+            }}
+          />
+
+          <div className="diary-barcode">
+            <input
+              className="input"
+              type="text"
+              inputMode="numeric"
+              placeholder={t("diary.barcodePlaceholder")}
+              value={barcode}
+              onChange={(e) => setBarcode(e.target.value)}
+            />
+            <button className="btn btn--ghost btn--sm" onClick={lookupBarcode}>
+              {t("diary.lookup")}
+            </button>
+          </div>
+
+          {error && <div className="error">{error}</div>}
 
           {!searching && results.length > 0 && (
             <div className="food-recent__head">{t("diary.recentTitle")}</div>
           )}
-
           <ul className="food-results">
             {visibleResults.map((f) => (
               <li key={f.id} className="food-results__rowwrap">
@@ -332,242 +455,134 @@ export function DiaryScreen() {
                 : t("diary.showMoreRecent", { count: results.length - COLLAPSED_RECENT })}
             </button>
           )}
+        </Modal>
+      )}
 
-          <div className="diary-actions">
-            <button className="btn btn--ghost btn--sm" onClick={searchOff} disabled={offLoading || query.trim().length < 2}>
-              {offLoading ? t("common.loading") : t("diary.searchOff")}
-            </button>
-            <button className="btn btn--ghost btn--sm" onClick={() => setShowCustom((s) => !s)}>
-              {t("diary.custom")}
-            </button>
-          </div>
-
-          <div className="diary-actions">
-            <button className="btn btn--ghost btn--sm" onClick={() => setShowScanner(true)}>
-              📷 {t("diary.scanBarcode")}
-            </button>
-            <button
-              className="btn btn--ghost btn--sm"
-              onClick={() => fileInputRef.current?.click()}
-            >
-              🍽️ {t("diary.photo")}
-            </button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              capture="environment"
-              hidden
-              onChange={(e) => {
-                const f = e.target.files?.[0];
-                if (f) setPhotoFile(f);
-                e.target.value = "";
-              }}
-            />
-            <button
-              className="btn btn--ghost btn--sm"
-              onClick={() => setShowSuggest((s) => !s)}
-            >
-              ✨ {t("suggest.fillRemaining")}
-            </button>
-          </div>
-
-          <div className="diary-barcode">
-            <input
-              className="input"
-              type="text"
-              inputMode="numeric"
-              placeholder={t("diary.barcodePlaceholder")}
-              value={barcode}
-              onChange={(e) => setBarcode(e.target.value)}
-            />
-            <button className="btn btn--ghost btn--sm" onClick={lookupBarcode}>
-              {t("diary.lookup")}
-            </button>
-          </div>
-
-          {showCustom && (
-            <div className="custom-food">
-              <input className="input" placeholder={t("diary.customName")} value={custom.name}
-                onChange={(e) => setCustom({ ...custom, name: e.target.value })} />
-              <div className="form__row">
-                <input className="input" type="number" step="0.1" placeholder={t("diary.customKcal")} value={custom.kcal}
-                  onChange={(e) => setCustom({ ...custom, kcal: e.target.value })} />
-                <input className="input" type="number" step="0.1" placeholder={t("today.macros.protein")} value={custom.protein}
-                  onChange={(e) => setCustom({ ...custom, protein: e.target.value })} />
-              </div>
-              <div className="form__row">
-                <input className="input" type="number" step="0.1" placeholder={t("today.macros.fat")} value={custom.fat}
-                  onChange={(e) => setCustom({ ...custom, fat: e.target.value })} />
-                <input className="input" type="number" step="0.1" placeholder={t("today.macros.carbs")} value={custom.carbs}
-                  onChange={(e) => setCustom({ ...custom, carbs: e.target.value })} />
-              </div>
-              <input className="input" type="number" step="1" min="1" placeholder={t("diary.servingOptional")} value={custom.serving}
-                onChange={(e) => setCustom({ ...custom, serving: e.target.value })} />
-              <button className="btn btn--ghost btn--sm" onClick={useCustom}>{t("diary.useCustom")}</button>
+      {/* ── Food detail (portion + meal) ──────────────────────────────────── */}
+      {selected && (
+        <Modal
+          title={selected.name}
+          onClose={() => setSelected(null)}
+          footer={
+            <div className="diary-actions">
+              <button className="btn btn--primary" onClick={logSelected}>{t("diary.add")}</button>
+              <button className="btn btn--ghost" onClick={() => setSelected(null)}>{t("diary.cancel")}</button>
             </div>
-          )}
-
-          {error && <div className="error">{error}</div>}
-
-          {selected && (
-            <div className="add-form">
-              <div className="add-form__name">{selected.name} · {kcal(selected.per100_kcal)} / 100g</div>
-              <div className="form__row">
-                <label className="field">
-                  <span>{t("diary.amount")}</span>
-                  <input className="input" type="number" step="1" min="1" value={amount} onChange={(e) => setAmount(e.target.value)} />
-                </label>
-                <label className="field">
-                  <span>{t("diary.slot")}</span>
-                  <select className="select" value={slot} onChange={(e) => setSlot(e.target.value as MealSlot)}>
-                    {MEAL_SLOTS.map((s) => (
-                      <option key={s} value={s}>{t(`diary.slots.${s}`)}</option>
-                    ))}
-                  </select>
-                </label>
-              </div>
-              {scaledMacros && (
-                <div className="add-form__macros">
-                  <span><strong className="tnum">{kcal(scaledMacros.kcal)}</strong> kcal</span>
-                  <span><strong className="tnum">{oneDecimal(scaledMacros.protein)} g</strong> {t("today.macros.protein")}</span>
-                  <span><strong className="tnum">{oneDecimal(scaledMacros.carbs)} g</strong> {t("today.macros.carbs")}</span>
-                  <span><strong className="tnum">{oneDecimal(scaledMacros.fat)} g</strong> {t("today.macros.fat")}</span>
-                </div>
-              )}
-              {selected.id && (
-                <div className="serving-edit">
-                  <label className="field serving-edit__field">
-                    <span>{t("diary.serving")}</span>
-                    <input
-                      className="input"
-                      type="number"
-                      step="1"
-                      min="1"
-                      inputMode="numeric"
-                      value={servingEdit}
-                      onChange={(e) => setServingEdit(e.target.value)}
-                    />
-                  </label>
-                  <button className="btn btn--ghost btn--sm" onClick={saveServing}>
-                    {t("diary.saveServing")}
-                  </button>
-                </div>
-              )}
-              <div className="diary-actions">
-                <button className="btn btn--primary btn--sm" onClick={logSelected}>{t("diary.add")}</button>
-                <button className="btn btn--ghost btn--sm" onClick={() => setSelected(null)}>{t("diary.cancel")}</button>
-              </div>
-            </div>
-          )}
-        </Card>
-
-        <Card
-          title={t("diary.dayTitle")}
-          action={
-            <button className="btn btn--ghost btn--sm" onClick={copyYesterday}>{t("diary.copyYesterday")}</button>
           }
         >
-          {MEAL_SLOTS.map((s) => {
-            const entries = (day.data?.entries ?? []).filter((e) => e.slot === s);
-            if (entries.length === 0) return null;
-            const mt = sumMacros(entries);
-            return (
-              <div className="slot-group" key={s}>
-                <h3>{t(`diary.slots.${s}`)}</h3>
-                <ul className="list">
-                  {entries.map((e) => {
-                    if (editingId === e.id) {
-                      const es = scaleEntry(e, editAmount);
-                      return (
-                        <li key={e.id} className="diary-entry diary-entry--edit">
-                          <span className="diary-entry__name">{e.food_name}</span>
-                          <div className="diary-entry__edit">
-                            <input
-                              className="input"
-                              type="number"
-                              step="1"
-                              min="1"
-                              inputMode="numeric"
-                              value={editAmount}
-                              onChange={(ev) => setEditAmount(ev.target.value)}
-                              autoFocus
-                            />
-                            <span className="muted">g</span>
-                            <button className="btn btn--primary btn--sm" onClick={() => saveEdit(e)}>
-                              {t("common.save")}
-                            </button>
-                            <button
-                              className="icon-btn icon-btn--xs"
-                              onClick={() => setEditingId(null)}
-                              aria-label={t("diary.cancel")}
-                            >
-                              ✕
-                            </button>
-                          </div>
-                          <div className="add-form__macros diary-entry__macros">
-                            <span><strong className="tnum">{kcal(es.kcal)}</strong> kcal</span>
-                            <span><strong className="tnum">{oneDecimal(es.protein)} g</strong> {t("today.macros.protein")}</span>
-                            <span><strong className="tnum">{oneDecimal(es.carbs)} g</strong> {t("today.macros.carbs")}</span>
-                            <span><strong className="tnum">{oneDecimal(es.fat)} g</strong> {t("today.macros.fat")}</span>
-                          </div>
-                        </li>
-                      );
-                    }
-                    return (
-                      <li key={e.id} className="diary-entry">
-                        <span className="diary-entry__name">{e.food_name}</span>
-                        <span className="muted tnum">{oneDecimal(e.amount_g)} g</span>
-                        <span className="tnum">{kcal(e.kcal)}</span>
-                        <button className="icon-btn icon-btn--xs" onClick={() => startEdit(e)} aria-label={t("common.save")}>✎</button>
-                        <button className="icon-btn icon-btn--xs" onClick={() => removeEntry(e.id)} aria-label={t("weight.delete")}>✕</button>
-                      </li>
-                    );
-                  })}
-                </ul>
-                <div className="add-form__macros meal-summary">
-                  <span><strong className="tnum">{kcal(mt.kcal)}</strong> kcal</span>
-                  <span><strong className="tnum">{oneDecimal(mt.protein)} g</strong> {t("today.macros.protein")}</span>
-                  <span><strong className="tnum">{oneDecimal(mt.carbs)} g</strong> {t("today.macros.carbs")}</span>
-                  <span><strong className="tnum">{oneDecimal(mt.fat)} g</strong> {t("today.macros.fat")}</span>
-                </div>
-              </div>
-            );
-          })}
-          {(day.data?.entries.length ?? 0) === 0 && <p className="muted">{t("diary.empty")}</p>}
-          {totals && (
-            <div className="diary-total">
-              <div className="result-row result-row--target">
-                <span>{t("diary.total")}</span>
-                <strong className="tnum">{kcal(totals.kcal)} kcal</strong>
-              </div>
-              <div className="add-form__macros diary-total__macros">
-                <span><strong className="tnum">{oneDecimal(totals.protein_g)} g</strong> {t("today.macros.protein")}</span>
-                <span><strong className="tnum">{oneDecimal(totals.carbs_g)} g</strong> {t("today.macros.carbs")}</span>
-                <span><strong className="tnum">{oneDecimal(totals.fat_g)} g</strong> {t("today.macros.fat")}</span>
-              </div>
+          <div className="muted">{kcal(selected.per100_kcal)} kcal / 100g</div>
+          <div className="form__row">
+            <label className="field">
+              <span>{t("diary.amount")}</span>
+              <input className="input" type="number" step="1" min="1" inputMode="numeric" value={amount} autoFocus onChange={(e) => setAmount(e.target.value)} />
+            </label>
+            <label className="field">
+              <span>{t("diary.slot")}</span>
+              <select className="select" value={slot} onChange={(e) => setSlot(e.target.value as MealSlot)}>
+                {MEAL_SLOTS.map((s) => (
+                  <option key={s} value={s}>{t(`diary.slots.${s}`)}</option>
+                ))}
+              </select>
+            </label>
+          </div>
+          {scaledMacros && (
+            <div className="add-form__macros">
+              <span><strong className="tnum">{kcal(scaledMacros.kcal)}</strong> kcal</span>
+              <span><strong className="tnum">{oneDecimal(scaledMacros.protein)} g</strong> {t("today.macros.protein")}</span>
+              <span><strong className="tnum">{oneDecimal(scaledMacros.carbs)} g</strong> {t("today.macros.carbs")}</span>
+              <span><strong className="tnum">{oneDecimal(scaledMacros.fat)} g</strong> {t("today.macros.fat")}</span>
             </div>
           )}
-        </Card>
-      </div>
+          {selected.id && (
+            <div className="serving-edit">
+              <label className="field serving-edit__field">
+                <span>{t("diary.serving")}</span>
+                <input className="input" type="number" step="1" min="1" inputMode="numeric" value={servingEdit} onChange={(e) => setServingEdit(e.target.value)} />
+              </label>
+              <button className="btn btn--ghost btn--sm" onClick={saveServing}>{t("diary.saveServing")}</button>
+            </div>
+          )}
+        </Modal>
+      )}
 
+      {/* ── Custom food ───────────────────────────────────────────────────── */}
+      {showCustom && (
+        <Modal
+          title={t("diary.custom")}
+          onClose={() => setShowCustom(false)}
+          footer={
+            <div className="diary-actions">
+              <button className="btn btn--primary" onClick={useCustom} disabled={!custom.name.trim() || !custom.kcal}>{t("diary.useCustom")}</button>
+              <button className="btn btn--ghost" onClick={() => setShowCustom(false)}>{t("diary.cancel")}</button>
+            </div>
+          }
+        >
+          <input className="input" placeholder={t("diary.customName")} value={custom.name}
+            onChange={(e) => setCustom({ ...custom, name: e.target.value })} autoFocus />
+          <div className="form__row">
+            <input className="input" type="number" step="0.1" placeholder={t("diary.customKcal")} value={custom.kcal}
+              onChange={(e) => setCustom({ ...custom, kcal: e.target.value })} />
+            <input className="input" type="number" step="0.1" placeholder={t("today.macros.protein")} value={custom.protein}
+              onChange={(e) => setCustom({ ...custom, protein: e.target.value })} />
+          </div>
+          <div className="form__row">
+            <input className="input" type="number" step="0.1" placeholder={t("today.macros.fat")} value={custom.fat}
+              onChange={(e) => setCustom({ ...custom, fat: e.target.value })} />
+            <input className="input" type="number" step="0.1" placeholder={t("today.macros.carbs")} value={custom.carbs}
+              onChange={(e) => setCustom({ ...custom, carbs: e.target.value })} />
+          </div>
+          <input className="input" type="number" step="1" min="1" placeholder={t("diary.servingOptional")} value={custom.serving}
+            onChange={(e) => setCustom({ ...custom, serving: e.target.value })} />
+        </Modal>
+      )}
+
+      {/* ── Edit a logged entry ───────────────────────────────────────────── */}
+      {editing && (
+        <Modal
+          title={editing.food_name}
+          onClose={() => setEditing(null)}
+          footer={
+            <div className="diary-actions diary-actions--split">
+              <button className="btn btn--danger btn--sm" onClick={deleteEditing}>{t("diary.delete")}</button>
+              <div className="diary-actions">
+                <button className="btn btn--primary" onClick={saveEdit}>{t("common.save")}</button>
+                <button className="btn btn--ghost" onClick={() => setEditing(null)}>{t("diary.cancel")}</button>
+              </div>
+            </div>
+          }
+        >
+          <label className="field">
+            <span>{t("diary.amount")}</span>
+            <input className="input" type="number" step="1" min="1" inputMode="numeric" value={editAmount} autoFocus onChange={(e) => setEditAmount(e.target.value)} />
+          </label>
+          {editScaled && (
+            <div className="add-form__macros">
+              <span><strong className="tnum">{kcal(editScaled.kcal)}</strong> kcal</span>
+              <span><strong className="tnum">{oneDecimal(editScaled.protein)} g</strong> {t("today.macros.protein")}</span>
+              <span><strong className="tnum">{oneDecimal(editScaled.carbs)} g</strong> {t("today.macros.carbs")}</span>
+              <span><strong className="tnum">{oneDecimal(editScaled.fat)} g</strong> {t("today.macros.fat")}</span>
+            </div>
+          )}
+        </Modal>
+      )}
+
+      {/* ── Suggestions (fill remaining) + photo estimate as overlays ─────── */}
       {showSuggest && (
-        <SuggestPanel
-          date={date}
-          tz={tz}
-          defaultSlot={slot}
-          onClose={() => setShowSuggest(false)}
-        />
+        <Modal onClose={() => setShowSuggest(false)} bare>
+          <SuggestPanel date={date} tz={tz} defaultSlot={slot} onClose={() => setShowSuggest(false)} />
+        </Modal>
       )}
 
       {photoFile && (
-        <PhotoEstimatePanel
-          file={photoFile}
-          date={date}
-          defaultSlot={slot}
-          aiAvailable={todayInfo.data?.ai_available ?? true}
-          onClose={() => setPhotoFile(null)}
-        />
+        <Modal onClose={() => setPhotoFile(null)} bare>
+          <PhotoEstimatePanel
+            file={photoFile}
+            date={date}
+            defaultSlot={slot}
+            aiAvailable={todayInfo.data?.ai_available ?? true}
+            onClose={() => setPhotoFile(null)}
+          />
+        </Modal>
       )}
     </div>
   );
