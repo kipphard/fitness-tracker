@@ -336,6 +336,37 @@ class PantryItemOut(BaseModel):
     food: FoodOut
 
 
+# --- shopping list (issue #5 §3) ---
+
+class ShoppingItemIn(BaseModel):
+    name: str = Field(min_length=1, max_length=200)
+    amount_g: Decimal | None = Field(default=None, gt=0, le=100000)
+
+
+class ShoppingPlanItem(BaseModel):
+    name: str = Field(min_length=1, max_length=200)
+    food_id: uuid.UUID | None = None
+    amount_g: Decimal | None = Field(default=None, gt=0, le=100000)
+
+
+class ShoppingFromPlanIn(BaseModel):
+    items: list[ShoppingPlanItem]
+
+
+class ShoppingPatchIn(BaseModel):
+    checked: bool
+
+
+class ShoppingItemOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    name: str
+    food_id: uuid.UUID | None = None
+    amount_g: Decimal | None = None
+    checked: bool
+
+
 # --- photo estimation (Phase 5) ---
 
 class EstimateItemOut(BaseModel):

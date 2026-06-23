@@ -10,6 +10,7 @@
       "today": "Heute",
       "diary": "Tagebuch",
       "pantry": "Vorrat",
+      "shopping": "Einkauf",
       "calculator": "Kalorienbedarf",
       "weight": "Gewicht",
       "workouts": "Training",
@@ -395,5 +396,20 @@
     "empty": "Noch nichts — füge Lebensmittel hinzu, die du da hast, oder tippe ☆ bei einem Lebensmittel im Tagebuch.",
     "remove": "Entfernen",
     "toggle": "„Habe ich zu Hause“ umschalten"
+  },
+  "shopping": {
+    "title": "Einkaufsliste",
+    "addFromPlan": "Einkaufsliste",
+    "addedToList": "Fehlende Artikel des Plans zur Einkaufsliste hinzugefügt.",
+    "goToList": "Einkaufsliste öffnen",
+    "addTitle": "Artikel hinzufügen",
+    "namePlaceholder": "Artikelname",
+    "amountPlaceholder": "Gramm",
+    "add": "Hinzufügen",
+    "listTitle": "Einzukaufen ({{remaining}}/{{total}})",
+    "empty": "Nichts einzukaufen. Erstelle einen Tagesplan und tippe 🛒, oder füge oben Artikel hinzu.",
+    "remove": "Entfernen",
+    "clearChecked": "Erledigte löschen",
+    "clearAll": "Alle löschen"
   }
 }

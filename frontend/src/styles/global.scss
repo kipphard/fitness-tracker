@@ -825,6 +825,49 @@ a:hover {
   flex: 1;
   font-weight: 500;
 }
+// Shopping list (issue #5 §3).
+.shopping-add {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+  .input {
+    flex: 1;
+    min-width: 8rem;
+  }
+}
+.shopping-add__amount {
+  flex: 0 0 6rem !important;
+  min-width: 5rem !important;
+}
+.shopping-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin-bottom: 0.6rem;
+}
+.shopping-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid var(--border);
+  &.is-checked .shopping-item__name {
+    text-decoration: line-through;
+    color: var(--muted);
+  }
+}
+.shopping-item__main {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex: 1;
+  cursor: pointer;
+}
+.shopping-item__name {
+  flex: 1;
+}
 .serving-edit {
   display: flex;
   align-items: flex-end;

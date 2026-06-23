@@ -269,6 +269,32 @@ class PantryItem(Base):
     food: Mapped["Food"] = relationship("Food", lazy="joined")
 
 
+class ShoppingItem(Base):
+    """An item on the user's shopping list (issue #5 §3): generated from a day plan minus the
+    pantry, or added manually. Merged by a lowercased name key (one row per item); `food_id`
+    links back to a saved food when known; `checked` is ticked off while shopping."""
+
+    __tablename__ = "shopping_items"
+    __table_args__ = (
+        UniqueConstraint("user_id", "name_key", name="uq_shopping_user_name"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(GUID, primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        GUID, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    name: Mapped[str] = mapped_column(String(200), nullable=False)
+    name_key: Mapped[str] = mapped_column(String(200), nullable=False)  # lowercased, for merge
+    food_id: Mapped[uuid.UUID | None] = mapped_column(
+        GUID, ForeignKey("foods.id", ondelete="SET NULL"), nullable=True
+    )
+    amount_g: Mapped[Decimal | None] = mapped_column(Measure, nullable=True)
+    checked: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_now, nullable=False
+    )
+
+
 class StepLog(Base):
     """Daily step count (one per user+date). Calories are derived on read from the effective
     weight, so they always reflect the current weight. A generic ingestion point — manual entry

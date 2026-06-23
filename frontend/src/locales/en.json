@@ -10,6 +10,7 @@
       "today": "Today",
       "diary": "Diary",
       "pantry": "Pantry",
+      "shopping": "Shopping",
       "calculator": "Calorie needs",
       "weight": "Weight",
       "workouts": "Workouts",
@@ -395,5 +396,20 @@
     "empty": "Nothing here yet — add foods you have at home, or tap ☆ on a food in the Diary.",
     "remove": "Remove",
     "toggle": "Toggle 'have at home'"
+  },
+  "shopping": {
+    "title": "Shopping list",
+    "addFromPlan": "Shopping list",
+    "addedToList": "Added the plan's missing items to your shopping list.",
+    "goToList": "Open shopping list",
+    "addTitle": "Add an item",
+    "namePlaceholder": "Item name",
+    "amountPlaceholder": "grams",
+    "add": "Add",
+    "listTitle": "To buy ({{remaining}}/{{total}})",
+    "empty": "Nothing to buy. Generate a day plan and tap 🛒, or add items above.",
+    "remove": "Remove",
+    "clearChecked": "Clear checked",
+    "clearAll": "Clear all"
   }
 }

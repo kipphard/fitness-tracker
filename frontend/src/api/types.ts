@@ -183,6 +183,15 @@ export interface PantryItem {
   food: Food;
 }
 
+// --- shopping list (issue #5 §3) ---
+export interface ShoppingItem {
+  id: string;
+  name: string;
+  food_id: string | null;
+  amount_g: string | null;
+  checked: boolean;
+}
+
 export interface DiaryEntry {
   id: string;
   date: string;

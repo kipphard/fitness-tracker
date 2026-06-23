@@ -22,6 +22,7 @@ from backend.persistence.models import (
     RoutineExercise,
     SetLog,
     Settings,
+    ShoppingItem,
     StepLog,
     User,
     WeighIn,
@@ -248,6 +249,88 @@ def remove_pantry_by_food(
         return False
     session.delete(item)
     return True
+
+
+# --- shopping list (issue #5 §3) ---
+
+def list_shopping(session: Session, user_id: uuid.UUID) -> list[ShoppingItem]:
+    """The user's shopping list: unchecked items first, then by creation order."""
+    return list(
+        session.scalars(
+            select(ShoppingItem)
+            .where(ShoppingItem.user_id == user_id)
+            .order_by(ShoppingItem.checked, ShoppingItem.created_at)
+        )
+    )
+
+
+def upsert_shopping_item(
+    session: Session,
+    user_id: uuid.UUID,
+    name: str,
+    amount_g: Decimal | None = None,
+    food_id: uuid.UUID | None = None,
+) -> ShoppingItem:
+    """Add/update an item, merged by lowercased name (one row per item). Sets the amount and
+    un-checks it so a freshly (re)added item is 'to buy' again."""
+    name = name.strip()
+    key = name.lower()
+    existing = session.scalar(
+        select(ShoppingItem).where(
+            ShoppingItem.user_id == user_id, ShoppingItem.name_key == key
+        )
+    )
+    if existing is not None:
+        existing.name = name
+        existing.amount_g = amount_g
+        existing.checked = False
+        if food_id is not None:
+            existing.food_id = food_id
+        session.flush()
+        return existing
+    item = ShoppingItem(
+        user_id=user_id, name=name, name_key=key, amount_g=amount_g, food_id=food_id
+    )
+    session.add(item)
+    session.flush()
+    return item
+
+
+def set_shopping_checked(
+    session: Session, item_id: uuid.UUID, user_id: uuid.UUID, checked: bool
+) -> ShoppingItem | None:
+    item = session.get(ShoppingItem, item_id)
+    if item is None or item.user_id != user_id:
+        return None
+    item.checked = checked
+    session.flush()
+    return item
+
+
+def remove_shopping_item(
+    session: Session, item_id: uuid.UUID, user_id: uuid.UUID
+) -> bool:
+    item = session.get(ShoppingItem, item_id)
+    if item is None or item.user_id != user_id:
+        return False
+    session.delete(item)
+    return True
+
+
+def clear_shopping(
+    session: Session, user_id: uuid.UUID, checked_only: bool = False
+) -> int:
+    """Delete all shopping items (or only the checked ones). Returns how many were removed."""
+    items = session.scalars(
+        select(ShoppingItem).where(ShoppingItem.user_id == user_id)
+    )
+    n = 0
+    for item in items:
+        if checked_only and not item.checked:
+            continue
+        session.delete(item)
+        n += 1
+    return n
 
 
 # --- diary (food logs) ---

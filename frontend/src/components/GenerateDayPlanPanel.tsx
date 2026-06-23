@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
 import { apiGet, apiPost } from "../api/client";
@@ -39,6 +40,7 @@ export function GenerateDayPlanPanel({
   const [showPrefs, setShowPrefs] = useState(false);
   const [preferences, setPreferences] = useState("");
   const [settings, setSettings] = useState<Settings | null>(null);
+  const [shoppingAdded, setShoppingAdded] = useState(false);
 
   const load = async (
     mode: "rule" | "ai",
@@ -54,6 +56,7 @@ export function GenerateDayPlanPanel({
       if (mode === "ai" && preferences.trim()) body.preferences = preferences.trim();
       setData(await apiPost<DayPlanResponse>(path, body));
       setAdded(new Set());
+      setShoppingAdded(false);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -108,6 +111,20 @@ export function GenerateDayPlanPanel({
       }
     } finally {
       setBusy(false);
+    }
+  };
+
+  const addToShopping = async () => {
+    if (!data) return;
+    const items = data.meals.flatMap((m) =>
+      m.suggestions.map((s) => ({ name: s.name, food_id: s.food_id, amount_g: s.amount_g })),
+    );
+    if (items.length === 0) return;
+    try {
+      await apiPost("/shopping/from-plan", { items });
+      setShoppingAdded(true);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
     }
   };
 
@@ -173,15 +190,26 @@ export function GenerateDayPlanPanel({
           </p>
 
           {totalItems > 0 && (
-            <div className="diary-actions">
-              <button
-                className="btn btn--primary btn--sm"
-                onClick={addAll}
-                disabled={busy || allAdded}
-              >
-                {allAdded ? `✓ ${t("suggest.added")}` : t("plan.addAll")}
-              </button>
-            </div>
+            <>
+              <div className="diary-actions">
+                <button
+                  className="btn btn--primary btn--sm"
+                  onClick={addAll}
+                  disabled={busy || allAdded}
+                >
+                  {allAdded ? `✓ ${t("suggest.added")}` : t("plan.addAll")}
+                </button>
+                <button className="btn btn--ghost btn--sm" onClick={addToShopping}>
+                  🛒 {t("shopping.addFromPlan")}
+                </button>
+              </div>
+              {shoppingAdded && (
+                <p className="muted">
+                  {t("shopping.addedToList")}{" "}
+                  <Link to="/shopping">{t("shopping.goToList")}</Link>
+                </p>
+              )}
+            </>
           )}
 
           {data.meals.map((meal) => (

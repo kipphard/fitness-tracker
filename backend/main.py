@@ -16,6 +16,7 @@ from backend.api import (
     profile,
     routines,
     settings,
+    shopping,
     steps,
     today,
     trends,
@@ -47,6 +48,7 @@ app.include_router(weight.router, prefix=API)
 app.include_router(macros.router, prefix=API)
 app.include_router(food.router, prefix=API)
 app.include_router(pantry.router, prefix=API)
+app.include_router(shopping.router, prefix=API)
 app.include_router(diary.router, prefix=API)
 app.include_router(steps.router, prefix=API)
 app.include_router(today.router, prefix=API)
