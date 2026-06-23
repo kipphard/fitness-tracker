@@ -7,7 +7,7 @@ import uuid
 from datetime import date
 from decimal import Decimal
 
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 
 from backend.api.deps import (
     CurrentUser,
@@ -15,6 +15,7 @@ from backend.api.deps import (
     SessionDep,
     SuggestClientDep,
     VisionClientDep,
+    block_in_demo,
 )
 from backend.api.today import compute_today
 from backend.config import get_settings
@@ -116,7 +117,7 @@ def lookup_barcode(
     return FoodOut.model_validate(food)
 
 
-@router.post("/photo", response_model=PhotoEstimateOut)
+@router.post("/photo", response_model=PhotoEstimateOut, dependencies=[Depends(block_in_demo)])
 def estimate_photo(
     user: CurrentUser,  # resolved first, so unauthenticated requests 401 before the 503 check
     vision: VisionClientDep,
@@ -224,7 +225,7 @@ def suggest_fill(payload: SuggestIn, session: SessionDep, user: CurrentUser) -> 
     )
 
 
-@router.post("/suggest/ai", response_model=SuggestOut)
+@router.post("/suggest/ai", response_model=SuggestOut, dependencies=[Depends(block_in_demo)])
 def suggest_fill_ai(
     payload: SuggestAiIn,
     session: SessionDep,
@@ -428,7 +429,7 @@ def plan_rule(payload: PlanIn, session: SessionDep, user: CurrentUser) -> PlanOu
     )
 
 
-@router.post("/plan/ai", response_model=PlanOut)
+@router.post("/plan/ai", response_model=PlanOut, dependencies=[Depends(block_in_demo)])
 def plan_ai(
     payload: PlanIn,
     session: SessionDep,

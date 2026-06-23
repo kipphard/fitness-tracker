@@ -35,8 +35,9 @@ class UserOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID
-    email: EmailStr
+    email: str  # plain str (not EmailStr): demo users use the RFC-reserved @demo.invalid domain
     created_at: datetime
+    is_demo: bool = False
 
 
 class TokenOut(BaseModel):

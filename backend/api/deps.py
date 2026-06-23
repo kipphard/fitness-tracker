@@ -44,6 +44,13 @@ def get_current_user(
 CurrentUser = Annotated[User, Depends(get_current_user)]
 
 
+def block_in_demo(user: CurrentUser) -> None:
+    """Reject the request for demo users — used to gate paid (Anthropic) endpoints. Demo users
+    can do everything else; this only blocks features that would cost money."""
+    if user.is_demo:
+        raise HTTPException(status_code=403, detail="disabled in demo")
+
+
 def get_off_client() -> OpenFoodFactsClient:
     """Open Food Facts client. Overridden in tests with a fake (no network)."""
     return OpenFoodFactsClient()

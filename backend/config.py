@@ -48,6 +48,15 @@ class Settings(BaseSettings):
     def anthropic_configured(self) -> bool:
         return bool(self.anthropic_api_key)
 
+    # Public live demo: each visitor gets a private, seeded, auto-expiring sandbox.
+    demo_enabled: bool = True
+    demo_ttl_hours: int = 3  # demo users + their data are deleted after this
+    demo_max_active: int = 200  # global cap on concurrent demo sandboxes
+    demo_per_ip_per_hour: int = 5  # per-IP rate limit on POST /auth/demo
+    # Public sign-up. Off by default (the demo endpoint stays public regardless); flip on
+    # with REGISTRATION_ENABLED=true to allow self-service registration.
+    registration_enabled: bool = False
+
     @field_validator("fernet_key")
     @classmethod
     def _validate_fernet_key(cls, value: str) -> str:

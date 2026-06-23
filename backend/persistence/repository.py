@@ -6,7 +6,7 @@ from datetime import date, datetime, timezone
 from decimal import Decimal
 from typing import Any
 
-from sqlalchemy import func, or_, select
+from sqlalchemy import delete, func, or_, select
 from sqlalchemy.orm import Session
 
 from backend.persistence.models import (
@@ -33,11 +33,46 @@ from backend.workouts.seed import seed_library
 
 # --- users ---
 
-def create_user(session: Session, *, email: str, password_hash: str) -> User:
-    user = User(email=email, password_hash=password_hash)
+def create_user(
+    session: Session, *, email: str, password_hash: str, is_demo: bool = False
+) -> User:
+    user = User(email=email, password_hash=password_hash, is_demo=is_demo)
     session.add(user)
     session.flush()
     return user
+
+
+def count_demo_users(session: Session) -> int:
+    return int(
+        session.scalar(select(func.count()).select_from(User).where(User.is_demo.is_(True))) or 0
+    )
+
+
+def delete_user(session: Session, user_id: uuid.UUID) -> bool:
+    """Delete a user and ALL their rows. Children are deleted first via explicit statements so
+    this works whether or not the DB enforces FK cascades (SQLite in tests does not). Used by the
+    demo cleanup job."""
+    if session.get(User, user_id) is None:
+        return False
+    session_ids = select(WorkoutSession.id).where(WorkoutSession.user_id == user_id)
+    routine_ids = select(Routine.id).where(Routine.user_id == user_id)
+    session.execute(delete(SetLog).where(SetLog.session_id.in_(session_ids)))
+    session.execute(delete(WorkoutSession).where(WorkoutSession.user_id == user_id))
+    session.execute(delete(RoutineExercise).where(RoutineExercise.routine_id.in_(routine_ids)))
+    session.execute(delete(Routine).where(Routine.user_id == user_id))
+    session.execute(delete(FoodLog).where(FoodLog.user_id == user_id))
+    session.execute(delete(ShoppingItem).where(ShoppingItem.user_id == user_id))
+    session.execute(delete(PantryItem).where(PantryItem.user_id == user_id))
+    session.execute(delete(BodyMeasurement).where(BodyMeasurement.user_id == user_id))
+    session.execute(delete(StepLog).where(StepLog.user_id == user_id))
+    session.execute(delete(WeighIn).where(WeighIn.user_id == user_id))
+    session.execute(delete(MacroTarget).where(MacroTarget.user_id == user_id))
+    session.execute(delete(Settings).where(Settings.user_id == user_id))
+    session.execute(delete(Profile).where(Profile.user_id == user_id))
+    session.execute(delete(Food).where(Food.owner_id == user_id))
+    session.execute(delete(Exercise).where(Exercise.owner_id == user_id))
+    session.execute(delete(User).where(User.id == user_id))
+    return True
 
 
 def get_user(session: Session, user_id: uuid.UUID) -> User | None:
