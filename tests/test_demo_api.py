@@ -63,6 +63,21 @@ def test_non_demo_user_not_blocked(client):
     assert client.post("/api/food/suggest/ai", json={}).status_code != 403
 
 
+def test_registration_can_be_disabled_but_login_and_demo_still_work(client, monkeypatch):
+    from backend.config import get_settings
+
+    monkeypatch.setattr(get_settings(), "registration_enabled", False)
+    blocked = client.post(
+        "/api/auth/register", json={"email": "blocked@example.com", "password": "password123"}
+    )
+    assert blocked.status_code == 403
+    # The real login path and the public demo are unaffected.
+    assert client.post(
+        "/api/auth/login", json={"email": "user-a@example.com", "password": "password123"}
+    ).status_code == 200
+    assert client.post("/api/auth/demo", json={}).status_code == 201
+
+
 def test_demo_user_counts_toward_cap(client):
     before = _demo_client(client)  # noqa: F841 - creates one demo user
     from backend.persistence import repository

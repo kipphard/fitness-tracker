@@ -11,6 +11,7 @@ from cryptography.fernet import Fernet
 # Set env vars BEFORE importing backend.
 os.environ.setdefault("FERNET_KEY", Fernet.generate_key().decode())
 os.environ.setdefault("DATABASE_URL", "sqlite+pysqlite:///:memory:")
+os.environ.setdefault("REGISTRATION_ENABLED", "true")  # tests create users via /auth/register
 
 import pytest
 from fastapi.testclient import TestClient

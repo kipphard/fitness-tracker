@@ -48,6 +48,8 @@ def _rate_ok(ip: str, limit: int, window: float = 3600.0) -> bool:
 
 @router.post("/register", response_model=TokenOut, status_code=201)
 def register(payload: RegisterIn, session: SessionDep) -> TokenOut:
+    if not get_settings().registration_enabled:
+        raise HTTPException(status_code=403, detail="registration is closed")
     email = payload.email.lower()
     if repository.get_user_by_email(session, email) is not None:
         raise HTTPException(status_code=409, detail="email already registered")
