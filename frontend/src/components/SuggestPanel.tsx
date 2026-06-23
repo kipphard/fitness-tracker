@@ -30,6 +30,7 @@ export function SuggestPanel({
   const [error, setError] = useState<string | null>(null);
   const [slot, setSlot] = useState<MealSlot>(defaultSlot);
   const [added, setAdded] = useState<Set<number>>(new Set());
+  const [busy, setBusy] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [showPrefs, setShowPrefs] = useState(false);
   const [preferences, setPreferences] = useState("");
@@ -91,7 +92,23 @@ export function SuggestPanel({
     }
   };
 
+  const addAll = async () => {
+    if (!data) return;
+    setBusy(true);
+    try {
+      for (let i = 0; i < data.suggestions.length; i++) {
+        if (!added.has(i)) await addOne(data.suggestions[i], i);
+      }
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const remaining = data ? num(data.remaining_kcal) : 0;
+  const filled = data
+    ? data.suggestions.reduce((a, s) => a + num(s.kcal), 0)
+    : 0;
+  const allAdded = (data?.suggestions.length ?? 0) > 0 && added.size >= (data?.suggestions.length ?? 0);
   const gaps = data
     ? ([
         ["protein", num(data.protein_gap_g)],
@@ -130,20 +147,33 @@ export function SuggestPanel({
 
           {hasSuggestions && (
             <>
-              <label className="field suggest-slot">
-                <span>{t("diary.slot")}</span>
-                <select
-                  className="select"
-                  value={slot}
-                  onChange={(e) => setSlot(e.target.value as MealSlot)}
+              <div className="suggest-controls">
+                <label className="field suggest-slot">
+                  <span>{t("diary.slot")}</span>
+                  <select
+                    className="select"
+                    value={slot}
+                    onChange={(e) => setSlot(e.target.value as MealSlot)}
+                  >
+                    {MEAL_SLOTS.map((s) => (
+                      <option key={s} value={s}>
+                        {t(`diary.slots.${s}`)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <button
+                  className="btn btn--primary btn--sm"
+                  onClick={addAll}
+                  disabled={busy || allAdded}
                 >
-                  {MEAL_SLOTS.map((s) => (
-                    <option key={s} value={s}>
-                      {t(`diary.slots.${s}`)}
-                    </option>
-                  ))}
-                </select>
-              </label>
+                  {allAdded ? `✓ ${t("suggest.added")}` : t("suggest.addAll")}
+                </button>
+              </div>
+
+              <p className="muted suggest-fills">
+                {t("suggest.fills", { filled: kcal(filled), remaining: kcal(remaining) })}
+              </p>
 
               <ul className="list suggest-list">
                 {data.suggestions.map((s, i) => (

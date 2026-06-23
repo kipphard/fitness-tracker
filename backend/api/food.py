@@ -162,6 +162,7 @@ def _suggest_context(session: SessionDep, user: User, day: date, tz: int):
             per100_protein_g=f.per100_protein_g,
             per100_fat_g=f.per100_fat_g,
             per100_carbs_g=f.per100_carbs_g,
+            serving_g=f.serving_g,
         )
         for f in pool
     ]
@@ -174,7 +175,7 @@ def suggest_fill(payload: SuggestIn, session: SessionDep, user: CurrentUser) -> 
     remaining calories, ranked by macro-gap fit. Always available (no API key needed)."""
     day = payload.date or date.today()
     on, remaining, pg, fg, cg, candidates = _suggest_context(session, user, day, payload.tz)
-    suggestions = suggest_engine.suggest_foods(
+    suggestions = suggest_engine.suggest_basket(
         remaining_kcal=remaining,
         protein_gap=pg,
         fat_gap=fg,

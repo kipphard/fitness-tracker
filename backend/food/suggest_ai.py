@@ -64,7 +64,12 @@ suggest 3-5 single foods with realistic portions that together would help close 
 
 Prefer foods from the user's list (use their exact name and per-100g values when you do). You \
 may also add common, realistic foods when they balance the macros better — especially to hit a \
-protein gap. Size each portion so the suggestions are useful, not absurd.
+protein gap.
+
+Use REALISTIC portions: respect normal serving sizes and never suggest absurd amounts (e.g. \
+not 400 g of protein powder — a scoop is ~30 g). Spread a large remaining budget across a few \
+foods rather than one huge portion. Together your suggestions should roughly add up to the \
+remaining calories.
 
 Respond with ONLY a JSON object (no markdown, no prose) of exactly this shape:
 {
@@ -138,11 +143,13 @@ def parse_suggestions(payload: dict) -> AiSuggestResult:
 def _format_candidates(candidates: list[Candidate], limit: int = 40) -> str:
     if not candidates:
         return "(none yet)"
-    lines = [
-        f"- {c.name} (per 100 g: {c.per100_kcal} kcal, "
-        f"{c.per100_protein_g} P / {c.per100_fat_g} F / {c.per100_carbs_g} C)"
-        for c in candidates[:limit]
-    ]
+    lines = []
+    for c in candidates[:limit]:
+        serving = f", serving {c.serving_g} g" if c.serving_g else ""
+        lines.append(
+            f"- {c.name} (per 100 g: {c.per100_kcal} kcal, "
+            f"{c.per100_protein_g} P / {c.per100_fat_g} F / {c.per100_carbs_g} C{serving})"
+        )
     return "\n".join(lines)
 
 

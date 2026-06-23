@@ -1,11 +1,17 @@
-"""Pure unit tests for the deterministic fill-remaining-calories engine."""
+"""Pure unit tests for the deterministic fill-remaining-calories basket engine."""
 import uuid
 from decimal import Decimal
 
-from backend.food.suggest import Candidate, suggest_foods
+from backend.food.suggest import (
+    GENERIC_MAX_G,
+    MAX_SERVINGS,
+    Candidate,
+    realistic_portion,
+    suggest_basket,
+)
 
 
-def _c(name, kcal, p, f, c):
+def _c(name, kcal, p, f, c, serving=None):
     return Candidate(
         food_id=uuid.uuid4(),
         name=name,
@@ -13,51 +19,90 @@ def _c(name, kcal, p, f, c):
         per100_protein_g=Decimal(p),
         per100_fat_g=Decimal(f),
         per100_carbs_g=Decimal(c),
+        serving_g=None if serving is None else Decimal(serving),
     )
 
 
-def test_portion_fills_remaining_kcal():
-    # 100 kcal / 100 g, 250 kcal remaining → 250 g.
-    [s] = suggest_foods(
-        remaining_kcal=Decimal(250),
-        protein_gap=Decimal(0),
-        fat_gap=Decimal(0),
-        carbs_gap=Decimal(0),
-        candidates=[_c("Rice", 100, 2, 0, 22)],
+# --- portion realism -------------------------------------------------------
+
+def test_serving_food_capped_to_a_few_scoops():
+    # Whey ~378 kcal/100g, 30 g scoop, huge budget → must NOT become 480 g.
+    grams = realistic_portion(
+        target_kcal=Decimal(1800),
+        original_remaining=Decimal(1800),
+        per100_kcal=Decimal(378),
+        serving_g=Decimal(30),
     )
-    assert s.amount_g == Decimal(250)
-    assert s.kcal == Decimal(250)
+    assert grams <= MAX_SERVINGS * Decimal(30)  # at most 3 scoops
+    assert grams == Decimal(90)
 
 
-def test_protein_gap_ranks_protein_dense_food_first():
-    chicken = _c("Chicken", 165, 31, 4, 0)  # protein-dense
-    candy = _c("Candy", 400, 0, 5, 95)      # carb/fat
-    out = suggest_foods(
-        remaining_kcal=Decimal(300),
-        protein_gap=Decimal(40),  # big protein gap, no carb/fat need
+def test_servingless_food_capped_to_generic_max():
+    grams = realistic_portion(
+        target_kcal=Decimal(2000),
+        original_remaining=Decimal(2000),
+        per100_kcal=Decimal(150),
+        serving_g=None,
+    )
+    assert grams <= GENERIC_MAX_G
+
+
+def test_no_single_item_exceeds_calorie_share():
+    # Even an energy-dense, serving-less food is capped to ≤60% of the original budget.
+    grams = realistic_portion(
+        target_kcal=Decimal(1000),
+        original_remaining=Decimal(1000),
+        per100_kcal=Decimal(900),  # oil-like
+        serving_g=None,
+    )
+    assert Decimal(900) * grams / Decimal(100) <= Decimal(1000) * Decimal("0.6") + Decimal("1")
+
+
+# --- basket composition ----------------------------------------------------
+
+def test_basket_does_not_suggest_absurd_whey_portion():
+    whey = _c("Whey Isolate", 378, 90, 1, 4, serving=30)
+    out = suggest_basket(
+        remaining_kcal=Decimal(1800),
+        protein_gap=Decimal(190),
+        fat_gap=Decimal(76),
+        carbs_gap=Decimal(93),
+        candidates=[whey],
+    )
+    assert all(s.amount_g <= MAX_SERVINGS * Decimal(30) for s in out)
+
+
+def test_basket_combines_multiple_foods():
+    whey = _c("Whey", 378, 90, 1, 4, serving=30)
+    pasta = _c("Pasta bake", 191, 9, 10, 15)
+    snickers = _c("Snickers", 485, 9, 25, 60, serving=50)
+    out = suggest_basket(
+        remaining_kcal=Decimal(1800),
+        protein_gap=Decimal(190),
+        fat_gap=Decimal(76),
+        carbs_gap=Decimal(93),
+        candidates=[whey, pasta, snickers],
+    )
+    assert len(out) >= 2  # spread across foods, not one giant portion
+    assert len({s.name for s in out}) == len(out)  # no food repeated
+
+
+def test_protein_gap_picks_protein_food_first():
+    chicken = _c("Chicken", 165, 31, 4, 0)
+    rice = _c("Rice", 130, 2, 0, 28)
+    out = suggest_basket(
+        remaining_kcal=Decimal(600),
+        protein_gap=Decimal(60),
         fat_gap=Decimal(0),
         carbs_gap=Decimal(0),
-        candidates=[candy, chicken],  # deliberately list candy first
+        candidates=[rice, chicken],  # rice listed first on purpose
     )
     assert out[0].name == "Chicken"
 
 
-def test_carb_gap_ranks_carb_food_first():
-    chicken = _c("Chicken", 165, 31, 4, 0)
-    rice = _c("Rice", 130, 2, 0, 28)
-    out = suggest_foods(
-        remaining_kcal=Decimal(300),
-        protein_gap=Decimal(0),
-        fat_gap=Decimal(0),
-        carbs_gap=Decimal(60),  # carbs needed
-        candidates=[chicken, rice],
-    )
-    assert out[0].name == "Rice"
-
-
 def test_tiny_remaining_returns_nothing():
     assert (
-        suggest_foods(
+        suggest_basket(
             remaining_kcal=Decimal(30),
             protein_gap=Decimal(10),
             fat_gap=Decimal(5),
@@ -70,7 +115,7 @@ def test_tiny_remaining_returns_nothing():
 
 def test_no_candidates_returns_nothing():
     assert (
-        suggest_foods(
+        suggest_basket(
             remaining_kcal=Decimal(500),
             protein_gap=Decimal(30),
             fat_gap=Decimal(10),
@@ -81,30 +126,14 @@ def test_no_candidates_returns_nothing():
     )
 
 
-def test_low_energy_food_dropped():
-    # Lettuce ~15 kcal/100g: even at the max 600 g portion that's only 90 kcal — far below
-    # half of a 500 kcal gap → dropped.
-    assert (
-        suggest_foods(
-            remaining_kcal=Decimal(500),
-            protein_gap=Decimal(10),
-            fat_gap=Decimal(0),
-            carbs_gap=Decimal(20),
-            candidates=[_c("Lettuce", 15, 1, 0, 3)],
-        )
-        == []
-    )
-
-
-def test_results_capped_and_carry_food_id():
-    cands = [_c(f"Food{i}", 100 + i, 10, 5, 10) for i in range(10)]
-    out = suggest_foods(
-        remaining_kcal=Decimal(400),
-        protein_gap=Decimal(20),
-        fat_gap=Decimal(10),
-        carbs_gap=Decimal(20),
+def test_basket_capped_at_max_items_and_carries_food_id():
+    cands = [_c(f"Food{i}", 150, 10, 5, 12) for i in range(10)]
+    out = suggest_basket(
+        remaining_kcal=Decimal(3000),
+        protein_gap=Decimal(120),
+        fat_gap=Decimal(60),
+        carbs_gap=Decimal(200),
         candidates=cands,
-        max_results=6,
     )
-    assert len(out) == 6
+    assert 0 < len(out) <= 4
     assert all(s.food_id is not None for s in out)

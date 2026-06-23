@@ -333,6 +333,8 @@
     "stillNeed": "Noch nötig:",
     "add": "Hinzufügen",
     "added": "Hinzugefügt",
+    "addAll": "Alle hinzufügen",
+    "fills": "Deckt {{filled}} von {{remaining}} kcal",
     "onTarget": "Du bist heute auf Kurs — nichts zu füllen.",
     "noCandidates": "Trag erst ein paar Lebensmittel ein, dann kann ich aus deiner Liste vorschlagen.",
     "smarter": "Smartere Vorschläge",
