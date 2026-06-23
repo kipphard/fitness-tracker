@@ -81,6 +81,9 @@ export interface Settings {
   country: string | null;
   store: string | null;
   dietary_preferences: string | null;
+  // Food budget (issue #5 §4): weekly grocery spend + 3-letter currency code.
+  food_budget_weekly: string | null;
+  currency: string | null;
 }
 
 export interface Steps {
@@ -189,6 +192,7 @@ export interface ShoppingItem {
   name: string;
   food_id: string | null;
   amount_g: string | null;
+  price: string | null;
   checked: boolean;
 }
 

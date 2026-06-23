@@ -15,7 +15,13 @@ export function SettingsScreen() {
   const [backfilling, setBackfilling] = useState(false);
   const [backfill, setBackfill] = useState<BackfillResult | null>(null);
   // Local draft for the free-text planning fields; persisted on blur.
-  const [draft, setDraft] = useState({ country: "", store: "", dietary: "" });
+  const [draft, setDraft] = useState({
+    country: "",
+    store: "",
+    dietary: "",
+    budget: "",
+    currency: "",
+  });
 
   const runBackfill = async () => {
     setBackfilling(true);
@@ -39,6 +45,8 @@ export function SettingsScreen() {
         country: settings.country ?? "",
         store: settings.store ?? "",
         dietary: settings.dietary_preferences ?? "",
+        budget: settings.food_budget_weekly ?? "",
+        currency: settings.currency ?? "",
       });
   }, [settings]);
 
@@ -131,6 +139,35 @@ export function SettingsScreen() {
             }}
           />
         </label>
+        <div className="setting-row">
+          <span>{t("settings.budget")}</span>
+          <input
+            className="input select--auto"
+            type="number"
+            min="0"
+            value={draft.budget}
+            placeholder={t("settings.budgetPlaceholder")}
+            onChange={(e) => setDraft((d) => ({ ...d, budget: e.target.value }))}
+            onBlur={() => {
+              if ((settings?.food_budget_weekly ?? "") !== draft.budget)
+                save({ food_budget_weekly: draft.budget === "" ? null : draft.budget });
+            }}
+          />
+        </div>
+        <div className="setting-row">
+          <span>{t("settings.currency")}</span>
+          <input
+            className="input select--auto"
+            maxLength={3}
+            value={draft.currency}
+            placeholder="EUR"
+            onChange={(e) => setDraft((d) => ({ ...d, currency: e.target.value.toUpperCase() }))}
+            onBlur={() => {
+              if ((settings?.currency ?? "") !== draft.currency)
+                save({ currency: draft.currency === "" ? null : draft.currency });
+            }}
+          />
+        </div>
         {saved && <div className="alert alert--ok">{t("settings.saved")}</div>}
       </Card>
 

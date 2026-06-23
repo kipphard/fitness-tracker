@@ -33,7 +33,7 @@ def add_shopping(
 ) -> ShoppingItemOut:
     """Add (or update by name) a single item manually."""
     item = repository.upsert_shopping_item(
-        session, user.id, name=payload.name, amount_g=payload.amount_g
+        session, user.id, name=payload.name, amount_g=payload.amount_g, price=payload.price
     )
     session.commit()
     return ShoppingItemOut.model_validate(item)
@@ -81,10 +81,12 @@ def add_from_plan(
 
 
 @router.patch("/{item_id}", response_model=ShoppingItemOut)
-def check_shopping(
+def patch_shopping(
     item_id: uuid.UUID, payload: ShoppingPatchIn, session: SessionDep, user: CurrentUser
 ) -> ShoppingItemOut:
-    item = repository.set_shopping_checked(session, item_id, user.id, payload.checked)
+    """Tick an item off and/or set its estimated price (only the sent fields are applied)."""
+    fields = payload.model_dump(exclude_unset=True)
+    item = repository.update_shopping_item(session, item_id, user.id, **fields)
     if item is None:
         raise HTTPException(status_code=404, detail="item not found")
     session.commit()

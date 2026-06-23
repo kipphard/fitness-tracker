@@ -344,6 +344,8 @@ class AnthropicSuggestClient:
         store: str | None = None,
         dietary_preferences: str | None = None,
         preferences: str | None = None,
+        budget_daily: Decimal | None = None,
+        currency: str | None = None,
     ) -> AiDayPlan:
         horizon = "the whole day" if scope == "full_day" else "the rest of the day"
         user_text = (
@@ -361,6 +363,12 @@ class AnthropicSuggestClient:
                 else None
             ),
             (f"Extra notes: {preferences.strip()}" if preferences and preferences.strip() else None),
+            (
+                f"Daily grocery budget: about {budget_daily} {currency or 'EUR'} — keep the "
+                f"plan affordable within roughly this amount."
+                if budget_daily
+                else None
+            ),
         ]
         for line in context:
             if line:

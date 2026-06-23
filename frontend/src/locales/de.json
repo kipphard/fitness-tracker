@@ -337,6 +337,9 @@
     "storePlaceholder": "z. B. REWE",
     "dietaryPrefs": "Ernährungsvorlieben",
     "dietaryPlaceholder": "z. B. vegetarisch, keine Nüsse",
+    "budget": "Wöchentliches Essensbudget",
+    "budgetPlaceholder": "z. B. 60",
+    "currency": "Währung",
     "dataTitle": "Daten",
     "backfillServings": "Portionsgrößen von Open Food Facts",
     "backfillHint": "Fehlende Portionsgrößen für deine gescannten Lebensmittel laden, damit Vorschläge realistische Portionen wählen.",
@@ -377,6 +380,7 @@
     "prefsPlaceholder": "z. B. schnelle Gerichte, kein Schwein, extra Eiweiß…",
     "thinking": "Plant…",
     "smarter": "Smarterer Plan",
+    "budget": "Budget ≈ {{amount}}/Tag",
     "scope": {
       "full_day": "Ganzer Tag",
       "remaining": "Rest"
@@ -409,6 +413,8 @@
     "listTitle": "Einzukaufen ({{remaining}}/{{total}})",
     "empty": "Nichts einzukaufen. Erstelle einen Tagesplan und tippe 🛒, oder füge oben Artikel hinzu.",
     "remove": "Entfernen",
+    "total": "Geschätzte Summe",
+    "budget": "Budget",
     "clearChecked": "Erledigte löschen",
     "clearAll": "Alle löschen"
   }

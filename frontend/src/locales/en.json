@@ -337,6 +337,9 @@
     "storePlaceholder": "e.g. REWE",
     "dietaryPrefs": "Dietary preferences",
     "dietaryPlaceholder": "e.g. vegetarian, no nuts",
+    "budget": "Weekly food budget",
+    "budgetPlaceholder": "e.g. 60",
+    "currency": "Currency",
     "dataTitle": "Data",
     "backfillServings": "Serving sizes from Open Food Facts",
     "backfillHint": "Fetch missing serving sizes for your scanned foods, so suggestions size realistic portions.",
@@ -377,6 +380,7 @@
     "prefsPlaceholder": "e.g. quick meals, no pork, extra protein…",
     "thinking": "Planning…",
     "smarter": "Smarter plan",
+    "budget": "Budget ≈ {{amount}}/day",
     "scope": {
       "full_day": "Whole day",
       "remaining": "Remaining"
@@ -409,6 +413,8 @@
     "listTitle": "To buy ({{remaining}}/{{total}})",
     "empty": "Nothing to buy. Generate a day plan and tap 🛒, or add items above.",
     "remove": "Remove",
+    "total": "Estimated total",
+    "budget": "budget",
     "clearChecked": "Clear checked",
     "clearAll": "Clear all"
   }

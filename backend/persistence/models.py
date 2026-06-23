@@ -124,6 +124,10 @@ class Settings(Base):
     country: Mapped[str | None] = mapped_column(String(80), nullable=True)
     store: Mapped[str | None] = mapped_column(String(120), nullable=True)
     dietary_preferences: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    # Food budget (issue #5 §4): a weekly grocery spend the AI plan stays within and the
+    # shopping list is measured against. Currency is a 3-letter code (default EUR in the UI).
+    food_budget_weekly: Mapped[Decimal | None] = mapped_column(Numeric(10, 2), nullable=True)
+    currency: Mapped[str | None] = mapped_column(String(3), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_now, nullable=False
     )
@@ -289,6 +293,8 @@ class ShoppingItem(Base):
         GUID, ForeignKey("foods.id", ondelete="SET NULL"), nullable=True
     )
     amount_g: Mapped[Decimal | None] = mapped_column(Measure, nullable=True)
+    # Estimated cost for this line (issue #5 §4), user-entered. Summed against the weekly budget.
+    price: Mapped[Decimal | None] = mapped_column(Numeric(10, 2), nullable=True)
     checked: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_now, nullable=False

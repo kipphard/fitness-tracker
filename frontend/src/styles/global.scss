@@ -868,6 +868,14 @@ a:hover {
 .shopping-item__name {
   flex: 1;
 }
+.shopping-item__price {
+  flex: 0 0 4.75rem;
+  width: 4.75rem;
+  text-align: right;
+}
+.result-row--target.is-over strong {
+  color: #dc2626;
+}
 .serving-edit {
   display: flex;
   align-items: flex-end;

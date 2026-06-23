@@ -66,6 +66,24 @@ def test_remove_and_404(client):
     assert client.patch(f"/api/shopping/{uuid.uuid4()}", json={"checked": True}).status_code == 404
 
 
+def test_shopping_price_and_partial_patch(client):
+    created = client.post("/api/shopping", json={"name": "Rice", "price": "1.50"}).json()
+    assert Decimal(created["price"]) == Decimal("1.50")
+
+    # Ticking it off must not wipe the price (PATCH applies only the sent fields).
+    client.patch(f"/api/shopping/{created['id']}", json={"checked": True})
+    item = client.get("/api/shopping").json()[0]
+    assert item["checked"] is True and Decimal(item["price"]) == Decimal("1.50")
+
+    # Update only the price.
+    client.patch(f"/api/shopping/{created['id']}", json={"price": "2.00"})
+    assert Decimal(client.get("/api/shopping").json()[0]["price"]) == Decimal("2.00")
+
+    # An explicit null clears the price.
+    client.patch(f"/api/shopping/{created['id']}", json={"price": None})
+    assert client.get("/api/shopping").json()[0]["price"] is None
+
+
 def test_shopping_isolated_per_user(client, second_client):
     client.post("/api/shopping", json={"name": "Secret snack"})
     assert second_client.get("/api/shopping").json() == []

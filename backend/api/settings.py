@@ -30,7 +30,9 @@ def read_settings(session: SessionDep, user: CurrentUser) -> SettingsOut:
 def update_settings(
     payload: SettingsIn, session: SessionDep, user: CurrentUser
 ) -> SettingsOut:
-    fields = payload.model_dump(exclude_none=True)
+    # exclude_unset (not exclude_none) so an explicit null clears a field (e.g. budget) while
+    # fields the client didn't send are left unchanged.
+    fields = payload.model_dump(exclude_unset=True)
     settings = repository.upsert_settings(session, user.id, **fields)
     session.commit()
     return SettingsOut.model_validate(settings)

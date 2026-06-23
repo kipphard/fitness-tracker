@@ -10,7 +10,7 @@ import type {
   Settings,
   Suggestion,
 } from "../api/types";
-import { kcal, num, oneDecimal } from "../lib/format";
+import { kcal, money, num, oneDecimal } from "../lib/format";
 import { AiUnavailableNote } from "./AiUnavailableNote";
 import { Card } from "./Card";
 
@@ -188,6 +188,13 @@ export function GenerateDayPlanPanel({
               target: kcal(data.target_kcal),
             })}
           </p>
+          {num(settings?.food_budget_weekly) > 0 && (
+            <p className="muted suggest-fills">
+              {t("plan.budget", {
+                amount: money(num(settings?.food_budget_weekly) / 7, settings?.currency),
+              })}
+            </p>
+          )}
 
           {totalItems > 0 && (
             <>

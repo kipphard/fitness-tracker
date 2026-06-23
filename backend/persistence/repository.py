@@ -270,9 +270,10 @@ def upsert_shopping_item(
     name: str,
     amount_g: Decimal | None = None,
     food_id: uuid.UUID | None = None,
+    price: Decimal | None = None,
 ) -> ShoppingItem:
-    """Add/update an item, merged by lowercased name (one row per item). Sets the amount and
-    un-checks it so a freshly (re)added item is 'to buy' again."""
+    """Add/update an item, merged by lowercased name (one row per item). Sets the amount/price
+    and un-checks it so a freshly (re)added item is 'to buy' again."""
     name = name.strip()
     key = name.lower()
     existing = session.scalar(
@@ -283,26 +284,34 @@ def upsert_shopping_item(
     if existing is not None:
         existing.name = name
         existing.amount_g = amount_g
+        existing.price = price
         existing.checked = False
         if food_id is not None:
             existing.food_id = food_id
         session.flush()
         return existing
     item = ShoppingItem(
-        user_id=user_id, name=name, name_key=key, amount_g=amount_g, food_id=food_id
+        user_id=user_id,
+        name=name,
+        name_key=key,
+        amount_g=amount_g,
+        food_id=food_id,
+        price=price,
     )
     session.add(item)
     session.flush()
     return item
 
 
-def set_shopping_checked(
-    session: Session, item_id: uuid.UUID, user_id: uuid.UUID, checked: bool
+def update_shopping_item(
+    session: Session, item_id: uuid.UUID, user_id: uuid.UUID, **fields: Any
 ) -> ShoppingItem | None:
+    """Apply the given fields (e.g. ``checked``, ``price``) to one shopping item."""
     item = session.get(ShoppingItem, item_id)
     if item is None or item.user_id != user_id:
         return None
-    item.checked = checked
+    for key, value in fields.items():
+        setattr(item, key, value)
     session.flush()
     return item
 

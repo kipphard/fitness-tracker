@@ -16,6 +16,18 @@ export function oneDecimal(value: string | number | null | undefined): string {
   });
 }
 
+const CURRENCY_SYMBOLS: Record<string, string> = { EUR: "€", USD: "$", GBP: "£" };
+
+export function currencySymbol(currency?: string | null): string {
+  const code = currency || "EUR";
+  return CURRENCY_SYMBOLS[code] ?? `${code} `;
+}
+
+// Money display, e.g. "€12.50". Decimals arrive as strings from the API.
+export function money(value: string | number | null | undefined, currency?: string | null): string {
+  return `${currencySymbol(currency)}${num(value).toFixed(2)}`;
+}
+
 export function shortDate(value?: string | null): string {
   if (!value) return "—";
   const d = new Date(value);

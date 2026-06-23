@@ -118,6 +118,8 @@ class _FakeSuggest:
         store=None,
         dietary_preferences=None,
         preferences=None,
+        budget_daily=None,
+        currency=None,
     ) -> AiDayPlan:
         # "Chicken breast" matches a saved food by name (endpoint reuses its food_id); the
         # yogurt is novel (logged inline). Mirrors the real plan() shape.

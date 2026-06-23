@@ -78,6 +78,9 @@ class SettingsIn(BaseModel):
     country: str | None = Field(default=None, max_length=80)
     store: str | None = Field(default=None, max_length=120)
     dietary_preferences: str | None = Field(default=None, max_length=500)
+    # Food budget (issue #5 §4): weekly grocery spend + 3-letter currency code.
+    food_budget_weekly: Decimal | None = Field(default=None, ge=0, le=100000)
+    currency: str | None = Field(default=None, max_length=3)
 
 
 class SettingsOut(BaseModel):
@@ -89,6 +92,8 @@ class SettingsOut(BaseModel):
     country: str | None = None
     store: str | None = None
     dietary_preferences: str | None = None
+    food_budget_weekly: Decimal | None = None
+    currency: str | None = None
 
 
 # --- calories ---
@@ -341,6 +346,7 @@ class PantryItemOut(BaseModel):
 class ShoppingItemIn(BaseModel):
     name: str = Field(min_length=1, max_length=200)
     amount_g: Decimal | None = Field(default=None, gt=0, le=100000)
+    price: Decimal | None = Field(default=None, ge=0, le=100000)
 
 
 class ShoppingPlanItem(BaseModel):
@@ -354,7 +360,10 @@ class ShoppingFromPlanIn(BaseModel):
 
 
 class ShoppingPatchIn(BaseModel):
-    checked: bool
+    # Both optional so a PATCH can tick an item off, set its price, or both. exclude_unset
+    # distinguishes "not sent" from null in the endpoint.
+    checked: bool | None = None
+    price: Decimal | None = Field(default=None, ge=0, le=100000)
 
 
 class ShoppingItemOut(BaseModel):
@@ -364,6 +373,7 @@ class ShoppingItemOut(BaseModel):
     name: str
     food_id: uuid.UUID | None = None
     amount_g: Decimal | None = None
+    price: Decimal | None = None
     checked: bool
 
 

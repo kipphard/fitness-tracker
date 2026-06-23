@@ -2,9 +2,9 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { apiDelete, apiPatch, apiPost } from "../api/client";
-import type { ShoppingItem } from "../api/types";
+import type { Settings, ShoppingItem } from "../api/types";
 import { useApi } from "../hooks/useApi";
-import { oneDecimal } from "../lib/format";
+import { currencySymbol, money, num, oneDecimal } from "../lib/format";
 import { Card } from "./Card";
 
 // Shopping list (issue #5 §3): generated from a day plan minus the pantry, or added by hand.
@@ -12,12 +12,17 @@ import { Card } from "./Card";
 export function ShoppingScreen() {
   const { t } = useTranslation();
   const list = useApi<ShoppingItem[]>("/shopping");
+  const settings = useApi<Settings>("/settings");
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   const items = list.data ?? [];
   const remaining = items.filter((i) => !i.checked).length;
+  const currency = settings.data?.currency ?? "EUR";
+  const total = items.reduce((a, i) => a + num(i.price), 0);
+  const budget = num(settings.data?.food_budget_weekly);
+  const overBudget = budget > 0 && total > budget;
 
   const add = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,6 +42,8 @@ export function ShoppingScreen() {
 
   const toggle = (i: ShoppingItem) =>
     apiPatch(`/shopping/${i.id}`, { checked: !i.checked }).catch(() => undefined);
+  const setPrice = (i: ShoppingItem, value: string) =>
+    apiPatch(`/shopping/${i.id}`, { price: value === "" ? null : value }).catch(() => undefined);
   const remove = (i: ShoppingItem) => apiDelete(`/shopping/${i.id}`).catch(() => undefined);
   const clear = (checkedOnly: boolean) =>
     apiDelete(`/shopping${checkedOnly ? "?checked=true" : ""}`).catch(() => undefined);
@@ -85,6 +92,17 @@ export function ShoppingScreen() {
                       <span className="muted tnum">{oneDecimal(i.amount_g)} g</span>
                     )}
                   </label>
+                  <input
+                    className="input shopping-item__price"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    defaultValue={i.price ?? ""}
+                    placeholder={currencySymbol(currency)}
+                    onBlur={(e) => {
+                      if ((i.price ?? "") !== e.target.value) setPrice(i, e.target.value);
+                    }}
+                  />
                   <button
                     className="icon-btn"
                     onClick={() => remove(i)}
@@ -96,6 +114,13 @@ export function ShoppingScreen() {
                 </li>
               ))}
             </ul>
+            <div className={"result-row result-row--target" + (overBudget ? " is-over" : "")}>
+              <span>
+                {t("shopping.total")}
+                {budget > 0 && ` · ${t("shopping.budget")} ${money(budget, currency)}`}
+              </span>
+              <strong className="tnum">{money(total, currency)}</strong>
+            </div>
             <div className="diary-actions">
               <button
                 className="btn btn--ghost btn--sm"

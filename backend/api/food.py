@@ -447,6 +447,9 @@ def plan_ai(
         [_to_candidate(f, in_pantry=f.id in pantry_ids) for f in foods]
     )
     settings = repository.get_settings(session, user.id)
+    budget_daily = None
+    if settings and settings.food_budget_weekly:
+        budget_daily = (settings.food_budget_weekly / Decimal(7)).quantize(Decimal("0.01"))
 
     try:
         result = client.plan(
@@ -461,6 +464,8 @@ def plan_ai(
             store=settings.store if settings else None,
             dietary_preferences=settings.dietary_preferences if settings else None,
             preferences=payload.preferences,
+            budget_daily=budget_daily,
+            currency=settings.currency if settings else None,
         )
     except Exception as exc:  # noqa: BLE001 - upstream/model failure
         raise HTTPException(status_code=502, detail="plan generation failed") from exc
