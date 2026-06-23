@@ -238,6 +238,11 @@ export interface SuggestResponse {
   notes: string;
 }
 
+export interface BackfillResult {
+  checked: number;
+  updated: number;
+}
+
 // --- workouts (Phase 7) ---
 
 export type SetType = "warmup" | "working";

@@ -3,6 +3,7 @@ vision photo estimator (Phase 5)."""
 from __future__ import annotations
 
 import base64
+import uuid
 from datetime import date
 from decimal import Decimal
 
@@ -21,9 +22,11 @@ from backend.food import suggest as suggest_engine
 from backend.persistence import repository
 from backend.persistence.models import FoodSource, User
 from backend.schemas import (
+    BackfillOut,
     FoodDataOut,
     FoodIn,
     FoodOut,
+    FoodUpdateIn,
     PhotoEstimateOut,
     SuggestAiIn,
     SuggestIn,
@@ -140,15 +143,25 @@ def estimate_photo(
 # --- fill remaining calories (issue #5, section 1) ---
 
 
-def _suggest_context(session: SessionDep, user: User, day: date, tz: int):
+def _suggest_context(
+    session: SessionDep,
+    user: User,
+    day: date,
+    tz: int,
+    slot=None,
+    exclude_ids: set | None = None,
+):
     """Shared inputs for both suggestion paths: the day's remaining kcal + macro gaps (vs.
-    target) and the candidate food pool (recents first, then the rest of the catalogue)."""
+    target) and the candidate food pool (recents first, then the rest of the catalogue),
+    annotated with slot affinity and with excluded/duplicate foods removed."""
+    exclude_ids = exclude_ids or set()
     today = compute_today(session, user, day, tz)
     remaining = today.remaining_kcal
     protein_gap = today.macros.protein_g - today.consumed.protein_g
     fat_gap = today.macros.fat_g - today.consumed.fat_g
     carbs_gap = today.macros.carbs_g - today.consumed.carbs_g
 
+    affinity = repository.food_slot_counts(session, user.id, slot) if slot else {}
     recents = repository.recent_foods(session, user.id, limit=30)
     seen = {f.id for f in recents}
     pool = recents + [
@@ -163,8 +176,10 @@ def _suggest_context(session: SessionDep, user: User, day: date, tz: int):
             per100_fat_g=f.per100_fat_g,
             per100_carbs_g=f.per100_carbs_g,
             serving_g=f.serving_g,
+            slot_affinity=affinity.get(f.id, 0),
         )
         for f in pool
+        if f.id not in exclude_ids
     ]
     candidates = suggest_engine.dedup_candidates(candidates)
     return today.date, remaining, protein_gap, fat_gap, carbs_gap, candidates
@@ -173,15 +188,23 @@ def _suggest_context(session: SessionDep, user: User, day: date, tz: int):
 @router.post("/suggest", response_model=SuggestOut)
 def suggest_fill(payload: SuggestIn, session: SessionDep, user: CurrentUser) -> SuggestOut:
     """Rule-based suggestions: foods + portions from the user's catalogue that fill the day's
-    remaining calories, ranked by macro-gap fit. Always available (no API key needed)."""
+    remaining calories, ranked by macro-gap fit. Always available (no API key needed).
+
+    ``exclude_food_ids`` regenerates around foods already shown; ``count``=1 with
+    ``target_kcal`` swaps a single item for an equivalent-size alternative; ``slot`` biases
+    picks toward that meal."""
     day = payload.date or date.today()
-    on, remaining, pg, fg, cg, candidates = _suggest_context(session, user, day, payload.tz)
+    on, remaining, pg, fg, cg, candidates = _suggest_context(
+        session, user, day, payload.tz, payload.slot, set(payload.exclude_food_ids)
+    )
     suggestions = suggest_engine.suggest_basket(
-        remaining_kcal=remaining,
+        remaining_kcal=payload.target_kcal or remaining,
         protein_gap=pg,
         fat_gap=fg,
         carbs_gap=cg,
         candidates=candidates,
+        max_items=payload.count or suggest_engine.MAX_BASKET_ITEMS,
+        slot=payload.slot.value if payload.slot else None,
     )
     return SuggestOut(
         date=on,
@@ -205,7 +228,9 @@ def suggest_fill_ai(
     """AI-assisted suggestions via Claude. 503 until ANTHROPIC_API_KEY is set (issue #2);
     falls through to an empty list when the budget is already met."""
     day = payload.date or date.today()
-    on, remaining, pg, fg, cg, candidates = _suggest_context(session, user, day, payload.tz)
+    on, remaining, pg, fg, cg, candidates = _suggest_context(
+        session, user, day, payload.tz, payload.slot, set(payload.exclude_food_ids)
+    )
     pg, fg, cg = max(pg, Decimal(0)), max(fg, Decimal(0)), max(cg, Decimal(0))
 
     suggestions: list[suggest_engine.Suggestion] = []
@@ -265,3 +290,48 @@ def suggest_fill_ai(
         source="ai",
         notes=notes,
     )
+
+
+# --- food maintenance (serving sizes) ---
+
+
+@router.post("/backfill-servings", response_model=BackfillOut)
+def backfill_servings(
+    session: SessionDep, user: CurrentUser, off: OffClientDep
+) -> BackfillOut:
+    """Re-fetch serving sizes from Open Food Facts for the user's OFF foods that lack one, so
+    suggestions can size realistic portions. Capped and best-effort (skips on lookup failure)."""
+    missing = [
+        f
+        for f in repository.list_foods(session, user.id, limit=500)
+        if f.serving_g is None and f.source == FoodSource.off and f.barcode
+    ]
+    checked = updated = 0
+    for f in missing[:50]:
+        checked += 1
+        try:
+            data = off.get_product(f.barcode)
+        except Exception:  # noqa: BLE001 - skip transient/network failures
+            continue
+        if data is not None and data.serving_g:
+            repository.update_food(session, f, serving_g=data.serving_g)
+            updated += 1
+    if updated:
+        session.commit()
+    return BackfillOut(checked=checked, updated=updated)
+
+
+@router.patch("/{food_id}", response_model=FoodOut)
+def edit_food(
+    food_id: uuid.UUID, payload: FoodUpdateIn, session: SessionDep, user: CurrentUser
+) -> FoodOut:
+    """Update a saved food — chiefly to set a serving size after the fact. Only the provided
+    fields change; previously logged diary entries keep their snapshot macros."""
+    food = repository.get_food(session, food_id, user.id)
+    if food is None:
+        raise HTTPException(status_code=404, detail="food not found")
+    fields = payload.model_dump(exclude_unset=True)
+    if fields:
+        repository.update_food(session, food, **fields)
+        session.commit()
+    return FoodOut.model_validate(food)

@@ -14,7 +14,7 @@ from backend.food.suggest import (
 )
 
 
-def _c(name, kcal, p, f, c, serving=None):
+def _c(name, kcal, p, f, c, serving=None, affinity=0):
     return Candidate(
         food_id=uuid.uuid4(),
         name=name,
@@ -23,6 +23,7 @@ def _c(name, kcal, p, f, c, serving=None):
         per100_fat_g=Decimal(f),
         per100_carbs_g=Decimal(c),
         serving_g=None if serving is None else Decimal(serving),
+        slot_affinity=affinity,
     )
 
 
@@ -173,6 +174,37 @@ def test_no_candidates_returns_nothing():
         )
         == []
     )
+
+
+# --- slot awareness --------------------------------------------------------
+
+def test_slot_affinity_boosts_a_food():
+    # Near-equal macro fit; the one the user logs in this slot is nudged ahead.
+    plain = _c("Plain", 150, 10, 5, 12)
+    favourite = _c("Favourite", 150, 11, 6, 13, affinity=5)
+    out = suggest_basket(
+        remaining_kcal=Decimal(600),
+        protein_gap=Decimal(30),
+        fat_gap=Decimal(10),
+        carbs_gap=Decimal(30),
+        candidates=[plain, favourite],
+        slot="lunch",
+    )
+    assert out[0].name == "Favourite"
+
+
+def test_treat_penalised_for_meals_but_ok_for_snacks():
+    candy = _c("Candy", 480, 2, 20, 75)  # energy-dense, almost no protein → treat
+    rice = _c("Rice", 130, 3, 0, 28)
+    args = dict(
+        remaining_kcal=Decimal(500),
+        protein_gap=Decimal(0),
+        fat_gap=Decimal(30),
+        carbs_gap=Decimal(60),
+        candidates=[candy, rice],
+    )
+    assert suggest_basket(**args, slot="snack")[0].name == "Candy"   # fits the gap best
+    assert suggest_basket(**args, slot="dinner")[0].name == "Rice"   # treat penalised
 
 
 def test_basket_capped_at_max_items_and_carries_food_id():

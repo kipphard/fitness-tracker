@@ -38,6 +38,13 @@ MAX_ITEM_KCAL_SHARE = Decimal("0.45")  # one item ≤ 45% of the original remain
 # Don't put two near-identical foods in one basket (e.g. two quark variants). A signature
 # dedup removes catalogue duplicates; this cosine guard catches the rest at compose time.
 VARIETY_COS = Decimal("0.97")
+# Slot awareness (when a meal slot is given): nudge toward foods the user logs in that slot,
+# and away from treat-like foods (energy-dense, barely any protein) for real meals.
+AFFINITY_BONUS_PER = Decimal("0.02")
+AFFINITY_BONUS_MAX = Decimal("0.10")
+TREAT_PENALTY = Decimal("0.25")
+TREAT_KCAL = Decimal(350)
+TREAT_PROTEIN_FRACTION = Decimal("0.10")
 DEFAULT_MAX_RESULTS = MAX_BASKET_ITEMS
 
 
@@ -54,6 +61,7 @@ class Candidate:
     per100_fat_g: Decimal
     per100_carbs_g: Decimal
     serving_g: Decimal | None = None
+    slot_affinity: int = 0  # times the user has logged this food in the target meal slot
 
 
 @dataclass(frozen=True)
@@ -138,6 +146,14 @@ def _macro_signature(c: Candidate) -> tuple[int, int, int, int]:
     )
 
 
+def _is_treat(c: Candidate) -> bool:
+    """A treat-like food: energy-dense with barely any protein (sweets, chips). Fine as a snack,
+    a poor headline for a real meal."""
+    if c.per100_kcal < TREAT_KCAL:
+        return False
+    return (c.per100_protein_g * 4) / c.per100_kcal < TREAT_PROTEIN_FRACTION
+
+
 def dedup_candidates(candidates: list[Candidate]) -> list[Candidate]:
     """Drop near-identical foods, keeping the first occurrence (recents come first, so the most
     recently used variant wins). Prevents two of essentially the same food in one basket."""
@@ -195,14 +211,17 @@ def suggest_basket(
     carbs_gap: Decimal,
     candidates: list[Candidate],
     max_items: int = MAX_BASKET_ITEMS,
+    slot: str | None = None,
 ) -> list[Suggestion]:
     """Compose a basket of realistic portions that together fill ``remaining_kcal``.
 
     Greedy: at each step pick the unused food whose macro profile best matches the *residual*
     macro gap, add a realistic portion, and subtract its contribution — so the basket
-    diversifies as each gap closes. Stops once the budget is essentially met, the basket is
-    full, or no food can contribute meaningfully. Returns ``[]`` when the budget is already met
-    (``remaining_kcal < MIN_GAP_KCAL``) or there are no usable candidates.
+    diversifies as each gap closes. When ``slot`` is given, foods the user logs in that slot
+    are nudged up and treat-like foods are nudged down for non-snack meals. Stops once the
+    budget is essentially met, the basket is full, or no food can contribute meaningfully.
+    Returns ``[]`` when the budget is already met (``remaining_kcal < MIN_GAP_KCAL``) or there
+    are no usable candidates.
     """
     if remaining_kcal < MIN_GAP_KCAL:
         return []
@@ -240,7 +259,12 @@ def suggest_basket(
             if kcal < MIN_ITEM_KCAL:
                 continue
             score = _cosine(vec, gaps)
-            # Higher macro-fit first; round so near-ties fall back to input order (recents).
+            if slot is not None:
+                if c.slot_affinity > 0:
+                    score += min(AFFINITY_BONUS_MAX, AFFINITY_BONUS_PER * c.slot_affinity)
+                if slot != "snack" and _is_treat(c):
+                    score -= TREAT_PENALTY
+            # Higher score first; round so near-ties fall back to input order (recents).
             key = (-score.quantize(Decimal("0.01")), idx)
             if best is None or key < best[0]:
                 best = (key, idx, c, grams)

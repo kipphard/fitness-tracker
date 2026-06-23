@@ -154,6 +154,13 @@ def get_food(session: Session, food_id: uuid.UUID, owner_id: uuid.UUID) -> Food 
     return food
 
 
+def update_food(session: Session, food: Food, **fields: Any) -> Food:
+    for key, value in fields.items():
+        setattr(food, key, value)
+    session.flush()
+    return food
+
+
 def get_food_by_barcode(
     session: Session, owner_id: uuid.UUID, barcode: str
 ) -> Food | None:
@@ -236,6 +243,22 @@ def delete_food_log(session: Session, log_id: uuid.UUID, user_id: uuid.UUID) -> 
         return False
     session.delete(log)
     return True
+
+
+def food_slot_counts(
+    session: Session, user_id: uuid.UUID, slot: Any
+) -> dict[uuid.UUID, int]:
+    """How often each food has been logged in a given meal slot — for slot-aware suggestions."""
+    rows = session.execute(
+        select(FoodLog.food_id, func.count())
+        .where(
+            FoodLog.user_id == user_id,
+            FoodLog.slot == slot,
+            FoodLog.food_id.isnot(None),
+        )
+        .group_by(FoodLog.food_id)
+    ).all()
+    return {fid: int(n) for fid, n in rows}
 
 
 def recent_foods(

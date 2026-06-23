@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { apiGet, apiPut } from "../api/client";
-import type { Settings, UnitSystem } from "../api/types";
+import { apiGet, apiPost, apiPut } from "../api/client";
+import type { BackfillResult, Settings, UnitSystem } from "../api/types";
 import { Card } from "./Card";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 
@@ -12,6 +12,20 @@ export function SettingsScreen() {
   const { t } = useTranslation();
   const [settings, setSettings] = useState<Settings | null>(null);
   const [saved, setSaved] = useState(false);
+  const [backfilling, setBackfilling] = useState(false);
+  const [backfill, setBackfill] = useState<BackfillResult | null>(null);
+
+  const runBackfill = async () => {
+    setBackfilling(true);
+    setBackfill(null);
+    try {
+      setBackfill(await apiPost<BackfillResult>("/food/backfill-servings"));
+    } catch {
+      /* ignore — best-effort maintenance action */
+    } finally {
+      setBackfilling(false);
+    }
+  };
 
   useEffect(() => {
     apiGet<Settings>("/settings").then(setSettings).catch(() => undefined);
@@ -64,6 +78,23 @@ export function SettingsScreen() {
         </div>
         <p className="muted setting-note">{t("settings.note")}</p>
         {saved && <div className="alert alert--ok">{t("settings.saved")}</div>}
+      </Card>
+
+      <Card title={t("settings.dataTitle")}>
+        <div className="setting-row">
+          <span>
+            {t("settings.backfillServings")}
+            <small className="muted setting-sub">{t("settings.backfillHint")}</small>
+          </span>
+          <button className="btn btn--ghost btn--sm" onClick={runBackfill} disabled={backfilling}>
+            {backfilling ? t("common.loading") : t("settings.backfillRun")}
+          </button>
+        </div>
+        {backfill && (
+          <div className="alert alert--ok">
+            {t("settings.backfillDone", { updated: backfill.updated, checked: backfill.checked })}
+          </div>
+        )}
       </Card>
     </div>
   );

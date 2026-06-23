@@ -79,6 +79,9 @@
     "customName": "Name des Lebensmittels",
     "customKcal": "kcal / 100 g",
     "useCustom": "Dieses Lebensmittel verwenden",
+    "serving": "Portion (g)",
+    "servingOptional": "Portionsgröße (g, optional)",
+    "saveServing": "Portion speichern",
     "amount": "Menge (g)",
     "slot": "Mahlzeit",
     "add": "Zum Tagebuch hinzufügen",
@@ -323,7 +326,12 @@
       "imperial": "Imperial (lb, in)"
     },
     "saved": "Gespeichert",
-    "note": "Imperiale Eingabe folgt in einer späteren Phase; die Berechnung erfolgt immer metrisch."
+    "note": "Imperiale Eingabe folgt in einer späteren Phase; die Berechnung erfolgt immer metrisch.",
+    "dataTitle": "Daten",
+    "backfillServings": "Portionsgrößen von Open Food Facts",
+    "backfillHint": "Fehlende Portionsgrößen für deine gescannten Lebensmittel laden, damit Vorschläge realistische Portionen wählen.",
+    "backfillRun": "Portionen laden",
+    "backfillDone": "{{updated}} von {{checked}} geprüften Lebensmitteln aktualisiert."
   },
   "suggest": {
     "title": "Restkalorien füllen",
@@ -334,6 +342,8 @@
     "add": "Hinzufügen",
     "added": "Hinzugefügt",
     "addAll": "Alle hinzufügen",
+    "regenerate": "Andere Vorschläge",
+    "swap": "Tauschen",
     "fills": "Deckt {{filled}} von {{remaining}} kcal",
     "onTarget": "Du bist heute auf Kurs — nichts zu füllen.",
     "noCandidates": "Trag erst ein paar Lebensmittel ein, dann kann ich aus deiner Liste vorschlagen.",

@@ -211,6 +211,23 @@ class FoodOut(BaseModel):
     serving_g: Decimal | None = None
 
 
+class FoodUpdateIn(BaseModel):
+    """Partial update of a saved food — chiefly to set a serving size after the fact. Only the
+    fields present are applied (``model_dump(exclude_unset=True)``)."""
+
+    name: str | None = Field(default=None, min_length=1, max_length=200)
+    per100_kcal: Decimal | None = Field(default=None, ge=0, le=1000)
+    per100_protein_g: Decimal | None = Field(default=None, ge=0, le=100)
+    per100_fat_g: Decimal | None = Field(default=None, ge=0, le=100)
+    per100_carbs_g: Decimal | None = Field(default=None, ge=0, le=100)
+    serving_g: Decimal | None = Field(default=None, gt=0, le=5000)
+
+
+class BackfillOut(BaseModel):
+    checked: int
+    updated: int
+
+
 class FoodDataOut(BaseModel):
     """A transient Open Food Facts search result (not yet persisted; has no id)."""
 
@@ -332,6 +349,10 @@ class PhotoEstimateOut(BaseModel):
 class SuggestIn(BaseModel):
     date: date_type | None = None  # defaults to today
     tz: int = Field(default=0, ge=-720, le=840)  # minutes east of UTC
+    slot: MealSlot | None = None  # the meal we're filling — biases picks toward it
+    exclude_food_ids: list[uuid.UUID] = Field(default_factory=list)  # skip these (regenerate)
+    count: int | None = Field(default=None, ge=1, le=8)  # basket size override (1 = swap one)
+    target_kcal: Decimal | None = Field(default=None, gt=0)  # size against this, not the day
 
 
 class SuggestAiIn(SuggestIn):

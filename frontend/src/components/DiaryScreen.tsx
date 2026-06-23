@@ -28,6 +28,7 @@ interface Selectable {
   per100_protein_g: string;
   per100_fat_g: string;
   per100_carbs_g: string;
+  serving_g?: string | null;
   barcode?: string | null;
 }
 
@@ -39,6 +40,7 @@ function toSelectable(f: Food | FoodData): Selectable {
     per100_protein_g: f.per100_protein_g,
     per100_fat_g: f.per100_fat_g,
     per100_carbs_g: f.per100_carbs_g,
+    serving_g: f.serving_g,
     barcode: f.barcode,
   };
 }
@@ -66,7 +68,8 @@ export function DiaryScreen() {
   const [showAllRecent, setShowAllRecent] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editAmount, setEditAmount] = useState("");
-  const [custom, setCustom] = useState({ name: "", kcal: "", protein: "", fat: "", carbs: "" });
+  const [custom, setCustom] = useState({ name: "", kcal: "", protein: "", fat: "", carbs: "", serving: "" });
+  const [servingEdit, setServingEdit] = useState("");
 
   const [selected, setSelected] = useState<Selectable | null>(null);
   const [amount, setAmount] = useState("100");
@@ -126,9 +129,10 @@ export function DiaryScreen() {
       per100_protein_g: custom.protein || "0",
       per100_fat_g: custom.fat || "0",
       per100_carbs_g: custom.carbs || "0",
+      serving_g: custom.serving && num(custom.serving) > 0 ? custom.serving : null,
     });
     setShowCustom(false);
-    setCustom({ name: "", kcal: "", protein: "", fat: "", carbs: "" });
+    setCustom({ name: "", kcal: "", protein: "", fat: "", carbs: "", serving: "" });
   };
 
   const logSelected = async () => {
@@ -143,6 +147,8 @@ export function DiaryScreen() {
         per100_protein_g: selected.per100_protein_g,
         per100_fat_g: selected.per100_fat_g,
         per100_carbs_g: selected.per100_carbs_g,
+        serving_g:
+          selected.serving_g && num(selected.serving_g) > 0 ? selected.serving_g : null,
         barcode: selected.barcode ?? null,
       };
     try {
@@ -151,6 +157,24 @@ export function DiaryScreen() {
       setAmount("100");
       setQuery("");
       setOff(null);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    }
+  };
+
+  // Keep the serving editor in sync with the selected saved food.
+  useEffect(() => {
+    setServingEdit(selected?.serving_g ?? "");
+  }, [selected]);
+
+  // Set a serving size on a saved food (helps "fill remaining calories" pick natural portions).
+  const saveServing = async () => {
+    if (!selected?.id) return;
+    const v = num(servingEdit);
+    if (v <= 0) return;
+    try {
+      const updated = await apiPatch<Food>(`/food/${selected.id}`, { serving_g: String(v) });
+      setSelected({ ...selected, serving_g: updated.serving_g });
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     }
@@ -358,6 +382,8 @@ export function DiaryScreen() {
                 <input className="input" type="number" step="0.1" placeholder={t("today.macros.carbs")} value={custom.carbs}
                   onChange={(e) => setCustom({ ...custom, carbs: e.target.value })} />
               </div>
+              <input className="input" type="number" step="1" min="1" placeholder={t("diary.servingOptional")} value={custom.serving}
+                onChange={(e) => setCustom({ ...custom, serving: e.target.value })} />
               <button className="btn btn--ghost btn--sm" onClick={useCustom}>{t("diary.useCustom")}</button>
             </div>
           )}
@@ -387,6 +413,25 @@ export function DiaryScreen() {
                   <span><strong className="tnum">{oneDecimal(scaledMacros.protein)} g</strong> {t("today.macros.protein")}</span>
                   <span><strong className="tnum">{oneDecimal(scaledMacros.carbs)} g</strong> {t("today.macros.carbs")}</span>
                   <span><strong className="tnum">{oneDecimal(scaledMacros.fat)} g</strong> {t("today.macros.fat")}</span>
+                </div>
+              )}
+              {selected.id && (
+                <div className="serving-edit">
+                  <label className="field serving-edit__field">
+                    <span>{t("diary.serving")}</span>
+                    <input
+                      className="input"
+                      type="number"
+                      step="1"
+                      min="1"
+                      inputMode="numeric"
+                      value={servingEdit}
+                      onChange={(e) => setServingEdit(e.target.value)}
+                    />
+                  </label>
+                  <button className="btn btn--ghost btn--sm" onClick={saveServing}>
+                    {t("diary.saveServing")}
+                  </button>
                 </div>
               )}
               <div className="diary-actions">

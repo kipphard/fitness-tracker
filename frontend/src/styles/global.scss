@@ -773,8 +773,10 @@ a:hover {
   font-size: 0.82rem;
   font-style: italic;
 }
-.suggest-item__add {
-  align-self: flex-start;
+.suggest-item__actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
 }
 .suggest-ai {
   display: flex;
@@ -783,6 +785,14 @@ a:hover {
   margin-top: 0.9rem;
   padding-top: 0.9rem;
   border-top: 1px solid var(--border);
+}
+.serving-edit {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+.serving-edit__field {
+  flex: 1;
 }
 
 /* ── Prose / explainers ────────────────────────────────────────────────── */

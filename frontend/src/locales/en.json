@@ -79,6 +79,9 @@
     "customName": "Food name",
     "customKcal": "kcal / 100 g",
     "useCustom": "Use this food",
+    "serving": "Serving (g)",
+    "servingOptional": "Serving size (g, optional)",
+    "saveServing": "Save serving",
     "amount": "Amount (g)",
     "slot": "Meal",
     "add": "Add to diary",
@@ -323,7 +326,12 @@
       "imperial": "Imperial (lb, in)"
     },
     "saved": "Saved",
-    "note": "Imperial input arrives in a later phase; the engine always computes in metric."
+    "note": "Imperial input arrives in a later phase; the engine always computes in metric.",
+    "dataTitle": "Data",
+    "backfillServings": "Serving sizes from Open Food Facts",
+    "backfillHint": "Fetch missing serving sizes for your scanned foods, so suggestions size realistic portions.",
+    "backfillRun": "Fetch servings",
+    "backfillDone": "Updated {{updated}} of {{checked}} foods checked."
   },
   "suggest": {
     "title": "Fill remaining calories",
@@ -334,6 +342,8 @@
     "add": "Add",
     "added": "Added",
     "addAll": "Add all",
+    "regenerate": "Other ideas",
+    "swap": "Swap",
     "fills": "Fills {{filled}} of {{remaining}} kcal",
     "onTarget": "You're on target for today — nothing to fill.",
     "noCandidates": "Log a few foods first so I can suggest from your own list.",

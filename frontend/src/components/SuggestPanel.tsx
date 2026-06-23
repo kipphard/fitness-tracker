@@ -11,8 +11,9 @@ import {
 import { kcal, num, oneDecimal } from "../lib/format";
 import { Card } from "./Card";
 
-// "Fill remaining calories" (issue #5). Rule-based suggestions load on open (free, instant);
-// an optional "✨ Smarter suggestions" button calls the Claude path when it's configured.
+// "Fill remaining calories" (issue #5). Rule-based basket loads on open (free, instant); the
+// meal slot is an input (biases picks), with regenerate + per-item swap, plus an optional
+// "✨ Smarter suggestions" Claude path when it's configured.
 export function SuggestPanel({
   date,
   tz,
@@ -32,45 +33,50 @@ export function SuggestPanel({
   const [added, setAdded] = useState<Set<number>>(new Set());
   const [busy, setBusy] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
+  const [swapping, setSwapping] = useState<number | null>(null);
   const [showPrefs, setShowPrefs] = useState(false);
   const [preferences, setPreferences] = useState("");
 
-  const loadRule = async () => {
-    setLoading(true);
+  const load = async (
+    mode: "rule" | "ai",
+    exclude: string[] = [],
+    slotArg: MealSlot = slot,
+  ) => {
+    const setL = mode === "ai" ? setAiLoading : setLoading;
+    setL(true);
     setError(null);
     try {
-      setData(await apiPost<SuggestResponse>("/food/suggest", { date, tz }));
+      const path = mode === "ai" ? "/food/suggest/ai" : "/food/suggest";
+      const body: Record<string, unknown> = {
+        date,
+        tz,
+        slot: slotArg,
+        exclude_food_ids: exclude,
+      };
+      if (mode === "ai" && preferences.trim()) body.preferences = preferences.trim();
+      setData(await apiPost<SuggestResponse>(path, body));
       setAdded(new Set());
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
-      setLoading(false);
+      setL(false);
     }
   };
 
   useEffect(() => {
-    void loadRule();
+    void load("rule");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const runAi = async () => {
-    setAiLoading(true);
-    setError(null);
-    try {
-      setData(
-        await apiPost<SuggestResponse>("/food/suggest/ai", {
-          date,
-          tz,
-          preferences: preferences.trim() || undefined,
-        }),
-      );
-      setAdded(new Set());
-    } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
-    } finally {
-      setAiLoading(false);
-    }
+  const currentIds = (): string[] =>
+    (data?.suggestions ?? []).map((s) => s.food_id).filter((x): x is string => !!x);
+
+  const onSlot = (next: MealSlot) => {
+    setSlot(next);
+    void load(data?.source ?? "rule", [], next);
   };
+
+  const regenerate = () => load(data?.source ?? "rule", currentIds());
 
   const addOne = async (s: Suggestion, i: number) => {
     setError(null);
@@ -104,11 +110,41 @@ export function SuggestPanel({
     }
   };
 
+  // Swap one item for an equivalent-size alternative (rule path: deterministic + fast).
+  const swap = async (i: number) => {
+    if (!data) return;
+    setSwapping(i);
+    setError(null);
+    try {
+      const res = await apiPost<SuggestResponse>("/food/suggest", {
+        date,
+        tz,
+        slot,
+        exclude_food_ids: currentIds(),
+        count: 1,
+        target_kcal: data.suggestions[i].kcal,
+      });
+      if (res.suggestions.length > 0) {
+        const next = [...data.suggestions];
+        next[i] = res.suggestions[0];
+        setData({ ...data, suggestions: next });
+        setAdded((prev) => {
+          const n = new Set(prev);
+          n.delete(i);
+          return n;
+        });
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setSwapping(null);
+    }
+  };
+
   const remaining = data ? num(data.remaining_kcal) : 0;
-  const filled = data
-    ? data.suggestions.reduce((a, s) => a + num(s.kcal), 0)
-    : 0;
-  const allAdded = (data?.suggestions.length ?? 0) > 0 && added.size >= (data?.suggestions.length ?? 0);
+  const filled = data ? data.suggestions.reduce((a, s) => a + num(s.kcal), 0) : 0;
+  const allAdded =
+    (data?.suggestions.length ?? 0) > 0 && added.size >= (data?.suggestions.length ?? 0);
   const gaps = data
     ? ([
         ["protein", num(data.protein_gap_g)],
@@ -153,7 +189,7 @@ export function SuggestPanel({
                   <select
                     className="select"
                     value={slot}
-                    onChange={(e) => setSlot(e.target.value as MealSlot)}
+                    onChange={(e) => onSlot(e.target.value as MealSlot)}
                   >
                     {MEAL_SLOTS.map((s) => (
                       <option key={s} value={s}>
@@ -162,6 +198,13 @@ export function SuggestPanel({
                     ))}
                   </select>
                 </label>
+                <button
+                  className="btn btn--ghost btn--sm"
+                  onClick={regenerate}
+                  disabled={loading || aiLoading}
+                >
+                  ↻ {t("suggest.regenerate")}
+                </button>
                 <button
                   className="btn btn--primary btn--sm"
                   onClick={addAll}
@@ -190,13 +233,22 @@ export function SuggestPanel({
                       <span><strong className="tnum">{oneDecimal(s.fat_g)} g</strong> {t("today.macros.fat")}</span>
                     </div>
                     {s.reason && <p className="muted suggest-item__reason">{s.reason}</p>}
-                    <button
-                      className="btn btn--primary btn--sm suggest-item__add"
-                      onClick={() => addOne(s, i)}
-                      disabled={added.has(i)}
-                    >
-                      {added.has(i) ? `✓ ${t("suggest.added")}` : t("suggest.add")}
-                    </button>
+                    <div className="suggest-item__actions">
+                      <button
+                        className="btn btn--primary btn--sm"
+                        onClick={() => addOne(s, i)}
+                        disabled={added.has(i)}
+                      >
+                        {added.has(i) ? `✓ ${t("suggest.added")}` : t("suggest.add")}
+                      </button>
+                      <button
+                        className="btn btn--ghost btn--sm"
+                        onClick={() => swap(i)}
+                        disabled={swapping === i || added.has(i)}
+                      >
+                        {swapping === i ? "…" : `↻ ${t("suggest.swap")}`}
+                      </button>
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -233,7 +285,7 @@ export function SuggestPanel({
                 )}
                 <button
                   className="btn btn--ghost btn--sm"
-                  onClick={runAi}
+                  onClick={() => load("ai")}
                   disabled={aiLoading}
                 >
                   {aiLoading ? t("suggest.thinking") : `✨ ${t("suggest.smarter")}`}
@@ -241,7 +293,7 @@ export function SuggestPanel({
                 {data.source === "ai" && (
                   <button
                     className="btn btn--link btn--sm"
-                    onClick={loadRule}
+                    onClick={() => load("rule")}
                     disabled={loading}
                   >
                     {t("suggest.backToYours")}
