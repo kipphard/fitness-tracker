@@ -524,6 +524,19 @@ def delete_routine(session: Session, routine_id: uuid.UUID, user_id: uuid.UUID) 
     return True
 
 
+def update_routine(session: Session, routine: Routine, name: str) -> Routine:
+    routine.name = name
+    session.flush()
+    return routine
+
+
+def clear_routine_exercises(session: Session, routine: Routine) -> None:
+    """Remove all exercises from a routine (used by the replace-all edit endpoint)."""
+    for re in list(routine.exercises):
+        session.delete(re)
+    session.flush()
+
+
 def add_routine_exercise(
     session: Session, routine: Routine, exercise_id: uuid.UUID, **fields: Any
 ) -> RoutineExercise:
@@ -551,6 +564,17 @@ def get_workout_session(
     if ws is None or ws.user_id != user_id:
         return None
     return ws
+
+
+def delete_workout_session(
+    session: Session, session_id: uuid.UUID, user_id: uuid.UUID
+) -> bool:
+    """Delete a whole session (its sets cascade via the delete-orphan relationship)."""
+    ws = get_workout_session(session, session_id, user_id)
+    if ws is None:
+        return False
+    session.delete(ws)
+    return True
 
 
 def list_workout_sessions(

@@ -1479,6 +1479,127 @@ a:hover {
   font-size: 1.25rem;
   background: var(--surface-2);
 }
+.exercise-thumb--sm {
+  width: 2rem;
+  height: 2rem;
+  font-size: 0.9rem;
+}
+
+/* ── Workout routines: Hevy-style cards + editor (issue: routines now editable) ── */
+.btn--block {
+  width: 100%;
+  display: block;
+}
+.routines-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 1rem 0 0.5rem;
+}
+.routines-head h3 {
+  margin: 0;
+}
+.routine-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.routine-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.routine-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.routine-card__name {
+  font-size: 1rem;
+}
+.routine-card__actions {
+  display: flex;
+  gap: 0.25rem;
+}
+.routine-card__exercises {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.routine-card__exercises li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+}
+.routine-card__ex-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.routine-card__more {
+  color: var(--muted);
+}
+.routine-edit-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.routine-edit-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+.routine-edit-item__main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.routine-edit-item__name {
+  font-weight: 600;
+  font-size: 0.9rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.routine-edit-item__fields {
+  display: flex;
+  gap: 0.75rem;
+}
+.routine-edit-item__order {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.micro-field {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+.micro-field .input--steps {
+  width: 3.2rem;
+}
 .picker__row-text {
   display: flex;
   flex-direction: column;

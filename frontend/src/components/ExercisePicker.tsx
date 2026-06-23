@@ -2,35 +2,12 @@ import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { Exercise } from "../api/types";
-import {
-  EQUIPMENT_TYPES,
-  MUSCLE_GROUPS,
-  exerciseImageUrl,
-  localizedExerciseName,
-  vocabKey,
-} from "../lib/exercise";
+import { EQUIPMENT_TYPES, MUSCLE_GROUPS, localizedExerciseName, vocabKey } from "../lib/exercise";
+import { ExerciseThumb } from "./ExerciseThumb";
 
 // How many rows to render at once. Search/filters narrow the ~870-item library;
 // this caps the DOM (and lazy image requests) on phones until the user refines.
 const MAX_VISIBLE = 80;
-
-function Thumb({ exercise }: { exercise: Exercise }) {
-  const [failed, setFailed] = useState(false);
-  const src = exerciseImageUrl(exercise);
-  if (!src || failed) {
-    return <span className="exercise-thumb exercise-thumb--ph" aria-hidden>🏋️</span>;
-  }
-  return (
-    <img
-      className="exercise-thumb"
-      src={src}
-      alt=""
-      loading="lazy"
-      decoding="async"
-      onError={() => setFailed(true)}
-    />
-  );
-}
 
 export function ExercisePicker({
   exercises,
@@ -110,7 +87,7 @@ export function ExercisePicker({
           return (
             <li key={e.id}>
               <button className="picker__row" onClick={() => onPick(e)}>
-                <Thumb exercise={e} />
+                <ExerciseThumb exercise={e} />
                 <span className="picker__row-text">
                   <span className="picker__row-name">{localizedExerciseName(e, lang)}</span>
                   {primary && <span className="picker__row-sub">{muscleLabel(primary)}</span>}

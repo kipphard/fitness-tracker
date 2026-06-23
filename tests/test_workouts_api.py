@@ -48,6 +48,58 @@ def test_routine_crud(client):
     assert client.get(f"/api/routines/{routine['id']}").status_code == 404
 
 
+def test_routine_edit_replaces_name_and_exercises(client):
+    bench = _exercise(client)
+    squat = _exercise(client, "Barbell Squat")
+    routine = client.post(
+        "/api/routines",
+        json={"name": "Upper", "exercises": [{"exercise_id": bench["id"], "planned_sets": 3}]},
+    ).json()
+
+    # Rename + swap to a different exercise with new sets/reps + reorder.
+    updated = client.put(
+        f"/api/routines/{routine['id']}",
+        json={
+            "name": "Upper A",
+            "exercises": [
+                {"exercise_id": squat["id"], "planned_sets": 5, "planned_reps": 5},
+                {"exercise_id": bench["id"], "planned_sets": 4, "planned_reps": 8},
+            ],
+        },
+    )
+    assert updated.status_code == 200, updated.text
+    data = updated.json()
+    assert data["name"] == "Upper A"
+    assert [e["exercise_id"] for e in data["exercises"]] == [squat["id"], bench["id"]]
+    assert data["exercises"][0]["planned_sets"] == 5 and data["exercises"][0]["planned_reps"] == 5
+    assert [e["position"] for e in data["exercises"]] == [0, 1]
+    # Persisted.
+    assert client.get(f"/api/routines/{routine['id']}").json()["name"] == "Upper A"
+
+
+def test_routine_edit_404_and_bad_exercise(client):
+    import uuid
+
+    assert client.put(f"/api/routines/{uuid.uuid4()}", json={"name": "X", "exercises": []}).status_code == 404
+    routine = client.post("/api/routines", json={"name": "R", "exercises": []}).json()
+    bad = client.put(
+        f"/api/routines/{routine['id']}",
+        json={"name": "R", "exercises": [{"exercise_id": str(uuid.uuid4()), "planned_sets": 3}]},
+    )
+    assert bad.status_code == 400
+
+
+def test_delete_workout_session(client):
+    bench = _exercise(client)
+    sid = client.post("/api/workouts", json={}).json()["id"]
+    client.post(f"/api/workouts/{sid}/sets", json={"exercise_id": bench["id"], "weight": "80", "reps": 8})
+    assert any(h["id"] == sid for h in client.get("/api/workouts").json())
+
+    assert client.delete(f"/api/workouts/{sid}").status_code == 204
+    assert not any(h["id"] == sid for h in client.get("/api/workouts").json())
+    assert client.get(f"/api/workouts/{sid}").status_code == 404
+
+
 def test_session_log_sets_and_finish(client):
     bench = _exercise(client)
     sid = client.post("/api/workouts", json={}).json()["id"]

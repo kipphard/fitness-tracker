@@ -66,6 +66,33 @@ def get_routine(
     return _routine_out(routine)
 
 
+@router.put("/{routine_id}", response_model=RoutineOut)
+def update_routine(
+    routine_id: uuid.UUID, payload: RoutineIn, session: SessionDep, user: CurrentUser
+) -> RoutineOut:
+    """Replace a routine's name + exercises (handles rename, add/remove/reorder, sets/reps)."""
+    routine = repository.get_routine(session, routine_id, user.id)
+    if routine is None:
+        raise HTTPException(status_code=404, detail="routine not found")
+    for item in payload.exercises:
+        if repository.get_exercise(session, item.exercise_id, user.id) is None:
+            raise HTTPException(status_code=400, detail="exercise not found")
+    repository.update_routine(session, routine, payload.name)
+    repository.clear_routine_exercises(session, routine)
+    for position, item in enumerate(payload.exercises):
+        repository.add_routine_exercise(
+            session,
+            routine,
+            item.exercise_id,
+            position=position,
+            planned_sets=item.planned_sets,
+            planned_reps=item.planned_reps,
+        )
+    session.commit()
+    session.refresh(routine)
+    return _routine_out(routine)
+
+
 @router.delete("/{routine_id}", status_code=204)
 def delete_routine(
     routine_id: uuid.UUID, session: SessionDep, user: CurrentUser

@@ -69,6 +69,16 @@ def delete_set(
     return Response(status_code=204)
 
 
+@router.delete("/{session_id}", status_code=204)
+def delete_session(
+    session_id: uuid.UUID, session: SessionDep, user: CurrentUser
+) -> Response:
+    """Delete a whole workout session and its sets."""
+    repository.delete_workout_session(session, session_id, user.id)
+    session.commit()
+    return Response(status_code=204)
+
+
 @router.get("/{session_id}", response_model=WorkoutSessionOut)
 def get_session_detail(
     session_id: uuid.UUID, session: SessionDep, user: CurrentUser

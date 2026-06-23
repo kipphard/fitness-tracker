@@ -18,13 +18,9 @@ import { num, oneDecimal, shortDate } from "../lib/format";
 import { useTheme } from "../theme";
 import { Card } from "./Card";
 import { ExercisePicker } from "./ExercisePicker";
+import { ExerciseThumb } from "./ExerciseThumb";
 import { LiveSession } from "./LiveSession";
-
-interface BuilderItem {
-  exercise_id: string;
-  name: string;
-  planned_sets: number;
-}
+import { RoutineEditModal } from "./RoutineEditModal";
 
 export function WorkoutsScreen() {
   const { t, i18n } = useTranslation();
@@ -35,12 +31,12 @@ export function WorkoutsScreen() {
   const history = useApi<WorkoutSummary[]>("/workouts");
   const library = useApi<Exercise[]>("/exercises");
 
-  const [name, setName] = useState("");
-  const [items, setItems] = useState<BuilderItem[]>([]);
-  const [picker, setPicker] = useState<"routine" | "progression" | null>(null);
+  // null = closed; { routine: null } = create; { routine } = edit.
+  const [routineModal, setRoutineModal] = useState<{ routine: Routine | null } | null>(null);
 
   const [progId, setProgId] = useState("");
   const [prog, setProg] = useState<Progression | null>(null);
+  const [pickerProg, setPickerProg] = useState(false);
   useEffect(() => {
     if (!progId) {
       setProg(null);
@@ -61,10 +57,10 @@ export function WorkoutsScreen() {
     );
   }
 
-  // Library entries carry the German name; routine/session payloads only carry the
-  // canonical English name, so localize by exercise id where we have the library.
+  const libEx = (id: string) => library.data?.find((x) => x.id === id);
+  // Routine/session payloads carry only the canonical English name; localize via the library.
   const exName = (id: string, fallback: string) => {
-    const e = library.data?.find((x) => x.id === id);
+    const e = libEx(id);
     return e ? localizedExerciseName(e, i18n.language) : fallback;
   };
 
@@ -80,28 +76,8 @@ export function WorkoutsScreen() {
     });
   };
 
-  const addItem = (ex: Exercise) => {
-    if (items.some((i) => i.exercise_id === ex.id)) return;
-    setItems((p) => [
-      ...p,
-      { exercise_id: ex.id, name: localizedExerciseName(ex, i18n.language), planned_sets: 3 },
-    ]);
-  };
-  const createRoutine = async () => {
-    if (!name.trim() || items.length === 0) return;
-    await apiPost("/routines", {
-      name: name.trim(),
-      exercises: items.map((i) => ({ exercise_id: i.exercise_id, planned_sets: i.planned_sets })),
-    }).catch(() => undefined);
-    setName("");
-    setItems([]);
-  };
-
   const progExercise = (library.data ?? []).find((e) => e.id === progId);
-  const progData = (prog?.points ?? []).map((p) => ({
-    label: shortDate(p.date),
-    est: num(p.est_1rm),
-  }));
+  const progData = (prog?.points ?? []).map((p) => ({ label: shortDate(p.date), est: num(p.est_1rm) }));
 
   return (
     <div className="screen">
@@ -111,129 +87,88 @@ export function WorkoutsScreen() {
       </header>
 
       <Card title={t("workouts.start")}>
-        <button className="btn btn--primary" onClick={startEmpty}>
+        <button className="btn btn--primary btn--block" onClick={startEmpty}>
           {t("workouts.startEmpty")}
         </button>
-        {(routines.data ?? []).length > 0 && (
-          <ul className="list routine-list">
+
+        <div className="routines-head">
+          <h3>{t("workouts.routinesHead")}</h3>
+          <button className="btn btn--ghost btn--sm" onClick={() => setRoutineModal({ routine: null })}>
+            + {t("workouts.newRoutine")}
+          </button>
+        </div>
+
+        {(routines.data ?? []).length === 0 ? (
+          <p className="muted">{t("workouts.noRoutines")}</p>
+        ) : (
+          <div className="routine-cards">
             {(routines.data ?? []).map((r) => (
-              <li key={r.id} className="routine-item">
-                <div className="routine-item__info">
-                  <strong>{r.name}</strong>
-                  <span className="muted">
-                    {" "}
-                    · {r.exercises.map((e) => exName(e.exercise_id, e.exercise_name)).join(", ") || t("workouts.noExercises")}
-                  </span>
+              <div key={r.id} className="routine-card">
+                <div className="routine-card__head">
+                  <strong className="routine-card__name">{r.name}</strong>
+                  <div className="routine-card__actions">
+                    <button className="icon-btn icon-btn--xs" onClick={() => setRoutineModal({ routine: r })} aria-label={t("workouts.editRoutine")}>✎</button>
+                    <button
+                      className="icon-btn icon-btn--xs"
+                      onClick={() => apiDelete(`/routines/${r.id}`).catch(() => undefined)}
+                      aria-label={t("workouts.deleteRoutine")}
+                    >
+                      ✕
+                    </button>
+                  </div>
                 </div>
-                <div className="routine-item__actions">
-                  <button className="btn btn--ghost btn--sm" onClick={() => startRoutine(r)}>
-                    {t("workouts.startRoutine")}
-                  </button>
-                  <button
-                    className="icon-btn icon-btn--xs"
-                    onClick={() => apiDelete(`/routines/${r.id}`).catch(() => undefined)}
-                    aria-label={t("weight.delete")}
-                  >
-                    ✕
-                  </button>
-                </div>
-              </li>
+                <ul className="routine-card__exercises">
+                  {r.exercises.length === 0 && <li className="muted">{t("workouts.noExercises")}</li>}
+                  {r.exercises.slice(0, 4).map((e) => (
+                    <li key={e.exercise_id}>
+                      <ExerciseThumb exercise={libEx(e.exercise_id)} className="exercise-thumb exercise-thumb--sm" />
+                      <span className="routine-card__ex-name">{exName(e.exercise_id, e.exercise_name)}</span>
+                      <span className="muted tnum">
+                        {e.planned_sets}×{e.planned_reps ?? "–"}
+                      </span>
+                    </li>
+                  ))}
+                  {r.exercises.length > 4 && (
+                    <li className="muted routine-card__more">
+                      +{r.exercises.length - 4} {t("workouts.moreExercises")}
+                    </li>
+                  )}
+                </ul>
+                <button className="btn btn--primary btn--block btn--sm" onClick={() => startRoutine(r)}>
+                  {t("workouts.startRoutineFull")}
+                </button>
+              </div>
             ))}
-          </ul>
+          </div>
         )}
       </Card>
 
-      <div className="grid grid--2">
-        <Card title={t("workouts.newRoutine")}>
-          <input
-            className="input"
-            placeholder={t("workouts.routineName")}
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-          {items.length > 0 && (
-            <ul className="list">
-              {items.map((i) => (
-                <li key={i.exercise_id} className="diary-entry">
-                  <span className="diary-entry__name">{i.name}</span>
-                  <input
-                    className="input input--steps"
-                    type="number"
-                    min="1"
-                    max="20"
-                    value={i.planned_sets}
-                    onChange={(e) =>
-                      setItems((p) =>
-                        p.map((x) =>
-                          x.exercise_id === i.exercise_id
-                            ? { ...x, planned_sets: Number(e.target.value) }
-                            : x,
-                        ),
-                      )
-                    }
-                  />
-                  <span className="muted">{t("workouts.sets")}</span>
-                  <button
-                    className="icon-btn icon-btn--xs"
-                    onClick={() => setItems((p) => p.filter((x) => x.exercise_id !== i.exercise_id))}
-                    aria-label={t("weight.delete")}
-                  >
-                    ✕
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-          <button className="btn btn--ghost btn--add-exercise" onClick={() => setPicker("routine")}>
-            + {t("workouts.pickExercise")}
-          </button>
-          <button
-            className="btn btn--primary"
-            onClick={createRoutine}
-            disabled={!name.trim() || items.length === 0}
-          >
-            {t("workouts.createRoutine")}
-          </button>
-        </Card>
-
-        <Card title={t("workouts.progression")}>
-          <button className="btn btn--ghost btn--add-exercise" onClick={() => setPicker("progression")}>
-            {progExercise ? localizedExerciseName(progExercise, i18n.language) : t("workouts.pickExercise")}
-          </button>
-          {prog && prog.points.length > 0 ? (
-            <>
-              {prog.prs && (
-                <div className="pr-row">
-                  <span className="badge">
-                    {t("workouts.prWeight")}: {oneDecimal(prog.prs.best_weight)} kg
-                  </span>
-                  <span className="badge">
-                    {t("workouts.pr1rm")}: {oneDecimal(prog.prs.best_est_1rm)} kg
-                  </span>
-                </div>
-              )}
-              <ResponsiveContainer width="100%" height={200}>
-                <LineChart data={progData} margin={{ top: 8, right: 8, bottom: 0, left: -18 }}>
-                  <CartesianGrid stroke={chart.grid} strokeDasharray="3 3" />
-                  <XAxis dataKey="label" stroke={chart.axis} fontSize={11} />
-                  <YAxis stroke={chart.axis} fontSize={11} domain={["auto", "auto"]} />
-                  <Tooltip />
-                  <Line
-                    type="monotone"
-                    dataKey="est"
-                    name={t("workouts.est1rm")}
-                    stroke={chart.trend}
-                    strokeWidth={2}
-                    dot={{ r: 3 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </>
-          ) : (
-            <p className="muted">{progId ? t("workouts.noData") : t("workouts.pickToSee")}</p>
-          )}
-        </Card>
-      </div>
+      <Card title={t("workouts.progression")}>
+        <button className="btn btn--ghost btn--add-exercise" onClick={() => setPickerProg(true)}>
+          {progExercise ? localizedExerciseName(progExercise, i18n.language) : t("workouts.pickExercise")}
+        </button>
+        {prog && prog.points.length > 0 ? (
+          <>
+            {prog.prs && (
+              <div className="pr-row">
+                <span className="badge">{t("workouts.prWeight")}: {oneDecimal(prog.prs.best_weight)} kg</span>
+                <span className="badge">{t("workouts.pr1rm")}: {oneDecimal(prog.prs.best_est_1rm)} kg</span>
+              </div>
+            )}
+            <ResponsiveContainer width="100%" height={200}>
+              <LineChart data={progData} margin={{ top: 8, right: 8, bottom: 0, left: -18 }}>
+                <CartesianGrid stroke={chart.grid} strokeDasharray="3 3" />
+                <XAxis dataKey="label" stroke={chart.axis} fontSize={11} />
+                <YAxis stroke={chart.axis} fontSize={11} domain={["auto", "auto"]} />
+                <Tooltip />
+                <Line type="monotone" dataKey="est" name={t("workouts.est1rm")} stroke={chart.trend} strokeWidth={2} dot={{ r: 3 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </>
+        ) : (
+          <p className="muted">{progId ? t("workouts.noData") : t("workouts.pickToSee")}</p>
+        )}
+      </Card>
 
       <Card title={t("workouts.history")}>
         {(history.data ?? []).length ? (
@@ -244,10 +179,15 @@ export function WorkoutsScreen() {
                   {shortDate(h.started_at)}
                   {h.routine_name ? ` · ${h.routine_name}` : ""}
                 </span>
-                <span className="muted tnum">
-                  {h.set_count} {t("workouts.setsShort")}
-                </span>
+                <span className="muted tnum">{h.set_count} {t("workouts.setsShort")}</span>
                 <span className="tnum">{oneDecimal(h.total_volume)} kg</span>
+                <button
+                  className="icon-btn icon-btn--xs"
+                  onClick={() => apiDelete(`/workouts/${h.id}`).catch(() => undefined)}
+                  aria-label={t("workouts.deleteWorkout")}
+                >
+                  ✕
+                </button>
               </li>
             ))}
           </ul>
@@ -256,15 +196,21 @@ export function WorkoutsScreen() {
         )}
       </Card>
 
-      {picker && (
+      {routineModal && (
+        <RoutineEditModal
+          routine={routineModal.routine}
+          library={library.data ?? []}
+          onClose={() => setRoutineModal(null)}
+        />
+      )}
+
+      {pickerProg && (
         <ExercisePicker
           exercises={library.data ?? []}
-          excludeIds={picker === "routine" ? items.map((i) => i.exercise_id) : []}
-          onClose={() => setPicker(null)}
+          onClose={() => setPickerProg(false)}
           onPick={(ex) => {
-            if (picker === "routine") addItem(ex);
-            else setProgId(ex.id);
-            setPicker(null);
+            setProgId(ex.id);
+            setPickerProg(false);
           }}
         />
       )}
