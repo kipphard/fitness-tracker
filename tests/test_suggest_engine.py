@@ -4,8 +4,11 @@ from decimal import Decimal
 
 from backend.food.suggest import (
     GENERIC_MAX_G,
+    MAX_ITEM_KCAL_SHARE,
     MAX_SERVINGS,
     Candidate,
+    dedup_candidates,
+    default_serving_g,
     realistic_portion,
     suggest_basket,
 )
@@ -48,14 +51,60 @@ def test_servingless_food_capped_to_generic_max():
 
 
 def test_no_single_item_exceeds_calorie_share():
-    # Even an energy-dense, serving-less food is capped to ≤60% of the original budget.
+    # Even an energy-dense, serving-less food stays within the per-item calorie share.
     grams = realistic_portion(
         target_kcal=Decimal(1000),
         original_remaining=Decimal(1000),
         per100_kcal=Decimal(900),  # oil-like
         serving_g=None,
     )
-    assert Decimal(900) * grams / Decimal(100) <= Decimal(1000) * Decimal("0.6") + Decimal("1")
+    assert Decimal(900) * grams / Decimal(100) <= Decimal(1000) * MAX_ITEM_KCAL_SHARE + Decimal("1")
+
+
+def test_default_serving_buckets():
+    assert default_serving_g(Decimal(68)) == Decimal(150)   # quark/yoghurt
+    assert default_serving_g(Decimal(150)) == Decimal(100)  # cooked dishes
+    assert default_serving_g(Decimal(300)) == Decimal(60)   # cheese/bread
+    assert default_serving_g(Decimal(500)) == Decimal(40)   # nuts/chocolate/powder
+
+
+def test_servingless_dense_food_uses_small_default():
+    # Whey-like 378 kcal/100g without serving data → small default serving, a few "scoops".
+    grams = realistic_portion(
+        target_kcal=Decimal(1800),
+        original_remaining=Decimal(1800),
+        per100_kcal=Decimal(378),
+        serving_g=None,
+    )
+    assert grams <= MAX_SERVINGS * default_serving_g(Decimal(378))  # ≤ 3 × 40 g
+
+
+# --- duplicate / variety handling -----------------------------------------
+
+def test_dedup_drops_near_identical_foods():
+    quark_a = _c("Speisequark Magerstufe 0,2 % Fett", 68, 12, 0.2, 4)
+    quark_b = _c("SPEISEQUARK MAGERSTUFE", 67, 12, 0.3, 4)  # essentially the same food
+    chicken = _c("Chicken", 165, 31, 4, 0)
+    out = dedup_candidates([quark_a, quark_b, chicken])
+    assert len(out) == 2
+    assert out[0].name == "Speisequark Magerstufe 0,2 % Fett"  # first (most recent) wins
+
+
+def test_basket_avoids_two_similar_foods():
+    # Same macro direction, different magnitude → distinct signatures (not deduped) but the
+    # variety guard should keep only one of them in the basket.
+    lean_a = _c("Lean A", 100, 20, 2, 5)
+    lean_b = _c("Lean B", 200, 40, 4, 10)  # 1:1 with A
+    fatty = _c("Olive oil", 884, 0, 100, 0)
+    out = suggest_basket(
+        remaining_kcal=Decimal(900),
+        protein_gap=Decimal(80),
+        fat_gap=Decimal(40),
+        carbs_gap=Decimal(20),
+        candidates=[lean_a, lean_b, fatty],
+    )
+    names = {s.name for s in out}
+    assert not ({"Lean A", "Lean B"} <= names)  # not both
 
 
 # --- basket composition ----------------------------------------------------

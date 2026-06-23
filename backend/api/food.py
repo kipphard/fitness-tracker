@@ -166,6 +166,7 @@ def _suggest_context(session: SessionDep, user: User, day: date, tz: int):
         )
         for f in pool
     ]
+    candidates = suggest_engine.dedup_candidates(candidates)
     return today.date, remaining, protein_gap, fat_gap, carbs_gap, candidates
 
 

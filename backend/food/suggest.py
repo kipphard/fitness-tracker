@@ -25,15 +25,19 @@ from backend.food.scale import scale_per100
 MIN_GAP_KCAL = Decimal(50)
 # A basket is a few foods, not a feast; cap how many we compose.
 MAX_BASKET_ITEMS = 4
-# Portion realism. Serving-size foods snap to whole servings (capped); the rest fall back to a
-# tidy gram amount bounded by a generic max. A per-item calorie cap stops any one food from
-# dominating, which is what forces variety instead of "one food = the whole day".
+# Portion realism. Every food is portioned in whole "servings" (≤ MAX_SERVINGS): its real
+# serving size when known, else a typical-portion default keyed to energy density. A per-item
+# calorie cap stops any one food from dominating, which forces variety over "one food = the
+# whole day".
 MAX_SERVINGS = 3
 GENERIC_MAX_G = Decimal(350)
 MIN_PORTION_G = Decimal(10)
 PORTION_STEP_G = Decimal(5)
 MIN_ITEM_KCAL = Decimal(40)  # skip a food whose realistic portion barely moves the needle
-MAX_ITEM_KCAL_SHARE = Decimal("0.6")  # one item ≤ 60% of the original remaining budget
+MAX_ITEM_KCAL_SHARE = Decimal("0.45")  # one item ≤ 45% of the original remaining budget
+# Don't put two near-identical foods in one basket (e.g. two quark variants). A signature
+# dedup removes catalogue duplicates; this cosine guard catches the rest at compose time.
+VARIETY_COS = Decimal("0.97")
 DEFAULT_MAX_RESULTS = MAX_BASKET_ITEMS
 
 
@@ -87,6 +91,19 @@ def _cosine(a: tuple[Decimal, Decimal, Decimal], b: tuple[Decimal, Decimal, Deci
     return dot / (na * nb)
 
 
+def default_serving_g(per100_kcal: Decimal) -> Decimal:
+    """A typical single-portion size when a food has no serving on record, keyed to energy
+    density: light foods (quark, yoghurt, veg) come in bigger portions; dense foods (nuts,
+    chocolate, protein powder) in small ones. A heuristic — real serving data always wins."""
+    if per100_kcal < 100:
+        return Decimal(150)
+    if per100_kcal < 200:
+        return Decimal(100)
+    if per100_kcal < 320:
+        return Decimal(60)
+    return Decimal(40)
+
+
 def realistic_portion(
     *,
     target_kcal: Decimal,
@@ -94,21 +111,45 @@ def realistic_portion(
     per100_kcal: Decimal,
     serving_g: Decimal | None,
 ) -> Decimal:
-    """A sensible portion of a food aimed at ``target_kcal`` but never more than ~60% of the
-    original budget. Serving-size foods snap to whole servings (≤ MAX_SERVINGS); the rest use a
-    tidy gram amount. This is what keeps protein powder at a few scoops, not half a tub."""
+    """A sensible portion of a food aimed at ``target_kcal`` but never more than ~45% of the
+    original budget. Always a whole number of servings (real serving size if known, else an
+    energy-density default), capped at MAX_SERVINGS and a generic gram ceiling — so protein
+    powder stays at a couple of scoops, not half a tub."""
     cap_kcal = min(target_kcal, original_remaining * MAX_ITEM_KCAL_SHARE)
     ideal_g = cap_kcal / per100_kcal * Decimal(100)
 
-    if serving_g is not None and serving_g > 0:
-        servings = (ideal_g / serving_g).to_integral_value(rounding=ROUND_HALF_UP)
-        if servings < 1:
-            servings = Decimal(1)
-        elif servings > MAX_SERVINGS:
-            servings = Decimal(MAX_SERVINGS)
-        return min(servings * serving_g, GENERIC_MAX_G)
+    serving = serving_g if (serving_g is not None and serving_g > 0) else default_serving_g(per100_kcal)
+    servings = (ideal_g / serving).to_integral_value(rounding=ROUND_HALF_UP)
+    if servings < 1:
+        servings = Decimal(1)
+    elif servings > MAX_SERVINGS:
+        servings = Decimal(MAX_SERVINGS)
+    return min(max(servings * serving, MIN_PORTION_G), GENERIC_MAX_G)
 
-    return min(max(_round_to_step(ideal_g), MIN_PORTION_G), GENERIC_MAX_G)
+
+def _macro_signature(c: Candidate) -> tuple[int, int, int, int]:
+    """A coarse fingerprint of a food's per-100g macros for duplicate detection — two foods
+    that round to the same signature (e.g. two lean-quark variants) are treated as the same."""
+    return (
+        int((c.per100_kcal / Decimal(10)).to_integral_value(rounding=ROUND_HALF_UP)),
+        int((c.per100_protein_g / Decimal(2)).to_integral_value(rounding=ROUND_HALF_UP)),
+        int((c.per100_fat_g / Decimal(2)).to_integral_value(rounding=ROUND_HALF_UP)),
+        int((c.per100_carbs_g / Decimal(2)).to_integral_value(rounding=ROUND_HALF_UP)),
+    )
+
+
+def dedup_candidates(candidates: list[Candidate]) -> list[Candidate]:
+    """Drop near-identical foods, keeping the first occurrence (recents come first, so the most
+    recently used variant wins). Prevents two of essentially the same food in one basket."""
+    seen: set[tuple[int, int, int, int]] = set()
+    out: list[Candidate] = []
+    for c in candidates:
+        sig = _macro_signature(c)
+        if sig in seen:
+            continue
+        seen.add(sig)
+        out.append(c)
+    return out
 
 
 def build_suggestion(
@@ -166,6 +207,7 @@ def suggest_basket(
     if remaining_kcal < MIN_GAP_KCAL:
         return []
 
+    candidates = dedup_candidates(candidates)
     residual_kcal = remaining_kcal
     rp = max(protein_gap, Decimal(0))
     rf = max(fat_gap, Decimal(0))
@@ -174,6 +216,7 @@ def suggest_basket(
     stop_kcal = max(Decimal(120), remaining_kcal * Decimal("0.08"))
 
     used: set[int] = set()
+    picked_vecs: list[tuple[Decimal, Decimal, Decimal]] = []
     basket: list[Suggestion] = []
     for _ in range(max_items):
         if residual_kcal <= stop_kcal:
@@ -182,6 +225,10 @@ def suggest_basket(
         best: tuple[tuple[Decimal, int], int, Candidate, Decimal] | None = None
         for idx, c in enumerate(candidates):
             if idx in used or c.per100_kcal <= 0:
+                continue
+            vec = (c.per100_protein_g, c.per100_fat_g, c.per100_carbs_g)
+            # Variety: skip a food too macro-similar to one already in the basket.
+            if any(_cosine(vec, pv) >= VARIETY_COS for pv in picked_vecs):
                 continue
             grams = realistic_portion(
                 target_kcal=residual_kcal,
@@ -192,7 +239,7 @@ def suggest_basket(
             kcal = c.per100_kcal * grams / Decimal(100)
             if kcal < MIN_ITEM_KCAL:
                 continue
-            score = _cosine((c.per100_protein_g, c.per100_fat_g, c.per100_carbs_g), gaps)
+            score = _cosine(vec, gaps)
             # Higher macro-fit first; round so near-ties fall back to input order (recents).
             key = (-score.quantize(Decimal("0.01")), idx)
             if best is None or key < best[0]:
@@ -202,6 +249,7 @@ def suggest_basket(
 
         _key, idx, c, grams = best
         used.add(idx)
+        picked_vecs.append((c.per100_protein_g, c.per100_fat_g, c.per100_carbs_g))
         s = build_suggestion(
             food_id=c.food_id,
             name=c.name,

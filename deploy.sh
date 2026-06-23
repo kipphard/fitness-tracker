@@ -38,5 +38,12 @@ systemctl is-active fitness-tracker
 EOS
 
 echo "==> Health check"
-curl -fsS https://fitness-tracker.kipphard.com/health && echo
+# The service needs a moment to come up after restart; retry before declaring failure
+# (avoids a spurious 502 the instant nginx beats the app to the punch).
+ok=0
+for i in 1 2 3 4 5; do
+  if curl -fsS https://fitness-tracker.kipphard.com/health; then echo; ok=1; break; fi
+  echo "  not ready yet (attempt $i/5)…"; sleep 3
+done
+[ "$ok" = 1 ] || { echo "!! health check failed after retries"; exit 1; }
 echo "==> Deployed."
