@@ -7,6 +7,7 @@ import { useApi } from "../hooks/useApi";
 import { localizedExerciseName } from "../lib/exercise";
 import { num, oneDecimal } from "../lib/format";
 import { Card } from "./Card";
+import { ExerciseDetailModal } from "./ExerciseDetailModal";
 import { ExercisePicker } from "./ExercisePicker";
 import { ExerciseThumb } from "./ExerciseThumb";
 import { Modal } from "./Modal";
@@ -61,6 +62,7 @@ export function LiveSession({
   );
   const [rest, setRest] = useState(0);
   const [now, setNow] = useState(() => Date.now());
+  const [detailId, setDetailId] = useState<string | null>(null);
 
   useEffect(() => {
     apiGet<Exercise[]>("/exercises").then(setLibrary).catch(() => undefined);
@@ -194,10 +196,11 @@ export function LiveSession({
           <Card
             key={ex.id}
             title={
-              <span className="ex-title">
+              <button className="ex-title ex-title--btn" onClick={() => setDetailId(ex.id)}>
                 <ExerciseThumb exercise={libEx(ex.id)} className="exercise-thumb exercise-thumb--sm" />
                 {ex.name}
-              </span>
+                <span className="ex-title__info" aria-hidden>ⓘ</span>
+              </button>
             }
             action={
               ex.planned_sets ? (
@@ -299,6 +302,14 @@ export function LiveSession({
           excludeIds={exercises.map((x) => x.id)}
           onClose={() => setShowPicker(false)}
           onPick={addExercise}
+        />
+      )}
+
+      {detailId && (
+        <ExerciseDetailModal
+          exerciseId={detailId}
+          fallbackName={exercises.find((x) => x.id === detailId)?.name}
+          onClose={() => setDetailId(null)}
         />
       )}
 

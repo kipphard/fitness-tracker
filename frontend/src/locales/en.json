@@ -221,6 +221,10 @@
     "noHistory": "No workouts yet."
   },
   "exercise": {
+    "details": "Details",
+    "primaryMuscles": "Primary muscles",
+    "secondaryMuscles": "Secondary muscles",
+    "instructions": "Instructions",
     "muscles": {
       "abdominals": "Abs",
       "abductors": "Abductors",

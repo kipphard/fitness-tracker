@@ -57,6 +57,17 @@ def create_exercise(
     return ExerciseOut.model_validate(ex)
 
 
+@router.get("/{exercise_id}", response_model=ExerciseOut)
+def get_exercise_detail(
+    exercise_id: uuid.UUID, session: SessionDep, user: CurrentUser
+) -> ExerciseOut:
+    """Full exercise record (incl. instructions) for the exercise-detail view."""
+    ex = repository.get_exercise(session, exercise_id, user.id)
+    if ex is None:
+        raise HTTPException(status_code=404, detail="exercise not found")
+    return ExerciseOut.model_validate(ex)
+
+
 @router.get("/{exercise_id}/last", response_model=list[SetOut])
 def last_time(
     exercise_id: uuid.UUID,

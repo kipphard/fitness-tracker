@@ -14,6 +14,18 @@ def test_library_seeded_and_search(client):
     assert all(e["source"] in ("lib", "custom") for e in all_exercises)
 
 
+def test_exercise_detail_includes_instructions(client):
+    bench = _exercise(client)
+    full = client.get(f"/api/exercises/{bench['id']}")
+    assert full.status_code == 200, full.text
+    data = full.json()
+    assert data["name"] == bench["name"]
+    assert "instructions" in data  # full record (list omits it)
+    import uuid
+
+    assert client.get(f"/api/exercises/{uuid.uuid4()}").status_code == 404
+
+
 def test_create_custom_exercise(client):
     created = client.post(
         "/api/exercises",

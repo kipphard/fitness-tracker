@@ -7,6 +7,7 @@ import { localizedExerciseName } from "../lib/exercise";
 import { ExercisePicker } from "./ExercisePicker";
 import { ExerciseThumb } from "./ExerciseThumb";
 import { Modal } from "./Modal";
+import { MuscleChips } from "./MuscleChips";
 
 interface Item {
   exercise_id: string;
@@ -147,6 +148,7 @@ export function RoutineEditModal({
                 <ExerciseThumb exercise={i} />
                 <div className="routine-edit-item__main">
                   <span className="routine-edit-item__name">{i.name}</span>
+                  <MuscleChips muscles={byId(i.exercise_id)?.primary_muscles} max={2} />
                   <div className="routine-edit-item__fields">
                     <label className="micro-field">
                       <span>{t("workouts.sets")}</span>

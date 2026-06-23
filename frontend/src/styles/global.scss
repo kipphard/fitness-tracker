@@ -1706,6 +1706,78 @@ a:hover {
 .micro-field .input--steps {
   width: 3.2rem;
 }
+
+/* ── Slice C: muscle chips + exercise-detail modal ── */
+.muscle-chips {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+.muscle-chip {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--muted);
+}
+.exercise-hero {
+  width: 100%;
+  max-height: 14rem;
+  object-fit: contain;
+  border-radius: var(--radius-sm);
+  background: #fff;
+}
+.detail-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.detail-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--muted);
+  font-weight: 600;
+}
+.exercise-steps {
+  margin: 0;
+  padding-left: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.88rem;
+}
+.picker__rowwrap {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.picker__rowwrap .picker__row {
+  flex: 1;
+  min-width: 0;
+}
+.picker__info {
+  flex: 0 0 auto;
+  font-size: 1.1rem;
+  color: var(--muted);
+}
+.ex-title--btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: var(--text);
+  font: inherit;
+}
+.ex-title__info {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
 .picker__row-text {
   display: flex;
   flex-direction: column;

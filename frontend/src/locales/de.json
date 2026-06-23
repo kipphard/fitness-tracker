@@ -221,6 +221,10 @@
     "noHistory": "Noch kein Training."
   },
   "exercise": {
+    "details": "Details",
+    "primaryMuscles": "Primäre Muskeln",
+    "secondaryMuscles": "Sekundäre Muskeln",
+    "instructions": "Anleitung",
     "muscles": {
       "abdominals": "Bauch",
       "abductors": "Abduktoren",

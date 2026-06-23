@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 
 import type { Exercise } from "../api/types";
 import { EQUIPMENT_TYPES, MUSCLE_GROUPS, localizedExerciseName, vocabKey } from "../lib/exercise";
+import { ExerciseDetailModal } from "./ExerciseDetailModal";
 import { ExerciseThumb } from "./ExerciseThumb";
 
 // How many rows to render at once. Search/filters narrow the ~870-item library;
@@ -24,6 +25,7 @@ export function ExercisePicker({
   const [query, setQuery] = useState("");
   const [equipment, setEquipment] = useState("");
   const [muscle, setMuscle] = useState("");
+  const [detail, setDetail] = useState<Exercise | null>(null);
 
   const lang = i18n.language;
   const muscleLabel = (m: string) => t(`exercise.muscles.${vocabKey(m)}`, { defaultValue: m });
@@ -85,13 +87,20 @@ export function ExercisePicker({
         {visible.map((e) => {
           const primary = (e.primary_muscles ?? [])[0];
           return (
-            <li key={e.id}>
+            <li key={e.id} className="picker__rowwrap">
               <button className="picker__row" onClick={() => onPick(e)}>
                 <ExerciseThumb exercise={e} />
                 <span className="picker__row-text">
                   <span className="picker__row-name">{localizedExerciseName(e, lang)}</span>
                   {primary && <span className="picker__row-sub">{muscleLabel(primary)}</span>}
                 </span>
+              </button>
+              <button
+                className="icon-btn picker__info"
+                onClick={() => setDetail(e)}
+                aria-label={t("exercise.details")}
+              >
+                ⓘ
               </button>
             </li>
           );
@@ -105,6 +114,14 @@ export function ExercisePicker({
         <p className="muted picker__more">
           {t("workouts.refineSearch", { shown: MAX_VISIBLE, total: filtered.length })}
         </p>
+      )}
+
+      {detail && (
+        <ExerciseDetailModal
+          exerciseId={detail.id}
+          fallbackName={localizedExerciseName(detail, lang)}
+          onClose={() => setDetail(null)}
+        />
       )}
     </div>
   );
