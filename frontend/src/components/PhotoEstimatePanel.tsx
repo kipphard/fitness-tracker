@@ -4,19 +4,24 @@ import { useTranslation } from "react-i18next";
 import { apiPost, apiUpload } from "../api/client";
 import { MEAL_SLOTS, type MealSlot, type PhotoEstimate } from "../api/types";
 import { kcal, num, oneDecimal } from "../lib/format";
+import { AiUnavailableNote } from "./AiUnavailableNote";
 import { Card } from "./Card";
 
 // Photo → Claude vision estimate → review → log. The estimate gives absolute macros per item;
-// logging derives per-100g so the existing diary scaling reproduces the same numbers.
+// logging derives per-100g so the existing diary scaling reproduces the same numbers. Photo
+// estimation is AI-only (no rule fallback is possible), so when Claude isn't configured we show
+// the shared unavailable note instead of attempting the call.
 export function PhotoEstimatePanel({
   file,
   date,
   defaultSlot,
+  aiAvailable = true,
   onClose,
 }: {
   file: File;
   date: string;
   defaultSlot: MealSlot;
+  aiAvailable?: boolean;
   onClose: () => void;
 }) {
   const { t } = useTranslation();
@@ -43,7 +48,8 @@ export function PhotoEstimatePanel({
   };
 
   useEffect(() => {
-    void run();
+    if (aiAvailable) void run();
+    else setLoading(false); // AI off → show the unavailable note, don't call the API
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -85,9 +91,13 @@ export function PhotoEstimatePanel({
         </button>
       }
     >
-      <div className="alert alert--info">{t("diary.photoDisclaimer")}</div>
+      {aiAvailable ? (
+        <div className="alert alert--info">{t("diary.photoDisclaimer")}</div>
+      ) : (
+        <AiUnavailableNote />
+      )}
 
-      {loading && <p className="muted">{t("diary.estimating")}</p>}
+      {aiAvailable && loading && <p className="muted">{t("diary.estimating")}</p>}
       {error && <div className="error">{error}</div>}
 
       {estimate && !loading && (

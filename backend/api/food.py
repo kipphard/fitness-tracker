@@ -18,9 +18,10 @@ from backend.api.deps import (
 )
 from backend.api.today import compute_today
 from backend.config import get_settings
+from backend.food import plan as plan_engine
 from backend.food import suggest as suggest_engine
 from backend.persistence import repository
-from backend.persistence.models import FoodSource, User
+from backend.persistence.models import Food, FoodSource, MealSlot, User
 from backend.schemas import (
     BackfillOut,
     FoodDataOut,
@@ -28,6 +29,9 @@ from backend.schemas import (
     FoodOut,
     FoodUpdateIn,
     PhotoEstimateOut,
+    PlanIn,
+    PlanMealOut,
+    PlanOut,
     SuggestAiIn,
     SuggestIn,
     SuggestionOut,
@@ -289,6 +293,212 @@ def suggest_fill_ai(
         ai_available=True,
         source="ai",
         notes=notes,
+    )
+
+
+# --- generate a day's meal plan (issue #5, section 2) ---
+
+
+def _plan_basis(today, scope: str) -> tuple[Decimal, Decimal, Decimal, Decimal]:
+    """The kcal budget + macro targets the plan should fill, given the scope.
+
+    ``full_day`` aims at the whole day's eating budget + macro targets (a fresh blueprint,
+    ignoring what's already logged); ``remaining`` aims only at what's left after today's logged
+    food (gaps, floored at 0)."""
+    if scope == "remaining":
+        return (
+            max(today.remaining_kcal, Decimal(0)),
+            max(today.macros.protein_g - today.consumed.protein_g, Decimal(0)),
+            max(today.macros.fat_g - today.consumed.fat_g, Decimal(0)),
+            max(today.macros.carbs_g - today.consumed.carbs_g, Decimal(0)),
+        )
+    # full_day: remaining + consumed reconstructs the day's whole eating budget.
+    return (
+        today.remaining_kcal + today.consumed.kcal,
+        today.macros.protein_g,
+        today.macros.fat_g,
+        today.macros.carbs_g,
+    )
+
+
+def _plan_candidate_pool(session: SessionDep, user: User) -> list[Food]:
+    """The user's food catalogue for planning: recents first, then the rest of the catalogue."""
+    recents = repository.recent_foods(session, user.id, limit=30)
+    seen = {f.id for f in recents}
+    return recents + [
+        f for f in repository.list_foods(session, user.id, limit=200) if f.id not in seen
+    ]
+
+
+def _to_candidate(f: Food, affinity: int = 0) -> "suggest_engine.Candidate":
+    return suggest_engine.Candidate(
+        food_id=f.id,
+        name=f.name,
+        per100_kcal=f.per100_kcal,
+        per100_protein_g=f.per100_protein_g,
+        per100_fat_g=f.per100_fat_g,
+        per100_carbs_g=f.per100_carbs_g,
+        serving_g=f.serving_g,
+        slot_affinity=affinity,
+    )
+
+
+def _build_plan_out(
+    *,
+    day: date,
+    scope: str,
+    target_kcal: Decimal,
+    planned: list[plan_engine.PlannedMeal],
+    source: str,
+    ai_available: bool,
+    notes: str,
+) -> PlanOut:
+    """Package planned meals into a PlanOut, computing per-slot and whole-day totals."""
+    meals_out: list[PlanMealOut] = []
+    tot_k = tot_p = tot_f = tot_c = Decimal(0)
+    for pm in planned:
+        s_k = sum((s.kcal for s in pm.suggestions), Decimal(0))
+        s_p = sum((s.protein_g for s in pm.suggestions), Decimal(0))
+        s_f = sum((s.fat_g for s in pm.suggestions), Decimal(0))
+        s_c = sum((s.carbs_g for s in pm.suggestions), Decimal(0))
+        tot_k, tot_p, tot_f, tot_c = tot_k + s_k, tot_p + s_p, tot_f + s_f, tot_c + s_c
+        meals_out.append(
+            PlanMealOut(
+                slot=MealSlot(pm.slot),
+                suggestions=[SuggestionOut.model_validate(s) for s in pm.suggestions],
+                kcal=s_k,
+                protein_g=s_p,
+                fat_g=s_f,
+                carbs_g=s_c,
+            )
+        )
+    return PlanOut(
+        date=day,
+        scope=scope,
+        target_kcal=target_kcal,
+        meals=meals_out,
+        planned_kcal=tot_k,
+        planned_protein_g=tot_p,
+        planned_fat_g=tot_f,
+        planned_carbs_g=tot_c,
+        ai_available=ai_available,
+        source=source,
+        notes=notes,
+    )
+
+
+@router.post("/plan", response_model=PlanOut)
+def plan_rule(payload: PlanIn, session: SessionDep, user: CurrentUser) -> PlanOut:
+    """Rule-based day plan: split the (whole-day or remaining) target across meals and fill each
+    from the user's catalogue, slot affinity aware. Always available (no API key needed)."""
+    day = payload.date or date.today()
+    today = compute_today(session, user, day, payload.tz)
+    kcal, protein, fat, carbs = _plan_basis(today, payload.scope)
+
+    foods = _plan_candidate_pool(session, user)
+    by_slot: dict[str, list[suggest_engine.Candidate]] = {}
+    for slot, _pct in plan_engine.meal_split(payload.meals):
+        affinity = repository.food_slot_counts(session, user.id, MealSlot(slot))
+        by_slot[slot] = suggest_engine.dedup_candidates(
+            [_to_candidate(f, affinity.get(f.id, 0)) for f in foods]
+        )
+
+    planned = plan_engine.plan_day(
+        kcal_budget=kcal,
+        protein_target=protein,
+        fat_target=fat,
+        carbs_target=carbs,
+        candidates_by_slot=by_slot,
+        meals=payload.meals,
+    )
+    return _build_plan_out(
+        day=today.date,
+        scope=payload.scope,
+        target_kcal=kcal,
+        planned=planned,
+        source="rule",
+        ai_available=get_settings().anthropic_configured,
+        notes="",
+    )
+
+
+@router.post("/plan/ai", response_model=PlanOut)
+def plan_ai(
+    payload: PlanIn,
+    session: SessionDep,
+    user: CurrentUser,
+    client: SuggestClientDep,
+) -> PlanOut:
+    """AI day plan via Claude: store/country-aware realistic products that hit the target. 503
+    until ANTHROPIC_API_KEY is set (issue #2); the rule path above stays available regardless."""
+    day = payload.date or date.today()
+    today = compute_today(session, user, day, payload.tz)
+    kcal, protein, fat, carbs = _plan_basis(today, payload.scope)
+
+    foods = _plan_candidate_pool(session, user)
+    candidates = suggest_engine.dedup_candidates([_to_candidate(f) for f in foods])
+    settings = repository.get_settings(session, user.id)
+
+    try:
+        result = client.plan(
+            scope=payload.scope,
+            kcal_budget=kcal,
+            protein_target=protein,
+            fat_target=fat,
+            carbs_target=carbs,
+            meals=payload.meals,
+            candidates=candidates,
+            country=settings.country if settings else None,
+            store=settings.store if settings else None,
+            dietary_preferences=settings.dietary_preferences if settings else None,
+            preferences=payload.preferences,
+        )
+    except Exception as exc:  # noqa: BLE001 - upstream/model failure
+        raise HTTPException(status_code=502, detail="plan generation failed") from exc
+
+    by_name = {c.name.strip().lower(): c for c in candidates}
+    planned: list[plan_engine.PlannedMeal] = []
+    for m in result.meals:
+        suggestions: list[suggest_engine.Suggestion] = []
+        for it in m.items:
+            # Reuse a saved food (authoritative per-100g + food_id) when the name matches.
+            match = by_name.get(it.name.strip().lower())
+            if match is not None:
+                suggestions.append(
+                    suggest_engine.build_suggestion(
+                        food_id=match.food_id,
+                        name=match.name,
+                        amount_g=it.amount_g,
+                        per100_kcal=match.per100_kcal,
+                        per100_protein_g=match.per100_protein_g,
+                        per100_fat_g=match.per100_fat_g,
+                        per100_carbs_g=match.per100_carbs_g,
+                        reason=it.reason,
+                    )
+                )
+            else:
+                suggestions.append(
+                    suggest_engine.build_suggestion(
+                        food_id=None,
+                        name=it.name,
+                        amount_g=it.amount_g,
+                        per100_kcal=it.per100_kcal,
+                        per100_protein_g=it.per100_protein_g,
+                        per100_fat_g=it.per100_fat_g,
+                        per100_carbs_g=it.per100_carbs_g,
+                        reason=it.reason,
+                    )
+                )
+        planned.append(plan_engine.PlannedMeal(slot=m.slot, suggestions=suggestions))
+
+    return _build_plan_out(
+        day=today.date,
+        scope=payload.scope,
+        target_kcal=kcal,
+        planned=planned,
+        source="ai",
+        ai_available=True,
+        notes=result.notes,
     )
 
 

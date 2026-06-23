@@ -14,6 +14,8 @@ export function SettingsScreen() {
   const [saved, setSaved] = useState(false);
   const [backfilling, setBackfilling] = useState(false);
   const [backfill, setBackfill] = useState<BackfillResult | null>(null);
+  // Local draft for the free-text planning fields; persisted on blur.
+  const [draft, setDraft] = useState({ country: "", store: "", dietary: "" });
 
   const runBackfill = async () => {
     setBackfilling(true);
@@ -30,6 +32,15 @@ export function SettingsScreen() {
   useEffect(() => {
     apiGet<Settings>("/settings").then(setSettings).catch(() => undefined);
   }, []);
+
+  useEffect(() => {
+    if (settings)
+      setDraft({
+        country: settings.country ?? "",
+        store: settings.store ?? "",
+        dietary: settings.dietary_preferences ?? "",
+      });
+  }, [settings]);
 
   const save = async (patch: Partial<Settings>) => {
     const next = await apiPut<Settings>("/settings", patch);
@@ -77,6 +88,49 @@ export function SettingsScreen() {
           </label>
         </div>
         <p className="muted setting-note">{t("settings.note")}</p>
+        {saved && <div className="alert alert--ok">{t("settings.saved")}</div>}
+      </Card>
+
+      <Card title={t("settings.planTitle")}>
+        <p className="muted setting-note">{t("settings.planHint")}</p>
+        <div className="setting-row">
+          <span>{t("settings.country")}</span>
+          <input
+            className="input select--auto"
+            value={draft.country}
+            placeholder={t("settings.countryPlaceholder")}
+            onChange={(e) => setDraft((d) => ({ ...d, country: e.target.value }))}
+            onBlur={() => {
+              if ((settings?.country ?? "") !== draft.country) save({ country: draft.country });
+            }}
+          />
+        </div>
+        <div className="setting-row">
+          <span>{t("settings.store")}</span>
+          <input
+            className="input select--auto"
+            value={draft.store}
+            placeholder={t("settings.storePlaceholder")}
+            onChange={(e) => setDraft((d) => ({ ...d, store: e.target.value }))}
+            onBlur={() => {
+              if ((settings?.store ?? "") !== draft.store) save({ store: draft.store });
+            }}
+          />
+        </div>
+        <label className="field">
+          <span>{t("settings.dietaryPrefs")}</span>
+          <textarea
+            className="input"
+            rows={2}
+            value={draft.dietary}
+            placeholder={t("settings.dietaryPlaceholder")}
+            onChange={(e) => setDraft((d) => ({ ...d, dietary: e.target.value }))}
+            onBlur={() => {
+              if ((settings?.dietary_preferences ?? "") !== draft.dietary)
+                save({ dietary_preferences: draft.dietary });
+            }}
+          />
+        </label>
         {saved && <div className="alert alert--ok">{t("settings.saved")}</div>}
       </Card>
 

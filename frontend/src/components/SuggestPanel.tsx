@@ -9,6 +9,7 @@ import {
   type SuggestResponse,
 } from "../api/types";
 import { kcal, num, oneDecimal } from "../lib/format";
+import { AiUnavailableNote } from "./AiUnavailableNote";
 import { Card } from "./Card";
 
 // "Fill remaining calories" (issue #5). Rule-based basket loads on open (free, instant); the
@@ -262,6 +263,8 @@ export function SuggestPanel({
           )}
 
           {data.notes && data.source === "ai" && <p className="muted">{data.notes}</p>}
+
+          {!data.ai_available && <AiUnavailableNote />}
 
           {data.ai_available && (
             <div className="suggest-ai">

@@ -153,6 +153,136 @@ def _format_candidates(candidates: list[Candidate], limit: int = 40) -> str:
     return "\n".join(lines)
 
 
+# --- full-day meal plan (issue #5, section 2) ---
+
+VALID_SLOTS = ("breakfast", "lunch", "dinner", "snack")
+
+# JSON Schema for the day plan: meals (each a slot + a few items) plus brief notes. Emitted via
+# output_config on newer SDKs; the PLAN_SYSTEM prompt requests the same shape as a fallback.
+PLAN_SCHEMA: dict = {
+    "type": "object",
+    "properties": {
+        "meals": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "slot": {"type": "string", "enum": list(VALID_SLOTS)},
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "name": {"type": "string"},
+                                "amount_g": {"type": "number"},
+                                "per100_kcal": {"type": "number"},
+                                "per100_protein_g": {"type": "number"},
+                                "per100_fat_g": {"type": "number"},
+                                "per100_carbs_g": {"type": "number"},
+                                "reason": {"type": "string"},
+                            },
+                            "required": [
+                                "name",
+                                "amount_g",
+                                "per100_kcal",
+                                "per100_protein_g",
+                                "per100_fat_g",
+                                "per100_carbs_g",
+                                "reason",
+                            ],
+                            "additionalProperties": False,
+                        },
+                    },
+                },
+                "required": ["slot", "items"],
+                "additionalProperties": False,
+            },
+        },
+        "notes": {"type": "string"},
+    },
+    "required": ["meals", "notes"],
+    "additionalProperties": False,
+}
+
+PLAN_SYSTEM = """You are a nutrition assistant building a realistic day of meals for a user. \
+Given a calorie + macro target (protein/fat/carbs in grams), the number of meals to plan, the \
+user's country and store, their dietary preferences, and a list of foods they already \
+have/eat, produce a meal plan whose portions TOGETHER roughly hit the targets.
+
+Plan exactly the requested number of meals using the standard slots in order \
+(breakfast, lunch, dinner, then snack if a 4th meal). Each meal has 1-3 food items.
+
+Constrain every item to a REALISTIC product the user can actually buy in their country and \
+store (use concrete, common product names). Prefer foods from the user's list (use their exact \
+name and per-100g values when you do). Respect dietary preferences strictly. Use realistic \
+portions and normal serving sizes — never absurd amounts.
+
+Respond with ONLY a JSON object (no markdown, no prose) of exactly this shape:
+{
+  "meals": [{"slot": "breakfast"|"lunch"|"dinner"|"snack", "items": [{"name": string, \
+"amount_g": number, "per100_kcal": number, "per100_protein_g": number, "per100_fat_g": number, \
+"per100_carbs_g": number, "reason": string}]}],
+  "notes": string
+}
+
+amount_g is the portion in grams; per100_* are the food's nutrition per 100 g. "reason" is one \
+short phrase. Keep "notes" brief. These are suggestions, not prescriptions. Output the JSON \
+object only."""
+
+
+@dataclass(frozen=True)
+class AiPlanItem:
+    name: str
+    amount_g: Decimal
+    per100_kcal: Decimal
+    per100_protein_g: Decimal
+    per100_fat_g: Decimal
+    per100_carbs_g: Decimal
+    reason: str
+
+
+@dataclass(frozen=True)
+class AiPlanMeal:
+    slot: str
+    items: list[AiPlanItem]
+
+
+@dataclass(frozen=True)
+class AiDayPlan:
+    meals: list[AiPlanMeal]
+    notes: str
+
+
+def parse_plan(payload: dict) -> AiDayPlan:
+    """Build an AiDayPlan from the decoded JSON dict. Unknown slots and zero-portion/zero-energy
+    items are dropped; meals left with no usable items are omitted entirely."""
+    meals: list[AiPlanMeal] = []
+    for m in payload.get("meals", []):
+        slot = str(m.get("slot", "")).strip().lower()
+        if slot not in VALID_SLOTS:
+            continue
+        items: list[AiPlanItem] = []
+        for it in m.get("items", []):
+            amount = _dec(it.get("amount_g"))
+            per100_kcal = _dec(it.get("per100_kcal"))
+            if amount <= 0 or per100_kcal <= 0:
+                continue
+            items.append(
+                AiPlanItem(
+                    name=str(it.get("name", "")).strip()[:200] or "food",
+                    amount_g=amount,
+                    per100_kcal=per100_kcal,
+                    per100_protein_g=_dec(it.get("per100_protein_g")),
+                    per100_fat_g=_dec(it.get("per100_fat_g")),
+                    per100_carbs_g=_dec(it.get("per100_carbs_g")),
+                    reason=str(it.get("reason", "")).strip()[:200],
+                )
+            )
+        if items:
+            meals.append(AiPlanMeal(slot=slot, items=items))
+    return AiDayPlan(meals=meals, notes=str(payload.get("notes", "")).strip())
+
+
 class AnthropicSuggestClient:
     """Wraps a Claude suggestion call. Injected via ``get_suggest_client``; faked in tests."""
 
@@ -197,3 +327,58 @@ class AnthropicSuggestClient:
 
         text = next((b.text for b in resp.content if getattr(b, "type", None) == "text"), "")
         return parse_suggestions(json.loads(extract_json(text)))
+
+    def plan(
+        self,
+        *,
+        scope: str,
+        kcal_budget: Decimal,
+        protein_target: Decimal,
+        fat_target: Decimal,
+        carbs_target: Decimal,
+        meals: int,
+        candidates: list[Candidate],
+        country: str | None = None,
+        store: str | None = None,
+        dietary_preferences: str | None = None,
+        preferences: str | None = None,
+    ) -> AiDayPlan:
+        horizon = "the whole day" if scope == "full_day" else "the rest of the day"
+        user_text = (
+            f"Plan {meals} meals for {horizon}.\n"
+            f"Targets to hit together: {kcal_budget} kcal, {protein_target} g protein, "
+            f"{fat_target} g fat, {carbs_target} g carbs.\n\n"
+            f"Foods the user already has/eats:\n{_format_candidates(candidates)}\n"
+        )
+        context = [
+            (f"Country: {country.strip()}" if country and country.strip() else None),
+            (f"Store: {store.strip()}" if store and store.strip() else None),
+            (
+                f"Dietary preferences: {dietary_preferences.strip()}"
+                if dietary_preferences and dietary_preferences.strip()
+                else None
+            ),
+            (f"Extra notes: {preferences.strip()}" if preferences and preferences.strip() else None),
+        ]
+        for line in context:
+            if line:
+                user_text += f"\n{line}"
+        user_text += "\n\nBuild the meal plan."
+
+        kwargs: dict = {
+            "model": self._model,
+            "max_tokens": 3072,
+            "system": PLAN_SYSTEM,
+            "messages": [{"role": "user", "content": user_text}],
+        }
+        try:
+            resp = self._client.messages.create(
+                **kwargs,
+                output_config={"format": {"type": "json_schema", "schema": PLAN_SCHEMA}},
+            )
+        except TypeError:
+            # Older SDK without output_config — the system prompt still yields JSON.
+            resp = self._client.messages.create(**kwargs)
+
+        text = next((b.text for b in resp.content if getattr(b, "type", None) == "text"), "")
+        return parse_plan(json.loads(extract_json(text)))

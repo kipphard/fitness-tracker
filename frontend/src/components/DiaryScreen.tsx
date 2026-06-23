@@ -9,6 +9,7 @@ import {
   type Food,
   type FoodData,
   type MealSlot,
+  type Today,
 } from "../api/types";
 import { useApi } from "../hooks/useApi";
 import { addDays, kcal, num, oneDecimal, todayIso } from "../lib/format";
@@ -50,6 +51,8 @@ export function DiaryScreen() {
   const [date, setDate] = useState(todayIso());
   const day = useApi<DiaryDay>(`/diary?date=${date}`);
   const recent = useApi<Food[]>("/diary/recent");
+  // tz set below; the flag tells the photo panel whether Claude is configured.
+  const todayInfo = useApi<Today>(`/today?date=${date}&tz=${-new Date().getTimezoneOffset()}`);
 
   const [query, setQuery] = useState("");
   const [saved, setSaved] = useState<Food[]>([]);
@@ -545,6 +548,7 @@ export function DiaryScreen() {
           file={photoFile}
           date={date}
           defaultSlot={slot}
+          aiAvailable={todayInfo.data?.ai_available ?? true}
           onClose={() => setPhotoFile(null)}
         />
       )}

@@ -20,7 +20,13 @@ from sqlalchemy.pool import StaticPool
 
 from backend.api.deps import get_off_client, get_suggest_client, get_vision_client
 from backend.food.off import FoodData
-from backend.food.suggest_ai import AiSuggestion, AiSuggestResult
+from backend.food.suggest_ai import (
+    AiDayPlan,
+    AiPlanItem,
+    AiPlanMeal,
+    AiSuggestion,
+    AiSuggestResult,
+)
 from backend.main import app
 from backend.persistence.database import Base, get_session
 from backend.vision.estimator import EstimateItem, MacroTotal, PhotoEstimate
@@ -96,6 +102,57 @@ class _FakeSuggest:
                 )
             ],
             notes="A protein-forward option.",
+        )
+
+    def plan(
+        self,
+        *,
+        scope,
+        kcal_budget,
+        protein_target,
+        fat_target,
+        carbs_target,
+        meals,
+        candidates,
+        country=None,
+        store=None,
+        dietary_preferences=None,
+        preferences=None,
+    ) -> AiDayPlan:
+        # "Chicken breast" matches a saved food by name (endpoint reuses its food_id); the
+        # yogurt is novel (logged inline). Mirrors the real plan() shape.
+        return AiDayPlan(
+            meals=[
+                AiPlanMeal(
+                    slot="breakfast",
+                    items=[
+                        AiPlanItem(
+                            name="Greek yogurt",
+                            amount_g=Decimal("200"),
+                            per100_kcal=Decimal("59"),
+                            per100_protein_g=Decimal("10"),
+                            per100_fat_g=Decimal("0.4"),
+                            per100_carbs_g=Decimal("3.6"),
+                            reason="High protein start.",
+                        )
+                    ],
+                ),
+                AiPlanMeal(
+                    slot="lunch",
+                    items=[
+                        AiPlanItem(
+                            name="Chicken breast",
+                            amount_g=Decimal("150"),
+                            per100_kcal=Decimal("165"),
+                            per100_protein_g=Decimal("31"),
+                            per100_fat_g=Decimal("4"),
+                            per100_carbs_g=Decimal("0"),
+                            reason="Lean protein.",
+                        )
+                    ],
+                ),
+            ],
+            notes="A balanced day.",
         )
 
 

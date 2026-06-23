@@ -786,6 +786,21 @@ a:hover {
   padding-top: 0.9rem;
   border-top: 1px solid var(--border);
 }
+// Day plan (issue #5 §2): a segmented scope toggle + per-meal groups.
+.seg {
+  display: inline-flex;
+  gap: 0.3rem;
+}
+.plan-meal {
+  margin-top: 0.9rem;
+}
+.plan-meal__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin-bottom: 0.45rem;
+}
 .serving-edit {
   display: flex;
   align-items: flex-end;

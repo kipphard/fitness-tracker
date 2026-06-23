@@ -8,6 +8,7 @@ import type { MacroPrefs, Today, WeighIn } from "../api/types";
 import { useApi } from "../hooks/useApi";
 import { addDays, kcal, num, oneDecimal, todayIso } from "../lib/format";
 import { Card } from "./Card";
+import { GenerateDayPlanPanel } from "./GenerateDayPlanPanel";
 import { SuggestPanel } from "./SuggestPanel";
 
 const MACRO_COLORS = { protein: "#6366f1", carbs: "#f59e0b", fat: "#10b981" };
@@ -30,6 +31,7 @@ export function TodayScreen() {
   const [loggingWeight, setLoggingWeight] = useState(false);
   const [weightError, setWeightError] = useState<string | null>(null);
   const [showSuggest, setShowSuggest] = useState(false);
+  const [showPlan, setShowPlan] = useState(false);
 
   useEffect(() => {
     if (prefs.data) {
@@ -259,6 +261,12 @@ export function TodayScreen() {
                 {t("suggest.fillRemaining")}
               </button>
             )}
+            <button
+              className="btn btn--ghost btn--sm"
+              onClick={() => setShowPlan((s) => !s)}
+            >
+              {t("plan.planMyDay")}
+            </button>
             <Link className="btn btn--ghost btn--sm" to="/diary">
               {t("today.openDiary")}
             </Link>
@@ -312,6 +320,10 @@ export function TodayScreen() {
           defaultSlot="dinner"
           onClose={() => setShowSuggest(false)}
         />
+      )}
+
+      {showPlan && (
+        <GenerateDayPlanPanel date={date} tz={tz} onClose={() => setShowPlan(false)} />
       )}
 
       <Card title={t("today.adjustTitle")}>

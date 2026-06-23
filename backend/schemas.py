@@ -11,6 +11,7 @@ import uuid
 from datetime import date as date_type
 from datetime import datetime
 from decimal import Decimal
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
@@ -73,6 +74,10 @@ class SettingsIn(BaseModel):
     language: Language | None = None
     unit_system: UnitSystem | None = None
     eat_back_activity: bool | None = None
+    # Food-planning preferences (issue #5 §2). "" clears a field; None leaves it unchanged.
+    country: str | None = Field(default=None, max_length=80)
+    store: str | None = Field(default=None, max_length=120)
+    dietary_preferences: str | None = Field(default=None, max_length=500)
 
 
 class SettingsOut(BaseModel):
@@ -81,6 +86,9 @@ class SettingsOut(BaseModel):
     language: Language
     unit_system: UnitSystem
     eat_back_activity: bool
+    country: str | None = None
+    store: str | None = None
+    dietary_preferences: str | None = None
 
 
 # --- calories ---
@@ -310,6 +318,7 @@ class TodayOut(BaseModel):
     workout_kcal: Decimal
     net_deficit_kcal: Decimal
     eat_back_activity: bool
+    ai_available: bool = False  # whether Claude features are configured (no API key → False)
 
 
 # --- photo estimation (Phase 5) ---
@@ -386,6 +395,42 @@ class SuggestOut(BaseModel):
     fat_gap_g: Decimal
     carbs_gap_g: Decimal
     suggestions: list[SuggestionOut]
+    ai_available: bool  # whether the AI path is configured (frontend shows the ✨ button)
+    source: str  # "rule" | "ai"
+    notes: str = ""
+
+
+# --- day plan (issue #5, section 2) ---
+
+class PlanIn(BaseModel):
+    date: date_type | None = None  # defaults to today
+    tz: int = Field(default=0, ge=-720, le=840)  # minutes east of UTC
+    # full_day = a fresh blueprint to the day's whole target; remaining = only what's left.
+    scope: Literal["full_day", "remaining"] = "full_day"
+    meals: int = Field(default=4, ge=3, le=4)  # how many meals to split the day into
+    preferences: str | None = Field(default=None, max_length=500)  # overrides saved prefs (AI)
+
+
+class PlanMealOut(BaseModel):
+    """One meal slot of the plan plus its slot totals."""
+
+    slot: MealSlot
+    suggestions: list[SuggestionOut]
+    kcal: Decimal
+    protein_g: Decimal
+    fat_g: Decimal
+    carbs_g: Decimal
+
+
+class PlanOut(BaseModel):
+    date: date_type
+    scope: str
+    target_kcal: Decimal  # the kcal the plan aims to fill (whole-day or remaining)
+    meals: list[PlanMealOut]
+    planned_kcal: Decimal  # what the plan's portions actually add up to
+    planned_protein_g: Decimal
+    planned_fat_g: Decimal
+    planned_carbs_g: Decimal
     ai_available: bool  # whether the AI path is configured (frontend shows the ✨ button)
     source: str  # "rule" | "ai"
     notes: str = ""

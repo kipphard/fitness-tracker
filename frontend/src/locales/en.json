@@ -327,6 +327,14 @@
     },
     "saved": "Saved",
     "note": "Imperial input arrives in a later phase; the engine always computes in metric.",
+    "planTitle": "Meal planning",
+    "planHint": "Used to tailor AI meal plans to products you can actually buy. Optional.",
+    "country": "Country",
+    "countryPlaceholder": "e.g. Germany",
+    "store": "Store",
+    "storePlaceholder": "e.g. REWE",
+    "dietaryPrefs": "Dietary preferences",
+    "dietaryPlaceholder": "e.g. vegetarian, no nuts",
     "dataTitle": "Data",
     "backfillServings": "Serving sizes from Open Food Facts",
     "backfillHint": "Fetch missing serving sizes for your scanned foods, so suggestions size realistic portions.",
@@ -352,5 +360,27 @@
     "addPrefs": "Add preferences",
     "prefsPlaceholder": "e.g. vegetarian, I have chicken and rice at home…",
     "backToYours": "Back to your foods"
+  },
+  "plan": {
+    "planMyDay": "Plan my day",
+    "title": "Generate a day's meal plan",
+    "loading": "Building your day plan…",
+    "meals": "Meals",
+    "planned": "Plans {{planned}} of {{target}} kcal",
+    "addAll": "Add whole plan",
+    "empty": "Add a few of your own foods first, then I can plan from them.",
+    "emptyMeal": "Nothing to add here.",
+    "disclaimer": "Suggestions, not prescriptions.",
+    "using": "Using: {{context}}",
+    "prefsPlaceholder": "e.g. quick meals, no pork, extra protein…",
+    "thinking": "Planning…",
+    "smarter": "Smarter plan",
+    "scope": {
+      "full_day": "Whole day",
+      "remaining": "Remaining"
+    }
+  },
+  "ai": {
+    "unavailable": "AI features are currently unavailable — showing standard results."
   }
 }

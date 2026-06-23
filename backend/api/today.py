@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 from backend.api.deps import CurrentUser, SessionDep
 from backend.api.diary import sum_consumed
 from backend.calories import adaptive, engine
+from backend.config import get_settings as get_app_settings
 from backend.macros import engine as macro_engine
 from backend.persistence import repository
 from backend.persistence.models import User
@@ -134,4 +135,5 @@ def compute_today(session: Session, user: User, day: date, tz: int = 0) -> Today
         workout_kcal=workout_kcal,
         net_deficit_kcal=(maintenance + activity_kcal) - consumed.kcal,
         eat_back_activity=eat_back,
+        ai_available=get_app_settings().anthropic_configured,
     )

@@ -119,6 +119,11 @@ class Settings(Base):
     eat_back_activity: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=False
     )
+    # Food-planning preferences (issue #5 §2): constrain AI meal/day plans to realistic
+    # products for the user's country + store, plus free-text dietary notes. All optional.
+    country: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    store: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    dietary_preferences: Mapped[str | None] = mapped_column(String(500), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_now, nullable=False
     )

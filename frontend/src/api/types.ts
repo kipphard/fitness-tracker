@@ -77,6 +77,10 @@ export interface Settings {
   language: Language;
   unit_system: UnitSystem;
   eat_back_activity: boolean;
+  // Food-planning preferences (issue #5 §2). null until set.
+  country: string | null;
+  store: string | null;
+  dietary_preferences: string | null;
 }
 
 export interface Steps {
@@ -149,6 +153,7 @@ export interface Today {
   workout_kcal: string;
   net_deficit_kcal: string;
   eat_back_activity: boolean;
+  ai_available: boolean;
 }
 
 // --- food + diary (Phase 4) ---
@@ -241,6 +246,33 @@ export interface SuggestResponse {
 export interface BackfillResult {
   checked: number;
   updated: number;
+}
+
+// --- day plan (issue #5 §2) ---
+
+export type PlanScope = "full_day" | "remaining";
+
+export interface PlanMeal {
+  slot: MealSlot;
+  suggestions: Suggestion[];
+  kcal: string;
+  protein_g: string;
+  fat_g: string;
+  carbs_g: string;
+}
+
+export interface DayPlanResponse {
+  date: string;
+  scope: PlanScope;
+  target_kcal: string;
+  meals: PlanMeal[];
+  planned_kcal: string;
+  planned_protein_g: string;
+  planned_fat_g: string;
+  planned_carbs_g: string;
+  ai_available: boolean;
+  source: "rule" | "ai";
+  notes: string;
 }
 
 // --- workouts (Phase 7) ---

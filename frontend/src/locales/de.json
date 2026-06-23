@@ -327,6 +327,14 @@
     },
     "saved": "Gespeichert",
     "note": "Imperiale Eingabe folgt in einer späteren Phase; die Berechnung erfolgt immer metrisch.",
+    "planTitle": "Essensplanung",
+    "planHint": "Damit werden KI-Tagespläne an Produkte angepasst, die du wirklich kaufen kannst. Optional.",
+    "country": "Land",
+    "countryPlaceholder": "z. B. Deutschland",
+    "store": "Geschäft",
+    "storePlaceholder": "z. B. REWE",
+    "dietaryPrefs": "Ernährungsvorlieben",
+    "dietaryPlaceholder": "z. B. vegetarisch, keine Nüsse",
     "dataTitle": "Daten",
     "backfillServings": "Portionsgrößen von Open Food Facts",
     "backfillHint": "Fehlende Portionsgrößen für deine gescannten Lebensmittel laden, damit Vorschläge realistische Portionen wählen.",
@@ -352,5 +360,27 @@
     "addPrefs": "Vorlieben angeben",
     "prefsPlaceholder": "z. B. vegetarisch, ich habe Hähnchen und Reis da…",
     "backToYours": "Zurück zu deinen Lebensmitteln"
+  },
+  "plan": {
+    "planMyDay": "Tag planen",
+    "title": "Tagesplan erstellen",
+    "loading": "Erstelle deinen Tagesplan…",
+    "meals": "Mahlzeiten",
+    "planned": "Plant {{planned}} von {{target}} kcal",
+    "addAll": "Ganzen Plan hinzufügen",
+    "empty": "Trag erst ein paar eigene Lebensmittel ein, dann plane ich daraus.",
+    "emptyMeal": "Hier gibt es nichts hinzuzufügen.",
+    "disclaimer": "Vorschläge, keine Vorgaben.",
+    "using": "Verwendet: {{context}}",
+    "prefsPlaceholder": "z. B. schnelle Gerichte, kein Schwein, extra Eiweiß…",
+    "thinking": "Plant…",
+    "smarter": "Smarterer Plan",
+    "scope": {
+      "full_day": "Ganzer Tag",
+      "remaining": "Rest"
+    }
+  },
+  "ai": {
+    "unavailable": "KI-Funktionen sind derzeit nicht verfügbar — Standardergebnisse werden angezeigt."
   }
 }
