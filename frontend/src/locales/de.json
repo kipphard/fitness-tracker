@@ -168,6 +168,8 @@
     "title": "Training",
     "subtitle": "Routinen, Live-Sessions und Fortschritt.",
     "active": "Aktives Training",
+    "resumeTitle": "Training fortsetzen",
+    "resume": "Fortsetzen",
     "skipRest": "überspringen",
     "finish": "Beenden",
     "duration": "Dauer",

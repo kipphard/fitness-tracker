@@ -11,10 +11,11 @@ import {
 } from "recharts";
 
 import { apiDelete, apiGet, apiPost } from "../api/client";
-import type { Exercise, Progression, Routine, WorkoutSummary } from "../api/types";
+import type { Exercise, Progression, Routine, WorkoutSession, WorkoutSummary } from "../api/types";
 import { useApi } from "../hooks/useApi";
 import { localizedExerciseName } from "../lib/exercise";
 import { num, oneDecimal, shortDate } from "../lib/format";
+import { buildResumeExercises } from "../lib/workout";
 import { useTheme } from "../theme";
 import { Card } from "./Card";
 import { ExercisePicker } from "./ExercisePicker";
@@ -84,6 +85,20 @@ export function WorkoutsScreen() {
     });
   };
 
+  // Resume an in-progress (unfinished) session left behind on a previous visit (#11).
+  const resume = async (summary: WorkoutSummary) => {
+    const detail = await apiGet<WorkoutSession>(`/workouts/${summary.id}`).catch(() => null);
+    if (!detail) return;
+    const routine = detail.routine_id
+      ? (routines.data ?? []).find((r) => r.id === detail.routine_id)
+      : undefined;
+    setActive({ id: detail.id, exercises: buildResumeExercises(detail, routine, exName) });
+  };
+
+  const sessions = history.data ?? [];
+  const activeSummary = sessions.find((s) => !s.ended_at);
+  const pastSessions = activeSummary ? sessions.filter((s) => s.id !== activeSummary.id) : sessions;
+
   const progExercise = (library.data ?? []).find((e) => e.id === progId);
   const progData = (prog?.points ?? []).map((p) => ({ label: shortDate(p.date), est: num(p.est_1rm) }));
 
@@ -93,6 +108,18 @@ export function WorkoutsScreen() {
         <h1>{t("workouts.title")}</h1>
         <p className="muted">{t("workouts.subtitle")}</p>
       </header>
+
+      {activeSummary && (
+        <Card title={t("workouts.resumeTitle")}>
+          <p className="muted">
+            {activeSummary.routine_name ? `${activeSummary.routine_name} · ` : ""}
+            {activeSummary.set_count} {t("workouts.setsShort")} · {shortDate(activeSummary.started_at)}
+          </p>
+          <button className="btn btn--primary btn--block" onClick={() => resume(activeSummary)}>
+            {t("workouts.resume")}
+          </button>
+        </Card>
+      )}
 
       <Card title={t("workouts.start")}>
         <button className="btn btn--primary btn--block" onClick={startEmpty}>
@@ -179,9 +206,9 @@ export function WorkoutsScreen() {
       </Card>
 
       <Card title={t("workouts.history")}>
-        {(history.data ?? []).length ? (
+        {pastSessions.length ? (
           <ul className="list">
-            {(history.data ?? []).map((h) => (
+            {pastSessions.map((h) => (
               <li key={h.id} className="diary-entry">
                 <span className="diary-entry__name">
                   {shortDate(h.started_at)}

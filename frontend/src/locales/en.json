@@ -168,6 +168,8 @@
     "title": "Workouts",
     "subtitle": "Routines, live sessions, and progression.",
     "active": "Active workout",
+    "resumeTitle": "Resume workout",
+    "resume": "Resume",
     "skipRest": "skip",
     "finish": "Finish",
     "duration": "Duration",
