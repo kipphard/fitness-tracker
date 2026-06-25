@@ -1,30 +1,38 @@
-import { useState } from "react";
+import Model from "react-body-highlighter";
 
 import type { Exercise } from "../api/types";
-import { exerciseImageUrl } from "../lib/exercise";
+import { modelSideFor, toMuscleSlugs } from "../lib/muscleMap";
 
-// A circular exercise illustration (free-exercise-db via CDN) with an emoji fallback when the
-// exercise has no image or the request fails. Shared by the picker, routine cards, and session.
+const BODY = "#c7ccd6";
+const HIGHLIGHT = "#11936a";
+
+// A circular muscle-highlight thumbnail (#17): a small body diagram with the exercise's primary
+// muscles highlighted — consistent and legible where the old free-exercise-db photos were not.
+// Falls back to an emoji when the muscles are unknown. Shared by the picker, routine cards, session.
 export function ExerciseThumb({
   exercise,
   className = "exercise-thumb",
 }: {
-  exercise: Pick<Exercise, "image_url"> | null | undefined;
+  exercise: Pick<Exercise, "primary_muscles"> | null | undefined;
   className?: string;
 }) {
-  const [failed, setFailed] = useState(false);
-  const src = exercise ? exerciseImageUrl(exercise) : null;
-  if (!src || failed) {
-    return <span className={`${className} exercise-thumb--ph`} aria-hidden>🏋️</span>;
+  const muscles = toMuscleSlugs(exercise?.primary_muscles);
+  if (muscles.length === 0) {
+    return (
+      <span className={`${className} exercise-thumb--ph`} aria-hidden>
+        🏋️
+      </span>
+    );
   }
   return (
-    <img
-      className={className}
-      src={src}
-      alt=""
-      loading="lazy"
-      decoding="async"
-      onError={() => setFailed(true)}
-    />
+    <span className={`${className} muscle-thumb`} aria-hidden>
+      <Model
+        type={modelSideFor(exercise?.primary_muscles)}
+        data={[{ name: "", muscles }]}
+        bodyColor={BODY}
+        highlightedColors={[HIGHLIGHT]}
+        svgStyle={{ height: "100%", width: "auto" }}
+      />
+    </span>
   );
 }

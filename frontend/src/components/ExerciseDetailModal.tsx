@@ -3,9 +3,10 @@ import { useTranslation } from "react-i18next";
 
 import { apiGet } from "../api/client";
 import type { Exercise } from "../api/types";
-import { exerciseImageUrl, localizedExerciseName, vocabKey } from "../lib/exercise";
+import { localizedExerciseName, vocabKey } from "../lib/exercise";
 import { Modal } from "./Modal";
 import { MuscleChips } from "./MuscleChips";
+import { MuscleMap } from "./MuscleMap";
 
 // Tap an exercise → its illustration, equipment, target muscles, and instructions. The list
 // endpoint omits instructions, so this fetches the full record via GET /exercises/{id}.
@@ -32,7 +33,6 @@ export function ExerciseDetailModal({
   }, [exerciseId]);
 
   const name = ex ? localizedExerciseName(ex, i18n.language) : fallbackName ?? "";
-  const img = ex ? exerciseImageUrl(ex) : null;
   const steps = (ex?.instructions ?? "")
     .split(/\n+/)
     .map((s) => s.trim())
@@ -40,7 +40,7 @@ export function ExerciseDetailModal({
 
   return (
     <Modal title={name} onClose={onClose}>
-      {img && <img className="exercise-hero" src={img} alt="" loading="lazy" />}
+      <MuscleMap primary={ex?.primary_muscles} secondary={ex?.secondary_muscles} />
       {ex?.equipment && (
         <p className="muted">
           {t(`exercise.equipment.${vocabKey(ex.equipment)}`, { defaultValue: ex.equipment })}

@@ -12,7 +12,7 @@ import { MuscleChips } from "./MuscleChips";
 interface Item {
   exercise_id: string;
   name: string;
-  image_url: string | null;
+  primary_muscles: string[] | null;
   planned_sets: number;
   planned_reps: number | null;
 }
@@ -38,7 +38,7 @@ export function RoutineEditModal({
       return {
         exercise_id: re.exercise_id,
         name: ex ? localizedExerciseName(ex, i18n.language) : re.exercise_name,
-        image_url: ex?.image_url ?? null,
+        primary_muscles: ex?.primary_muscles ?? null,
         planned_sets: re.planned_sets,
         planned_reps: re.planned_reps,
       };
@@ -55,7 +55,7 @@ export function RoutineEditModal({
       {
         exercise_id: ex.id,
         name: localizedExerciseName(ex, i18n.language),
-        image_url: ex.image_url,
+        primary_muscles: ex.primary_muscles,
         planned_sets: 3,
         planned_reps: null,
       },
