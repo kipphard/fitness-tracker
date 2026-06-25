@@ -3,7 +3,7 @@ import Model from "react-body-highlighter";
 import type { Exercise } from "../api/types";
 import { modelSideFor, toMuscleSlugs } from "../lib/muscleMap";
 
-const BODY = "#c7ccd6";
+const BODY = "#9aa1ad"; // mid-grey body, visible on the white thumbnail circle
 const HIGHLIGHT = "#11936a";
 
 // A circular muscle-highlight thumbnail (#17): a small body diagram with the exercise's primary

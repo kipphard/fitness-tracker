@@ -2,7 +2,7 @@ import Model from "react-body-highlighter";
 
 import { toMuscleSlugs } from "../lib/muscleMap";
 
-const BODY = "#c7ccd6";
+const BODY = "#9aa1ad";
 const STRONG = "#11936a"; // primary muscle (freq 2)
 const LIGHT = "#8fcdb9"; // secondary muscle (freq 1)
 

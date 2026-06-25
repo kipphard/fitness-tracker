@@ -1893,6 +1893,14 @@ a:hover {
   justify-content: center;
   overflow: hidden;
 }
+/* The library's wrapper has no height; give it one so the svg's height:100% resolves (#17). */
+.muscle-thumb .rbh-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
 .muscle-thumb svg {
   height: 100%;
   width: auto;
