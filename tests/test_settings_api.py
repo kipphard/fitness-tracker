@@ -34,3 +34,13 @@ def test_settings_budget_round_trip(client):
     cleared = client.put("/api/settings", json={"food_budget_weekly": None}).json()
     assert cleared["food_budget_weekly"] is None
     assert cleared["currency"] == "EUR"
+
+
+def test_settings_shoe_size_round_trip(client):
+    """Shoe size (#13) persists and is null until set."""
+    assert client.get("/api/settings").json()["shoe_size_eu"] is None
+    resp = client.put("/api/settings", json={"shoe_size_eu": "42.5"})
+    assert resp.status_code == 200, resp.text
+    assert Decimal(resp.json()["shoe_size_eu"]) == Decimal("42.5")
+    again = client.get("/api/settings").json()
+    assert Decimal(again["shoe_size_eu"]) == Decimal("42.5")

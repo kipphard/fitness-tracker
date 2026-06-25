@@ -82,6 +82,8 @@ class SettingsIn(BaseModel):
     # Food budget (issue #5 §4): weekly grocery spend + 3-letter currency code.
     food_budget_weekly: Decimal | None = Field(default=None, ge=0, le=100000)
     currency: str | None = Field(default=None, max_length=3)
+    # Shoe size (EU) for the km->steps calculator (#13).
+    shoe_size_eu: Decimal | None = Field(default=None, ge=20, le=60)
 
 
 class SettingsOut(BaseModel):
@@ -95,6 +97,7 @@ class SettingsOut(BaseModel):
     dietary_preferences: str | None = None
     food_budget_weekly: Decimal | None = None
     currency: str | None = None
+    shoe_size_eu: Decimal | None = None
 
 
 # --- calories ---

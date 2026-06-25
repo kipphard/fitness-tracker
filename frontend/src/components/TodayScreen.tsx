@@ -9,6 +9,7 @@ import { useApi } from "../hooks/useApi";
 import { addDays, kcal, num, oneDecimal, todayIso } from "../lib/format";
 import { Card } from "./Card";
 import { GenerateDayPlanPanel } from "./GenerateDayPlanPanel";
+import { StepsFromDistance } from "./StepsFromDistance";
 import { SuggestPanel } from "./SuggestPanel";
 
 const MACRO_COLORS = { protein: "#6366f1", carbs: "#f59e0b", fat: "#10b981" };
@@ -48,6 +49,13 @@ export function TodayScreen() {
     const n = Number(stepsInput);
     if (!Number.isFinite(n) || n < 0) return;
     await apiPut("/steps", { steps: Math.round(n), date }).catch(() => undefined);
+  };
+
+  // Add steps derived from a distance (km → steps calculator, #13) on top of today's count.
+  const addSteps = (extra: number) => {
+    const total = Math.round((Number(stepsInput) || 0) + extra);
+    setStepsInput(String(total));
+    apiPut("/steps", { steps: total, date }).catch(() => undefined);
   };
 
   const logWeight = async (e: React.FormEvent) => {
@@ -215,6 +223,7 @@ export function TodayScreen() {
               <span className="muted tnum">+{kcal(stepKcal)}</span>
             </span>
           </div>
+          <StepsFromDistance onAdd={addSteps} />
           {hasWorkout && (
             <div className="result-row">
               <span className="muted">{t("today.workout")}</span>

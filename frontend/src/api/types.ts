@@ -85,6 +85,7 @@ export interface Settings {
   // Food budget (issue #5 §4): weekly grocery spend + 3-letter currency code.
   food_budget_weekly: string | null;
   currency: string | null;
+  shoe_size_eu: string | null;
 }
 
 export interface Steps {

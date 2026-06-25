@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 
 import { apiGet, apiPost, apiPut } from "../api/client";
 import type { BackfillResult, Settings, UnitSystem } from "../api/types";
+import { parseDecimalInput } from "../lib/format";
 import { Card } from "./Card";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 
@@ -21,6 +22,7 @@ export function SettingsScreen() {
     dietary: "",
     budget: "",
     currency: "",
+    shoe: "",
   });
 
   const runBackfill = async () => {
@@ -47,6 +49,7 @@ export function SettingsScreen() {
         dietary: settings.dietary_preferences ?? "",
         budget: settings.food_budget_weekly ?? "",
         currency: settings.currency ?? "",
+        shoe: settings.shoe_size_eu ?? "",
       });
   }, [settings]);
 
@@ -94,6 +97,26 @@ export function SettingsScreen() {
             />
             <span className="toggle__track" />
           </label>
+        </div>
+        <div className="setting-row">
+          <span>
+            {t("settings.shoeSize")}
+            <small className="muted setting-sub">{t("settings.shoeSizeHint")}</small>
+          </span>
+          <input
+            className="input select--auto"
+            type="text"
+            inputMode="decimal"
+            value={draft.shoe}
+            placeholder={t("settings.shoeSizePlaceholder")}
+            onChange={(e) => setDraft((d) => ({ ...d, shoe: e.target.value }))}
+            onBlur={() => {
+              const raw = draft.shoe.trim();
+              const v = raw === "" ? null : parseDecimalInput(raw);
+              if (v === "") return; // ignore unparseable input
+              if ((settings?.shoe_size_eu ?? "") !== (v ?? "")) save({ shoe_size_eu: v });
+            }}
+          />
         </div>
         <p className="muted setting-note">{t("settings.note")}</p>
         {saved && <div className="alert alert--ok">{t("settings.saved")}</div>}

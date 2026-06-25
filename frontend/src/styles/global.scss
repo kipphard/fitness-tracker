@@ -1866,3 +1866,22 @@ a:hover {
 .feature-group {
   scroll-margin-top: 4rem;
 }
+
+/* Features tab end. km -> steps calculator on Today (#13). */
+.km-steps {
+  margin-top: 0.35rem;
+}
+.km-steps__form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.4rem;
+}
+.km-steps__form .input {
+  width: 5.5rem;
+}
+.km-steps__form .select {
+  width: auto;
+  min-width: 8rem;
+}

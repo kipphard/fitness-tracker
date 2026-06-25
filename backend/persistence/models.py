@@ -131,6 +131,8 @@ class Settings(Base):
     # shopping list is measured against. Currency is a 3-letter code (default EUR in the UI).
     food_budget_weekly: Mapped[Decimal | None] = mapped_column(Numeric(10, 2), nullable=True)
     currency: Mapped[str | None] = mapped_column(String(3), nullable=True)
+    # Shoe size (EU) — a rough basis for stride length in the km->steps calculator (#13). Optional.
+    shoe_size_eu: Mapped[Decimal | None] = mapped_column(Numeric(4, 1), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_now, nullable=False
     )
