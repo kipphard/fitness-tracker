@@ -10,6 +10,13 @@ export function exerciseImageUrl(e: Pick<Exercise, "image_url">): string | null 
   return e.image_url ? IMG_BASE + e.image_url : null;
 }
 
+// free-exercise-db ships a start (…/0.jpg) and end (…/1.jpg) frame per exercise; derive the end
+// from the start so the detail view can animate the movement (#17). null when there's no pair.
+export function endFrameImageUrl(e: Pick<Exercise, "image_url">): string | null {
+  const start = exerciseImageUrl(e);
+  return start && /\/0\.jpg$/i.test(start) ? start.replace(/\/0\.jpg$/i, "/1.jpg") : null;
+}
+
 export function localizedExerciseName(
   e: Pick<Exercise, "name" | "name_de">,
   lang: string,

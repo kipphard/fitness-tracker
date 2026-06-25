@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { apiGet } from "../api/client";
 import type { Exercise } from "../api/types";
 import { localizedExerciseName, vocabKey } from "../lib/exercise";
+import { ExerciseMovement } from "./ExerciseMovement";
 import { Modal } from "./Modal";
 import { MuscleChips } from "./MuscleChips";
 import { MuscleMap } from "./MuscleMap";
@@ -40,6 +41,7 @@ export function ExerciseDetailModal({
 
   return (
     <Modal title={name} onClose={onClose}>
+      <ExerciseMovement exercise={ex} />
       <MuscleMap primary={ex?.primary_muscles} secondary={ex?.secondary_muscles} />
       {ex?.equipment && (
         <p className="muted">
