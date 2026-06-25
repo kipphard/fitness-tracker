@@ -19,6 +19,7 @@
       "formula": "BMR-Formel",
       "activity": "Aktivitätslevel",
       "settings": "Einstellungen",
+      "features": "Funktionen",
       "more": "Mehr"
     }
   },
@@ -452,5 +453,139 @@
     "budget": "Budget",
     "clearChecked": "Erledigte löschen",
     "clearAll": "Alle löschen"
+  },
+  "features": {
+    "title": "Funktionen",
+    "subtitle": "Alles, was die App kann — und wie du es nutzt.",
+    "open": "Öffnen",
+    "aiBadge": "KI",
+    "aiOnlyNote": "Benötigt den KI-Schlüssel — in der Live-Demo deaktiviert.",
+    "aiOptionalNote": "Funktioniert regelbasiert; der smartere KI-Modus benötigt den Schlüssel (in der Demo aus).",
+    "groups": {
+      "tracking": "Tägliches Tracking",
+      "food": "Essen & Tagebuch",
+      "planning": "Planung & Einkauf",
+      "workouts": "Training",
+      "progress": "Körper & Fortschritt",
+      "setup": "Einrichtung & Wissen",
+      "account": "Konto"
+    },
+    "items": {
+      "today": {
+        "name": "Heute-Übersicht",
+        "desc": "Dein tägliches Kalorienbudget, Makros, Gegessen vs. Übrig und dein Netto-Defizit auf einen Blick.",
+        "how": "Öffne „Heute“, um dein Budget zu sehen und den Tag zu erfassen."
+      },
+      "steps": {
+        "name": "Schritte",
+        "desc": "Erfasse deine Schritte pro Tag; sie werden in verbrannte Kalorien umgerechnet und deinem Budget gutgeschrieben.",
+        "how": "Trage auf „Heute“ deine Schrittzahl für den Tag ein."
+      },
+      "diary": {
+        "name": "Ernährungstagebuch",
+        "desc": "Erfasse Frühstück, Mittag, Abendessen und Snacks; durchsuche eigene Lebensmittel und die Open-Food-Facts-Datenbank.",
+        "how": "Tagebuch → Mahlzeit wählen → Lebensmittel suchen und hinzufügen."
+      },
+      "barcode": {
+        "name": "Barcode-Scanner",
+        "desc": "Scanne den Barcode eines Produkts, um es zu finden und sofort zu erfassen.",
+        "how": "Tippe im Tagebuch auf das Scan-Symbol und halte es an einen Barcode."
+      },
+      "photo": {
+        "name": "KI-Fotoschätzung",
+        "desc": "Fotografiere deine Mahlzeit und lass die KI Kalorien und Makros schätzen.",
+        "how": "Lade im Tagebuch ein Foto deiner Mahlzeit hoch, um eine Schätzung zu erhalten."
+      },
+      "customFood": {
+        "name": "Eigene Lebensmittel",
+        "desc": "Lege eigene Lebensmittel mit Kalorien und Makros pro 100 g an.",
+        "how": "Wähle in der Tagebuch-Suche „Eigenes Lebensmittel anlegen“."
+      },
+      "copyDay": {
+        "name": "Tag kopieren",
+        "desc": "Übernimm das Tagebuch eines früheren Tages mit einem Tipp, statt alles neu einzugeben.",
+        "how": "Nutze oben im Tagebuch „Gestern kopieren“."
+      },
+      "fillRemaining": {
+        "name": "Restkalorien füllen",
+        "desc": "Erhalte Vorschläge, die deine übrigen Kalorien für den Tag auffüllen.",
+        "how": "Tippe bei verbleibenden Kalorien auf „Rest füllen“."
+      },
+      "dayPlan": {
+        "name": "Tagesplan",
+        "desc": "Erstelle die Mahlzeiten für einen ganzen Tag aus deinen Lebensmitteln, deinem Budget und deinen Vorlieben.",
+        "how": "Tippe auf „Tagesplan erstellen“ und füge ihn dem Tagebuch hinzu."
+      },
+      "pantry": {
+        "name": "Vorrat",
+        "desc": "Erfasse, was du zu Hause hast; Vorschläge und Pläne bevorzugen diese Artikel.",
+        "how": "Füge im Vorrat hinzu, was du zu Hause hast."
+      },
+      "shopping": {
+        "name": "Einkaufsliste",
+        "desc": "Erstelle eine Einkaufsliste mit Preisen und vergleiche sie mit deinem wöchentlichen Essensbudget.",
+        "how": "Füge Artikel hinzu oder übernimm fehlende Artikel eines Tagesplans."
+      },
+      "workouts": {
+        "name": "Trainingseinheiten",
+        "desc": "Starte eine Live-Einheit (leer oder aus einer Routine) und erfasse Sätze, Wiederholungen und Gewicht.",
+        "how": "Training → Starten, dann jeden Satz abhaken."
+      },
+      "routines": {
+        "name": "Routinen",
+        "desc": "Erstelle wiederverwendbare Trainingsvorlagen, um eine Einheit mit einem Tipp zu starten.",
+        "how": "Training → „Neue Routine“, um eine anzulegen."
+      },
+      "exerciseLibrary": {
+        "name": "Übungsbibliothek",
+        "desc": "Durchstöbere 300+ Übungen, gefiltert nach Muskelgruppe und Equipment.",
+        "how": "Füge während einer Einheit eine Übung über die Auswahl hinzu."
+      },
+      "progression": {
+        "name": "Fortschritt",
+        "desc": "Sieh Bestleistungen, geschätztes 1RM und Volumen-Trends je Übung.",
+        "how": "Wähle unter „Fortschritt“ eine Übung, um deinen Verlauf zu sehen."
+      },
+      "weight": {
+        "name": "Gewicht",
+        "desc": "Erfasse Wiegungen und sieh eine geglättete Trendlinie, die dein Kalorienziel steuert.",
+        "how": "Gewicht → trage die heutige Wiegung ein."
+      },
+      "body": {
+        "name": "Körpermaße",
+        "desc": "Verfolge Taille, Brust, Hüfte, Arm und Oberschenkel im Zeitverlauf mit Trenddiagrammen.",
+        "how": "Körper → erfasse ein Maß, optional mit Notiz."
+      },
+      "trends": {
+        "name": "Trends",
+        "desc": "Kalorien-Einhaltung, dein Gewichtstrend und ein aus deinen Daten gelernter Erhaltungsbedarf (TDEE).",
+        "how": "Öffne „Trends“ nach ein paar Wochen Erfassung."
+      },
+      "calculator": {
+        "name": "Kalorienrechner",
+        "desc": "Ermittle deinen täglichen Kalorienbedarf aus Größe, Alter, Gewicht, Aktivität und Ziel.",
+        "how": "Kalorienbedarf → trage deine Daten ein."
+      },
+      "formula": {
+        "name": "BMR-Formel",
+        "desc": "Verstehe die Mifflin-St-Jeor-Formel hinter deinen Werten.",
+        "how": "Lies die Erklärung zur BMR-Formel."
+      },
+      "activity": {
+        "name": "Aktivitätslevel",
+        "desc": "Sieh, was die einzelnen Aktivitätslevel bedeuten und wie sie deinen Bedarf skalieren.",
+        "how": "Öffne „Aktivitätslevel“ und wähle das passende für deinen Alltag."
+      },
+      "settings": {
+        "name": "Einstellungen",
+        "desc": "Sprache, Einheiten, Vorlieben für die Essensplanung, Budget und Währung.",
+        "how": "Einstellungen → Sprache, Einheiten und Vorlieben anpassen."
+      },
+      "demo": {
+        "name": "Live-Demo",
+        "desc": "Eine private Wegwerf-Sandbox mit Beispieldaten, die sich automatisch zurücksetzt.",
+        "how": "Öffne die App mit „?demo=1“ oder tippe auf der Anmeldeseite auf „Live-Demo testen“."
+      }
+    }
   }
 }

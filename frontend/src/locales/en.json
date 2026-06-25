@@ -19,6 +19,7 @@
       "formula": "BMR formula",
       "activity": "Activity levels",
       "settings": "Settings",
+      "features": "Features",
       "more": "More"
     }
   },
@@ -452,5 +453,139 @@
     "budget": "budget",
     "clearChecked": "Clear checked",
     "clearAll": "Clear all"
+  },
+  "features": {
+    "title": "Features",
+    "subtitle": "Everything the app can do — and how to use it.",
+    "open": "Open",
+    "aiBadge": "AI",
+    "aiOnlyNote": "Needs the AI key — disabled in the live demo.",
+    "aiOptionalNote": "Works rule-based; the smarter AI mode needs the key (off in the demo).",
+    "groups": {
+      "tracking": "Daily tracking",
+      "food": "Food & diary",
+      "planning": "Planning & shopping",
+      "workouts": "Workouts",
+      "progress": "Body & progress",
+      "setup": "Setup & reference",
+      "account": "Account"
+    },
+    "items": {
+      "today": {
+        "name": "Today dashboard",
+        "desc": "Your daily calorie budget, macros, eaten vs. left, and your net deficit at a glance.",
+        "how": "Open Today to see your budget and log the day."
+      },
+      "steps": {
+        "name": "Step tracking",
+        "desc": "Log your daily steps; they become calories burned and are added to your budget.",
+        "how": "On Today, type your step count for the day."
+      },
+      "diary": {
+        "name": "Food diary",
+        "desc": "Log breakfast, lunch, dinner and snacks; search your own foods and the Open Food Facts database.",
+        "how": "Diary → pick a meal → search and add a food."
+      },
+      "barcode": {
+        "name": "Barcode scanner",
+        "desc": "Scan a product barcode to look it up and log it instantly.",
+        "how": "In the Diary, tap the scan icon and point at a barcode."
+      },
+      "photo": {
+        "name": "AI photo estimate",
+        "desc": "Snap a photo of your meal and let AI estimate its calories and macros.",
+        "how": "In the Diary, upload a meal photo to get an estimate."
+      },
+      "customFood": {
+        "name": "Custom foods",
+        "desc": "Create your own foods with calories and macros per 100 g.",
+        "how": "In the Diary search, choose “create custom food”."
+      },
+      "copyDay": {
+        "name": "Copy a day",
+        "desc": "Repeat a previous day's diary in one tap instead of re-entering everything.",
+        "how": "Use “copy yesterday” at the top of the Diary."
+      },
+      "fillRemaining": {
+        "name": "Fill remaining calories",
+        "desc": "Get food suggestions that fill the calories you have left for the day.",
+        "how": "When you have calories left, tap “fill remaining”."
+      },
+      "dayPlan": {
+        "name": "Day meal plan",
+        "desc": "Generate a whole day's meals from your foods, budget and preferences.",
+        "how": "Tap “generate day plan”, then add it to your diary."
+      },
+      "pantry": {
+        "name": "Pantry",
+        "desc": "Track what you have at home; suggestions and plans prefer those items first.",
+        "how": "Add the items you have at home in Pantry."
+      },
+      "shopping": {
+        "name": "Shopping list",
+        "desc": "Build a shopping list with prices and compare it against your weekly food budget.",
+        "how": "Add items, or push a day plan's missing items to Shopping."
+      },
+      "workouts": {
+        "name": "Workout sessions",
+        "desc": "Start a live session (empty or from a routine) and log sets, reps and weight.",
+        "how": "Workouts → Start, then check off each set as you go."
+      },
+      "routines": {
+        "name": "Routines",
+        "desc": "Build reusable workout templates so you can start a session in one tap.",
+        "how": "Workouts → “new routine” to set one up."
+      },
+      "exerciseLibrary": {
+        "name": "Exercise library",
+        "desc": "Browse 300+ exercises filtered by muscle group and equipment.",
+        "how": "Add an exercise from the picker during a session."
+      },
+      "progression": {
+        "name": "Progression",
+        "desc": "See personal records, estimated 1RM and volume trends per exercise.",
+        "how": "Pick an exercise under Progression to see your trend."
+      },
+      "weight": {
+        "name": "Weight tracking",
+        "desc": "Log weigh-ins and see a smoothed trend line that powers your calorie target.",
+        "how": "Weight → add today's weigh-in."
+      },
+      "body": {
+        "name": "Body measurements",
+        "desc": "Track waist, chest, hips, arm and thigh over time with trend charts.",
+        "how": "Body → log a measurement, optionally with a note."
+      },
+      "trends": {
+        "name": "Trends",
+        "desc": "Calorie adherence, your weight trend, and a maintenance (TDEE) learned from your data.",
+        "how": "Open Trends after a couple of weeks of logging."
+      },
+      "calculator": {
+        "name": "Calorie calculator",
+        "desc": "Work out your daily calorie needs from height, age, weight, activity and goal.",
+        "how": "Calorie needs → enter your stats."
+      },
+      "formula": {
+        "name": "BMR formula",
+        "desc": "Understand the Mifflin-St Jeor formula behind your numbers.",
+        "how": "Read the BMR formula explainer."
+      },
+      "activity": {
+        "name": "Activity levels",
+        "desc": "See what each activity level means and how it scales your needs.",
+        "how": "Open Activity levels to pick the one that fits your day."
+      },
+      "settings": {
+        "name": "Settings",
+        "desc": "Language, units, meal-planning preferences, food budget and currency.",
+        "how": "Settings → adjust language, units and preferences."
+      },
+      "demo": {
+        "name": "Live demo",
+        "desc": "A private, throwaway sandbox seeded with sample data that resets automatically.",
+        "how": "Open the app with “?demo=1”, or tap “Try the live demo” on the login screen."
+      }
+    }
   }
 }
