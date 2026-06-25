@@ -77,6 +77,9 @@ const GROUPS: Group[] = [
 
 export function FeaturesScreen() {
   const { t } = useTranslation();
+  // HashRouter owns the URL hash, so jump via scrollIntoView instead of <a href="#…">.
+  const jumpTo = (id: string) =>
+    document.getElementById(`feat-${id}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
   return (
     <div className="screen screen--prose">
       <header className="screen__head">
@@ -84,8 +87,17 @@ export function FeaturesScreen() {
         <p className="muted">{t("features.subtitle")}</p>
       </header>
 
+      <nav className="feature-nav" aria-label={t("features.title")}>
+        {GROUPS.map((g) => (
+          <button key={g.id} className="feature-nav__chip" onClick={() => jumpTo(g.id)}>
+            {t(`features.groups.${g.id}`)}
+          </button>
+        ))}
+      </nav>
+
       {GROUPS.map((g) => (
-        <Card key={g.id} title={t(`features.groups.${g.id}`)}>
+        <section key={g.id} id={`feat-${g.id}`} className="feature-group">
+        <Card title={t(`features.groups.${g.id}`)}>
           <ul className="level-list">
             {g.items.map((f) => (
               <li key={f.id} className="level-list__item">
@@ -113,6 +125,7 @@ export function FeaturesScreen() {
             ))}
           </ul>
         </Card>
+        </section>
       ))}
     </div>
   );

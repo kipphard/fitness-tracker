@@ -1833,3 +1833,36 @@ a:hover {
   padding: 1rem;
   text-align: center;
 }
+
+/* Features tab: sticky category jump-bar (HashRouter-safe — buttons scroll, no anchors). */
+.feature-nav {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.4rem;
+  padding: 0.5rem 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+.feature-nav__chip {
+  appearance: none;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  padding: 0.35rem 0.75rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.feature-nav__chip:hover {
+  background: var(--surface-2);
+}
+.feature-group {
+  scroll-margin-top: 4rem;
+}
