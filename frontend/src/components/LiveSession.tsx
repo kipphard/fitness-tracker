@@ -5,7 +5,7 @@ import { apiDelete, apiGet, apiPatch, apiPost } from "../api/client";
 import type { Exercise, WorkoutSession, WorkoutSet } from "../api/types";
 import { useApi } from "../hooks/useApi";
 import { localizedExerciseName } from "../lib/exercise";
-import { num, oneDecimal } from "../lib/format";
+import { num, oneDecimal, parseDecimalInput } from "../lib/format";
 import { Card } from "./Card";
 import { ExerciseDetailModal } from "./ExerciseDetailModal";
 import { ExercisePicker } from "./ExercisePicker";
@@ -109,8 +109,8 @@ export function LiveSession({
   const logDraft = async (ex: ExRef, idx: number, prev?: WorkoutSet) => {
     const d = (drafts[ex.id] ?? [])[idx];
     if (!d) return;
-    const weight = d.weight || (prev ? oneDecimal(prev.weight) : "");
-    const reps = d.reps || (prev ? String(prev.reps) : "");
+    const weight = parseDecimalInput(d.weight) || (prev ? String(num(prev.weight)) : "");
+    const reps = d.reps.trim() || (prev ? String(prev.reps) : "");
     if (weight === "" || reps === "") return;
     await apiPost(`/workouts/${sessionId}/sets`, {
       exercise_id: ex.id,
@@ -122,9 +122,11 @@ export function LiveSession({
   };
 
   const editSet = (set: WorkoutSet, key: "weight" | "reps", value: string) => {
-    if (value === "" || value === (key === "weight" ? oneDecimal(set.weight) : String(set.reps))) return;
+    const v = key === "reps" ? value.trim() : parseDecimalInput(value);
+    if (v === "") return;
+    if (key === "reps" ? Number(v) === set.reps : num(v) === num(set.weight)) return;
     apiPatch(`/workouts/${sessionId}/sets/${set.id}`, {
-      [key]: key === "reps" ? Number(value) : value,
+      [key]: key === "reps" ? Number(v) : v,
     }).catch(() => undefined);
   };
   const toggleWarmup = (set: WorkoutSet) =>
@@ -231,9 +233,8 @@ export function LiveSession({
                   </span>
                   <input
                     className="input set-row__num"
-                    type="number"
-                    step="0.5"
-                    min="0"
+                    type="text"
+                    inputMode="decimal"
                     defaultValue={oneDecimal(s.weight)}
                     onBlur={(e) => editSet(s, "weight", e.target.value)}
                   />
@@ -261,9 +262,8 @@ export function LiveSession({
                     </span>
                     <input
                       className="input set-row__num"
-                      type="number"
-                      step="0.5"
-                      min="0"
+                      type="text"
+                      inputMode="decimal"
                       placeholder={prevSet ? oneDecimal(prevSet.weight) : t("workouts.weight")}
                       value={d.weight}
                       onChange={(e) => setDraft(ex.id, idx, "weight", e.target.value)}

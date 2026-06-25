@@ -4,6 +4,15 @@ export function num(value: string | number | null | undefined): number {
   return Number.isFinite(n) ? n : 0;
 }
 
+// Parse a user-typed decimal that may use a comma (de locale) or a dot into a dot-decimal
+// string safe for the API (which parses Decimal). Returns "" when it isn't a finite number,
+// so callers can treat empty/invalid the same way.
+export function parseDecimalInput(value: string): string {
+  const norm = value.trim().replace(",", ".");
+  if (norm === "") return "";
+  return Number.isFinite(Number(norm)) ? norm : "";
+}
+
 // Whole-kcal display (the engine returns exact Decimals; we round for the UI).
 export function kcal(value: string | number | null | undefined): string {
   return Math.round(num(value)).toLocaleString();
