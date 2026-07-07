@@ -8,9 +8,15 @@ maintenance can sit ±15–20% off it. Energy balance lets us *measure* it: if y
 
 We estimate ``Δ/D`` (kg/day) with a least-squares slope over the window's weigh-ins rather
 than EWMA endpoints — EWMA lags and under-reports the change when weigh-ins are sparse or
-irregular, whereas the slope is robust and uses every point. Once enough dense data exists we
-blend the measured value into the formula, with confidence growing as the window fills, so the
-target self-corrects per person. Below the data threshold confidence is 0 → pure formula.
+irregular, whereas the slope is robust and uses every point.
+
+``measured_TDEE`` from energy balance is *total* expenditure — it includes deliberate exercise.
+The formula maintenance excludes it (occupational activity only). To keep the two comparable and
+avoid double-counting (callers add today's steps+workouts on top for the net deficit / eat-back
+budget), we subtract the window's mean daily activity so the reported ``measured`` is an
+**exercise-excluded baseline**. Once enough dense data exists we blend that baseline into the
+formula, with confidence growing as the window fills, so the target self-corrects per person.
+Below the data threshold confidence is 0 → pure formula.
 
 Pure: no database, no framework. All values are :class:`~decimal.Decimal`, never ``float``.
 """
@@ -99,12 +105,21 @@ def adaptive_maintenance(
     weigh_points: list[Point],
     intake_by_day: dict[date, Decimal],
     today: date,
+    activity_by_day: dict[date, Decimal] | None = None,
     window_days: int = WINDOW_DAYS,
 ) -> AdaptiveResult:
-    """Blend the formula maintenance with a measured TDEE when enough recent data exists.
+    """Blend the formula maintenance with a measured *baseline* maintenance when enough recent
+    data exists.
 
     ``intake_by_day`` maps a date → that day's total kcal (logged days only). The current day
     is excluded from the intake average since its log is still partial.
+
+    ``activity_by_day`` maps a date → that day's deliberate-exercise kcal (steps + workouts).
+    Energy balance measures *total* expenditure (BMR + NEAT + exercise); we subtract the window's
+    mean daily activity so the reported ``measured`` is an **exercise-excluded baseline**,
+    directly comparable to the exercise-excluded ``formula``. Callers add today's activity back on
+    top exactly once (net deficit / eat-back budget), so exercise is never double-counted. Omit it
+    (or pass empty) to get the raw total-expenditure measurement.
     """
     formula = _dec(formula)
     nil = AdaptiveResult(formula, formula, None, Decimal(0), 0, 0)
@@ -122,7 +137,7 @@ def adaptive_maintenance(
         return nil
 
     logged = [
-        kcal
+        (d, _dec(kcal))
         for d, kcal in intake_by_day.items()
         if start_day <= d < today and _dec(kcal) > 0
     ]
@@ -135,10 +150,19 @@ def adaptive_maintenance(
     if slope is None:
         return AdaptiveResult(formula, formula, None, Decimal(0), logged_days, span_days)
 
-    mean_intake = sum((_dec(k) for k in logged), Decimal(0)) / Decimal(logged_days)
+    mean_intake = sum((k for _, k in logged), Decimal(0)) / Decimal(logged_days)
     delta = slope * Decimal(span_days)
-    raw = measured_tdee(mean_intake, delta, span_days)
-    measured = min(max(raw, formula * CLAMP_LOW), formula * CLAMP_HIGH)
+    raw_total = measured_tdee(mean_intake, delta, span_days)  # incl. exercise (energy balance)
+
+    # Subtract the window's mean deliberate-exercise kcal over the SAME logged days, so `measured`
+    # is an exercise-excluded baseline comparable to the formula (activity is added back on top
+    # once, downstream). Empty activity → mean_activity 0 → raw total (backward compatible).
+    activity = activity_by_day or {}
+    mean_activity = sum(
+        (_dec(activity.get(d, 0)) for d, _ in logged), Decimal(0)
+    ) / Decimal(logged_days)
+    raw_base = raw_total - mean_activity
+    measured = min(max(raw_base, formula * CLAMP_LOW), formula * CLAMP_HIGH)
 
     confidence = _confidence(span_days)
     blended = formula * (Decimal(1) - confidence) + measured * confidence

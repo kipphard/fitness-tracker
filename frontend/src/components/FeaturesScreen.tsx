@@ -29,20 +29,9 @@ const GROUPS: Group[] = [
     items: [
       { id: "diary", icon: "🍽️", to: "/diary" },
       { id: "barcode", icon: "📷", to: "/diary" },
-      { id: "photo", icon: "🤖", to: "/diary", ai: "only" },
-      { id: "labelScan", icon: "🏷️", to: "/diary", ai: "only" },
       { id: "customFood", icon: "✏️", to: "/diary" },
       { id: "mealSlots", icon: "🍱", to: "/settings" },
       { id: "copyDay", icon: "📋", to: "/diary" },
-    ],
-  },
-  {
-    id: "planning",
-    items: [
-      { id: "fillRemaining", icon: "🧩", to: "/diary", ai: "optional" },
-      { id: "dayPlan", icon: "🗓️", to: "/diary", ai: "optional" },
-      { id: "pantry", icon: "🥫", to: "/pantry" },
-      { id: "shopping", icon: "🛒", to: "/shopping" },
     ],
   },
   {

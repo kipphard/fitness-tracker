@@ -1,26 +1,19 @@
-import { Suspense, lazy, useEffect, useRef, useState } from "react";
+import { Suspense, lazy, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { apiDelete, apiGet, apiPatch, apiPost } from "../api/client";
-import { useAuth } from "../auth";
 import {
   type DiaryDay,
   type DiaryEntry,
   type Food,
   type FoodData,
-  type FoodLabelDraft,
   type MealSlot,
-  type PantryItem,
-  type Today,
 } from "../api/types";
 import { useApi } from "../hooks/useApi";
 import { useMealSlots, useSlotLabel } from "../hooks/useMealSlots";
 import { addDays, kcal, num, oneDecimal, todayIso } from "../lib/format";
 import { Card } from "./Card";
-import { LabelPhotoPanel } from "./LabelPhotoPanel";
 import { Modal } from "./Modal";
-import { PhotoEstimatePanel } from "./PhotoEstimatePanel";
-import { SuggestPanel } from "./SuggestPanel";
 
 // Lazy so the ZXing barcode library only loads when the user opens the scanner.
 const BarcodeScanner = lazy(() =>
@@ -55,23 +48,12 @@ const EMPTY_CUSTOM = { name: "", kcal: "", protein: "", fat: "", carbs: "", serv
 
 export function DiaryScreen() {
   const { t } = useTranslation();
-  const { user } = useAuth();
   const [date, setDate] = useState(todayIso());
   const day = useApi<DiaryDay>(`/diary?date=${date}`);
   const recent = useApi<Food[]>("/diary/recent");
-  const pantry = useApi<PantryItem[]>("/pantry");
-  const tz = -new Date().getTimezoneOffset();
-  const todayInfo = useApi<Today>(`/today?date=${date}&tz=${tz}`);
 
   const { slots } = useMealSlots();
   const slotLabel = useSlotLabel(slots);
-
-  const pantrySet = new Set((pantry.data ?? []).map((i) => i.food.id));
-  const togglePantry = (f: Food) =>
-    (pantrySet.has(f.id)
-      ? apiDelete(`/pantry/${f.id}`)
-      : apiPost("/pantry", { food_id: f.id })
-    ).catch(() => undefined);
 
   // Which meal's "add food" sheet is open (null = closed). Drives the whole add flow.
   const [addSlot, setAddSlot] = useState<MealSlot | null>(null);
@@ -82,14 +64,9 @@ export function DiaryScreen() {
   const [barcode, setBarcode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [showScanner, setShowScanner] = useState(false);
-  const [photoFile, setPhotoFile] = useState<File | null>(null);
-  const [labelFile, setLabelFile] = useState<File | null>(null);
-  const [showSuggest, setShowSuggest] = useState(false);
   const [showAllRecent, setShowAllRecent] = useState(false);
   const [showCustom, setShowCustom] = useState(false);
   const [custom, setCustom] = useState(EMPTY_CUSTOM);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const labelInputRef = useRef<HTMLInputElement>(null);
 
   // Food detail modal (a picked food being portioned) + the meal it goes to.
   const [selected, setSelected] = useState<Selectable | null>(null);
@@ -180,20 +157,6 @@ export function DiaryScreen() {
     });
     setShowCustom(false);
     setCustom(EMPTY_CUSTOM);
-  };
-
-  // A Nährwerttabelle photo was read → prefill the custom-food form for review, then save.
-  const prefillCustomFromLabel = (d: FoodLabelDraft) => {
-    setCustom({
-      name: d.name ?? "",
-      kcal: d.per100_kcal ?? "",
-      protein: d.per100_protein_g ?? "",
-      fat: d.per100_fat_g ?? "",
-      carbs: d.per100_carbs_g ?? "",
-      serving: d.serving_g ?? "",
-    });
-    setLabelFile(null);
-    setShowCustom(true);
   };
 
   const logSelected = async () => {
@@ -407,40 +370,7 @@ export function DiaryScreen() {
             <button className="btn btn--ghost btn--sm" onClick={() => setShowScanner(true)}>
               📷 {t("diary.scanBarcode")}
             </button>
-            <button className="btn btn--ghost btn--sm" onClick={() => fileInputRef.current?.click()}>
-              🍽️ {t("diary.photo")}
-            </button>
-            <button className="btn btn--ghost btn--sm" onClick={() => labelInputRef.current?.click()}>
-              🏷️ {t("diary.labelPhoto")}
-            </button>
-            <button className="btn btn--ghost btn--sm" onClick={() => setShowSuggest(true)}>
-              ✨ {t("suggest.fillRemaining")}
-            </button>
           </div>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            capture="environment"
-            hidden
-            onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f) setPhotoFile(f);
-              e.target.value = "";
-            }}
-          />
-          <input
-            ref={labelInputRef}
-            type="file"
-            accept="image/*"
-            capture="environment"
-            hidden
-            onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f) setLabelFile(f);
-              e.target.value = "";
-            }}
-          />
 
           <div className="diary-barcode">
             <input
@@ -463,18 +393,10 @@ export function DiaryScreen() {
           )}
           <ul className="food-results">
             {visibleResults.map((f) => (
-              <li key={f.id} className="food-results__rowwrap">
+              <li key={f.id}>
                 <button className="food-results__item" onClick={() => setSelected(toSelectable(f))}>
                   <span>{f.name}</span>
                   <span className="muted tnum">{kcal(f.per100_kcal)} / 100g</span>
-                </button>
-                <button
-                  className="icon-btn pantry-star"
-                  onClick={() => togglePantry(f)}
-                  aria-label={t("pantry.toggle")}
-                  title={t("pantry.toggle")}
-                >
-                  {pantrySet.has(f.id) ? "⭐" : "☆"}
                 </button>
               </li>
             ))}
@@ -612,35 +534,6 @@ export function DiaryScreen() {
         </Modal>
       )}
 
-      {/* ── Suggestions (fill remaining) + photo estimate as overlays ─────── */}
-      {showSuggest && (
-        <Modal onClose={() => setShowSuggest(false)} bare>
-          <SuggestPanel date={date} tz={tz} defaultSlot={slot} onClose={() => setShowSuggest(false)} />
-        </Modal>
-      )}
-
-      {photoFile && (
-        <Modal onClose={() => setPhotoFile(null)} bare>
-          <PhotoEstimatePanel
-            file={photoFile}
-            date={date}
-            defaultSlot={slot}
-            aiAvailable={(todayInfo.data?.ai_available ?? true) && !user?.is_demo}
-            onClose={() => setPhotoFile(null)}
-          />
-        </Modal>
-      )}
-
-      {labelFile && (
-        <Modal onClose={() => setLabelFile(null)} bare>
-          <LabelPhotoPanel
-            file={labelFile}
-            aiAvailable={(todayInfo.data?.ai_available ?? true) && !user?.is_demo}
-            onCancel={() => setLabelFile(null)}
-            onExtracted={prefillCustomFromLabel}
-          />
-        </Modal>
-      )}
     </div>
   );
 }

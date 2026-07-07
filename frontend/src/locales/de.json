@@ -67,7 +67,9 @@
     "weighInPrompt": "Du hast heute noch kein Gewicht eingetragen — trag es ein, damit dein Ziel genau bleibt.",
     "logWeightBtn": "Gewicht eintragen",
     "maintenance": "Erhaltungsbedarf",
-    "adaptiveMaintenance": "Aus deinen Daten angepasst: gemessen ≈ {{measured}} (Formel {{formula}}) · {{pct}} % Konfidenz",
+    "adaptiveMaintenance": "Aus deinen Daten angepasst: gemessen ≈ {{measured}} (Formel {{formula}}) · {{pct}} % Konfidenz — ohne Sport, der oben draufkommt",
+    "totalBurn": "Gesamtumsatz heute",
+    "totalBurnHint": "Basis-Erhaltungsbedarf + heutige Schritte & Workouts — dein echter Verbrauch und die Basis für dein Netto-Defizit.",
     "plannedDeficit": "Geplantes Defizit",
     "netDeficitHint": "Erhaltungsbedarf − gegessen + Schritte + Training",
     "weeklyLoss": "Gewichtsverlust",
@@ -334,9 +336,9 @@
     "weeklyAvg": "Wochenschnitt",
     "noWeight": "Trag Wiegungen ein, um den Verlauf zu sehen.",
     "maintenanceTitle": "Erhaltungsbedarf (gemessen vs. Formel)",
-    "measuredMaintenance": "Gemessener Erhaltungsbedarf",
+    "measuredMaintenance": "Gemessener Erhaltungsbedarf (ohne Sport)",
     "formulaMaintenance": "Formel-Schätzung",
-    "maintenanceHint": "Aus {{days}} Tagen Kalorien vs. Gewichtsänderung gelernt · {{pct}} % Konfidenz",
+    "maintenanceHint": "Aus {{days}} Tagen Kalorien vs. Gewichtsänderung gelernt · {{pct}} % Konfidenz. Ohne Sport — deine Schritte & Workouts kommen separat oben drauf.",
     "maintenanceLearning": "Tracke weiter Essen und Gewicht — nach ~2 Wochen wird hier dein echter Erhaltungsbedarf gemessen und fließt in dein Ziel ein."
   },
   "body": {

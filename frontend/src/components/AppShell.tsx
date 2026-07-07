@@ -11,10 +11,8 @@ import { DemoBanner } from "./DemoBanner";
 import { DiaryScreen } from "./DiaryScreen";
 import { FeaturesScreen } from "./FeaturesScreen";
 import { LanguageSwitcher } from "./LanguageSwitcher";
-import { PantryScreen } from "./PantryScreen";
 import { ProfileScreen } from "./ProfileScreen";
 import { SettingsScreen } from "./SettingsScreen";
-import { ShoppingScreen } from "./ShoppingScreen";
 import { TodayScreen } from "./TodayScreen";
 import { TrendsScreen } from "./TrendsScreen";
 import { WeightScreen } from "./WeightScreen";
@@ -36,8 +34,6 @@ const PRIMARY: NavItem[] = [
 ];
 const SECONDARY: NavItem[] = [
   { to: "/features", icon: "⭐", key: "features" },
-  { to: "/pantry", icon: "🥫", key: "pantry" },
-  { to: "/shopping", icon: "🛒", key: "shopping" },
   { to: "/calculator", icon: "🔥", key: "calculator" },
   { to: "/weight", icon: "⚖️", key: "weight" },
   { to: "/body", icon: "📏", key: "body" },
@@ -94,8 +90,6 @@ export function AppShell() {
           <Route path="/" element={<TodayScreen />} />
           <Route path="/diary" element={<DiaryScreen />} />
           <Route path="/features" element={<FeaturesScreen />} />
-          <Route path="/pantry" element={<PantryScreen />} />
-          <Route path="/shopping" element={<ShoppingScreen />} />
           <Route path="/calculator" element={<ProfileScreen />} />
           <Route path="/weight" element={<WeightScreen />} />
           <Route path="/workouts" element={<WorkoutsScreen />} />

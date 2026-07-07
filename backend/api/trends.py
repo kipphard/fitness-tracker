@@ -8,6 +8,7 @@ from fastapi import APIRouter
 
 from backend.api.deps import CurrentUser, SessionDep
 from backend.api.diary import sum_consumed
+from backend.api.today import activity_by_day
 from backend.calories import adaptive, engine
 from backend.persistence import repository
 from backend.schemas import AdherenceDayOut, TrendsOut, WeeklyWeightOut
@@ -40,14 +41,18 @@ def trends(session: SessionDep, user: CurrentUser) -> TrendsOut:
             activity=profile.activity_level,
             goal=profile.goal,
         )
-        # Adaptive TDEE (#4): same self-correcting maintenance the Today target uses.
+        # Adaptive TDEE (#4): same self-correcting maintenance the Today target uses (measured
+        # excludes exercise via the window's activity; tz=0 here — only workout day-bucketing is
+        # tz-sensitive and it's a window average, so the effect is negligible).
+        window_start = today - timedelta(days=adaptive.WINDOW_DAYS)
         adapt = adaptive.adaptive_maintenance(
             formula=cal.maintenance,
             weigh_points=weigh_points,
-            intake_by_day=repository.daily_intake(
-                session, user.id, today - timedelta(days=adaptive.WINDOW_DAYS), today
-            ),
+            intake_by_day=repository.daily_intake(session, user.id, window_start, today),
             today=today,
+            activity_by_day=activity_by_day(
+                session, user, weigh_points, profile.weight_kg, window_start, today
+            ),
         )
         target = engine.goal_target(adapt.maintenance, profile.gender, profile.goal)
 

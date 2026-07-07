@@ -8,9 +8,7 @@ import type { MacroPrefs, Today, WeighIn } from "../api/types";
 import { useApi } from "../hooks/useApi";
 import { addDays, kcal, num, oneDecimal, todayIso } from "../lib/format";
 import { Card } from "./Card";
-import { GenerateDayPlanPanel } from "./GenerateDayPlanPanel";
 import { StepsFromDistance } from "./StepsFromDistance";
-import { SuggestPanel } from "./SuggestPanel";
 
 const MACRO_COLORS = { protein: "#6366f1", carbs: "#f59e0b", fat: "#10b981" };
 
@@ -31,8 +29,6 @@ export function TodayScreen() {
   const [todayWeight, setTodayWeight] = useState("");
   const [loggingWeight, setLoggingWeight] = useState(false);
   const [weightError, setWeightError] = useState<string | null>(null);
-  const [showSuggest, setShowSuggest] = useState(false);
-  const [showPlan, setShowPlan] = useState(false);
 
   useEffect(() => {
     if (prefs.data) {
@@ -109,6 +105,9 @@ export function TodayScreen() {
   const weighedToday = (weighIns.data ?? []).some((w) => w.date === todayIso());
   // The deliberate cut/bulk gap your goal targets (maintenance − target), independent of intake.
   const plannedDeficit = num(calories.maintenance) - num(calories.target);
+  // Real total expenditure today = sport-free baseline maintenance + today's steps & workouts.
+  // This is what the net deficit is measured against (sport counted once, here on top).
+  const totalBurn = num(calories.maintenance) + num(activity_kcal);
   // The live deficit so far today: maintenance minus what's been eaten, plus the step burn.
   const netDeficit =
     num(calories.maintenance) - num(consumed.kcal) + num(activity_kcal);
@@ -230,7 +229,12 @@ export function TodayScreen() {
               <span className="muted tnum">+{kcal(workout_kcal)}</span>
             </div>
           )}
-          <div className="result-row result-row--divider">
+          <div className="result-row result-row--divider result-row--target">
+            <span>{t("today.totalBurn")}</span>
+            <strong className="tnum">{kcal(totalBurn)}</strong>
+          </div>
+          <p className="muted result-hint">{t("today.totalBurnHint")}</p>
+          <div className="result-row">
             <span className="muted">{t("today.plannedDeficit")}</span>
             <span className="tnum">{kcal(plannedDeficit)}</span>
           </div>
@@ -262,20 +266,6 @@ export function TodayScreen() {
             {t(`profile.results.source.${calories.weight_source}`)}
           </p>
           <div className="diary-actions">
-            {num(remaining_kcal) >= 50 && (
-              <button
-                className="btn btn--primary btn--sm"
-                onClick={() => setShowSuggest((s) => !s)}
-              >
-                {t("suggest.fillRemaining")}
-              </button>
-            )}
-            <button
-              className="btn btn--ghost btn--sm"
-              onClick={() => setShowPlan((s) => !s)}
-            >
-              {t("plan.planMyDay")}
-            </button>
             <Link className="btn btn--ghost btn--sm" to="/diary">
               {t("today.openDiary")}
             </Link>
@@ -321,19 +311,6 @@ export function TodayScreen() {
           </div>
         </Card>
       </div>
-
-      {showSuggest && (
-        <SuggestPanel
-          date={date}
-          tz={tz}
-          defaultSlot="dinner"
-          onClose={() => setShowSuggest(false)}
-        />
-      )}
-
-      {showPlan && (
-        <GenerateDayPlanPanel date={date} tz={tz} onClose={() => setShowPlan(false)} />
-      )}
 
       <Card title={t("today.adjustTitle")}>
         <form className="form macro-adjust" onSubmit={apply}>

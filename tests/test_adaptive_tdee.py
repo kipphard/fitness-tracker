@@ -104,6 +104,34 @@ def test_measured_is_clamped_to_a_sane_band():
     assert res.measured == Decimal("3000")  # 2000 * CLAMP_HIGH
 
 
+# --- activity is subtracted so `measured` is an exercise-excluded baseline --
+
+def test_activity_is_subtracted_from_measured():
+    kwargs = dict(
+        formula=2136,
+        weigh_points=_linear_weights(80, -0.05, 28),
+        intake_by_day=_intake(28, 2000),
+        today=TODAY,
+    )
+    without = adaptive.adaptive_maintenance(**kwargs)  # ≈ 2385 (total expenditure)
+    # Attribute 400 kcal/day of sport on every day → measured should drop by that mean.
+    activity = {d: Decimal("400") for d in _intake(28, 2000)}
+    with_sport = adaptive.adaptive_maintenance(**kwargs, activity_by_day=activity)
+    assert with_sport.measured < without.measured
+    assert abs(with_sport.measured - (without.measured - Decimal("400"))) < Decimal("0.01")
+
+
+def test_empty_activity_is_backward_compatible():
+    kwargs = dict(
+        formula=2136, weigh_points=_linear_weights(80, -0.05, 28),
+        intake_by_day=_intake(28, 2000), today=TODAY,
+    )
+    assert (
+        adaptive.adaptive_maintenance(**kwargs, activity_by_day={}).measured
+        == adaptive.adaptive_maintenance(**kwargs).measured
+    )
+
+
 # --- integration: the value flows through /today ----------------------------
 
 def test_today_uses_adaptive_maintenance(client):
@@ -131,6 +159,30 @@ def test_today_uses_adaptive_maintenance(client):
     assert min(formula, measured) <= maint <= max(formula, measured)
     # Ate 2000 and lost weight → measured maintenance exceeds intake.
     assert measured > Decimal("2000")
+
+
+def test_today_measured_excludes_logged_activity(client):
+    """With the same intake+weight-loss but high daily steps logged, the measured maintenance
+    reads a sport-free baseline (well below the ~2385 total it would show without activity)."""
+    client.put("/api/profile", json={
+        "height_cm": "180", "age": 30, "gender": "male",
+        "weight_kg": "82", "activity_level": "sedentary", "goal": "cut",
+    })
+    today = date.today()
+    for i in range(27, 0, -1):
+        day = (today - timedelta(days=i)).isoformat()
+        client.put("/api/weight", json={"date": day, "weight_kg": str(82 - 0.05 * (27 - i))})
+        client.post("/api/diary", json={
+            "date": day, "slot": "breakfast", "amount_g": "400",
+            "food": {"name": "Day", "per100_kcal": "500"},  # 2000 kcal
+        })
+        client.put("/api/steps", json={"date": day, "steps": 15000})  # ≈ 600 kcal/day of sport
+
+    t = client.get("/api/today").json()["calories"]
+    measured = Decimal(t["measured_maintenance"])
+    assert measured is not None
+    # ~2385 total minus ~600 sport → clearly below the no-activity value.
+    assert measured < Decimal("2100")
 
 
 def test_today_without_data_is_pure_formula(client):
