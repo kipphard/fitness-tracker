@@ -16,7 +16,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 from backend.calories.engine import ActivityLevel, Gender, Goal
-from backend.persistence.models import Language, MealSlot, SetType, UnitSystem
+from backend.persistence.models import Language, SetType, UnitSystem
 
 
 # --- auth ---
@@ -259,6 +259,20 @@ class FoodDataOut(BaseModel):
     serving_g: Decimal | None = None
 
 
+class FoodLabelDraftOut(BaseModel):
+    """Per-100g nutrition extracted from a Nährwerttabelle photo, used to prefill the
+    custom-food form (not persisted here). Values are clamped to the FoodIn ranges."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    name: str
+    per100_kcal: Decimal
+    per100_protein_g: Decimal
+    per100_fat_g: Decimal
+    per100_carbs_g: Decimal
+    serving_g: Decimal | None = None
+
+
 class ConsumedOut(BaseModel):
     kcal: Decimal
     protein_g: Decimal
@@ -268,7 +282,7 @@ class ConsumedOut(BaseModel):
 
 class DiaryIn(BaseModel):
     date: date_type | None = None  # defaults to today
-    slot: MealSlot
+    slot: str = Field(min_length=1, max_length=50)  # validated against the user's slots in the API
     amount_g: Decimal = Field(gt=0, le=5000)
     food_id: uuid.UUID | None = None
     food: FoodIn | None = None  # inline custom food when food_id is absent
@@ -276,7 +290,7 @@ class DiaryIn(BaseModel):
 
 class DiaryUpdateIn(BaseModel):
     amount_g: Decimal | None = Field(default=None, gt=0, le=5000)
-    slot: MealSlot | None = None
+    slot: str | None = Field(default=None, max_length=50)
 
 
 class DiaryEntryOut(BaseModel):
@@ -284,7 +298,7 @@ class DiaryEntryOut(BaseModel):
 
     id: uuid.UUID
     date: date_type
-    slot: MealSlot
+    slot: str
     food_id: uuid.UUID | None = None
     food_name: str
     amount_g: Decimal
@@ -298,6 +312,26 @@ class DiaryDayOut(BaseModel):
     date: date_type
     entries: list[DiaryEntryOut]
     totals: ConsumedOut
+
+
+# --- meal slots (user-defined) ---
+
+class MealSlotOut(BaseModel):
+    """A meal slot: a stable key + display label. Built-ins have label=None (translated in the
+    UI by key); custom slots carry the user's label. See backend.food.slots."""
+
+    key: str
+    label: str | None = None
+    builtin: bool
+
+
+class MealSlotItemIn(BaseModel):
+    key: str | None = Field(default=None, max_length=50)  # existing key to keep; None = new custom
+    label: str | None = Field(default=None, max_length=40)  # required for custom slots
+
+
+class MealSlotsIn(BaseModel):
+    slots: list[MealSlotItemIn] = Field(max_length=32)
 
 
 class DiaryCopyIn(BaseModel):
@@ -418,7 +452,7 @@ class PhotoEstimateOut(BaseModel):
 class SuggestIn(BaseModel):
     date: date_type | None = None  # defaults to today
     tz: int = Field(default=0, ge=-720, le=840)  # minutes east of UTC
-    slot: MealSlot | None = None  # the meal we're filling — biases picks toward it
+    slot: str | None = Field(default=None, max_length=50)  # the meal we're filling — biases picks
     exclude_food_ids: list[uuid.UUID] = Field(default_factory=list)  # skip these (regenerate)
     count: int | None = Field(default=None, ge=1, le=8)  # basket size override (1 = swap one)
     target_kcal: Decimal | None = Field(default=None, gt=0)  # size against this, not the day
@@ -474,7 +508,7 @@ class PlanIn(BaseModel):
 class PlanMealOut(BaseModel):
     """One meal slot of the plan plus its slot totals."""
 
-    slot: MealSlot
+    slot: str
     suggestions: list[SuggestionOut]
     kcal: Decimal
     protein_g: Decimal

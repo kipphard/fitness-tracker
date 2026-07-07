@@ -19,8 +19,14 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from backend.api.deps import get_off_client, get_suggest_client, get_vision_client
+from backend.api.deps import (
+    get_label_client,
+    get_off_client,
+    get_suggest_client,
+    get_vision_client,
+)
 from backend.food.off import FoodData
+from backend.vision.label import FoodLabelDraft
 from backend.food.suggest_ai import (
     AiDayPlan,
     AiPlanItem,
@@ -81,6 +87,20 @@ class _FakeVision:
             confidence="medium",
             questions=["Was any oil used?"],
             notes="Approximate.",
+        )
+
+
+class _FakeLabel:
+    """Fake Claude nutrition-label reader (no network / no API key) used in tests."""
+
+    def read_label(self, *, image_b64: str, media_type: str) -> FoodLabelDraft:
+        return FoodLabelDraft(
+            name="Skyr Vanilla",
+            per100_kcal=Decimal("74"),
+            per100_protein_g=Decimal("10"),
+            per100_fat_g=Decimal("0.2"),
+            per100_carbs_g=Decimal("7.5"),
+            serving_g=Decimal("150"),
         )
 
 
@@ -206,6 +226,7 @@ def client(session_factory):
     app.dependency_overrides[get_session] = _override
     app.dependency_overrides[get_off_client] = lambda: _FakeOFF()
     app.dependency_overrides[get_vision_client] = lambda: _FakeVision()
+    app.dependency_overrides[get_label_client] = lambda: _FakeLabel()
     app.dependency_overrides[get_suggest_client] = lambda: _FakeSuggest()
     with TestClient(app) as test_client:
         _register(test_client, "user-a@example.com")

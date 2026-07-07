@@ -4,11 +4,11 @@ import { useTranslation } from "react-i18next";
 import { apiPost } from "../api/client";
 import { useAuth } from "../auth";
 import {
-  MEAL_SLOTS,
   type MealSlot,
   type Suggestion,
   type SuggestResponse,
 } from "../api/types";
+import { useMealSlots, useSlotLabel } from "../hooks/useMealSlots";
 import { kcal, num, oneDecimal } from "../lib/format";
 import { AiUnavailableNote } from "./AiUnavailableNote";
 import { Card } from "./Card";
@@ -29,6 +29,8 @@ export function SuggestPanel({
 }) {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const { slots } = useMealSlots();
+  const slotLabel = useSlotLabel(slots);
   const [data, setData] = useState<SuggestResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -194,9 +196,9 @@ export function SuggestPanel({
                     value={slot}
                     onChange={(e) => onSlot(e.target.value as MealSlot)}
                   >
-                    {MEAL_SLOTS.map((s) => (
-                      <option key={s} value={s}>
-                        {t(`diary.slots.${s}`)}
+                    {slots.map((sdef) => (
+                      <option key={sdef.key} value={sdef.key}>
+                        {slotLabel(sdef.key)}
                       </option>
                     ))}
                   </select>

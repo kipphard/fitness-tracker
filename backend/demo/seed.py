@@ -164,7 +164,7 @@ def seed_demo_for_user(
                     session,
                     user_id,
                     date=d,
-                    slot=slot,
+                    slot=slot.value,  # store the plain slot key (column is now free-text)
                     food_id=food.id,
                     food_name=food.name,
                     amount_g=amount,

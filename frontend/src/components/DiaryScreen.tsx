@@ -4,18 +4,20 @@ import { useTranslation } from "react-i18next";
 import { apiDelete, apiGet, apiPatch, apiPost } from "../api/client";
 import { useAuth } from "../auth";
 import {
-  MEAL_SLOTS,
   type DiaryDay,
   type DiaryEntry,
   type Food,
   type FoodData,
+  type FoodLabelDraft,
   type MealSlot,
   type PantryItem,
   type Today,
 } from "../api/types";
 import { useApi } from "../hooks/useApi";
+import { useMealSlots, useSlotLabel } from "../hooks/useMealSlots";
 import { addDays, kcal, num, oneDecimal, todayIso } from "../lib/format";
 import { Card } from "./Card";
+import { LabelPhotoPanel } from "./LabelPhotoPanel";
 import { Modal } from "./Modal";
 import { PhotoEstimatePanel } from "./PhotoEstimatePanel";
 import { SuggestPanel } from "./SuggestPanel";
@@ -61,6 +63,9 @@ export function DiaryScreen() {
   const tz = -new Date().getTimezoneOffset();
   const todayInfo = useApi<Today>(`/today?date=${date}&tz=${tz}`);
 
+  const { slots } = useMealSlots();
+  const slotLabel = useSlotLabel(slots);
+
   const pantrySet = new Set((pantry.data ?? []).map((i) => i.food.id));
   const togglePantry = (f: Food) =>
     (pantrySet.has(f.id)
@@ -78,11 +83,13 @@ export function DiaryScreen() {
   const [error, setError] = useState<string | null>(null);
   const [showScanner, setShowScanner] = useState(false);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [labelFile, setLabelFile] = useState<File | null>(null);
   const [showSuggest, setShowSuggest] = useState(false);
   const [showAllRecent, setShowAllRecent] = useState(false);
   const [showCustom, setShowCustom] = useState(false);
   const [custom, setCustom] = useState(EMPTY_CUSTOM);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const labelInputRef = useRef<HTMLInputElement>(null);
 
   // Food detail modal (a picked food being portioned) + the meal it goes to.
   const [selected, setSelected] = useState<Selectable | null>(null);
@@ -173,6 +180,20 @@ export function DiaryScreen() {
     });
     setShowCustom(false);
     setCustom(EMPTY_CUSTOM);
+  };
+
+  // A Nährwerttabelle photo was read → prefill the custom-food form for review, then save.
+  const prefillCustomFromLabel = (d: FoodLabelDraft) => {
+    setCustom({
+      name: d.name ?? "",
+      kcal: d.per100_kcal ?? "",
+      protein: d.per100_protein_g ?? "",
+      fat: d.per100_fat_g ?? "",
+      carbs: d.per100_carbs_g ?? "",
+      serving: d.serving_g ?? "",
+    });
+    setLabelFile(null);
+    setShowCustom(true);
   };
 
   const logSelected = async () => {
@@ -271,6 +292,14 @@ export function DiaryScreen() {
   const totals = day.data?.totals;
   const editScaled = editing ? scaleEntry(editing, editAmount) : null;
 
+  // Render the user's slots in order, plus any slot an existing entry uses that isn't in the list
+  // (e.g. an entry logged to a since-deleted custom slot) so no logged food is ever hidden.
+  const knownSlotKeys = new Set(slots.map((s) => s.key));
+  const orphanSlotKeys = [...new Set((day.data?.entries ?? []).map((e) => e.slot))].filter(
+    (k) => !knownSlotKeys.has(k),
+  );
+  const slotKeys = [...slots.map((s) => s.key), ...orphanSlotKeys];
+
   return (
     <div className="screen">
       {showScanner && (
@@ -312,13 +341,13 @@ export function DiaryScreen() {
           <button className="btn btn--ghost btn--sm" onClick={copyYesterday}>{t("diary.copyYesterday")}</button>
         }
       >
-        {MEAL_SLOTS.map((s) => {
+        {slotKeys.map((s) => {
           const entries = (day.data?.entries ?? []).filter((e) => e.slot === s);
           const mt = sumMacros(entries);
           return (
             <div className="slot-group" key={s}>
               <div className="slot-group__head">
-                <h3>{t(`diary.slots.${s}`)}</h3>
+                <h3>{slotLabel(s)}</h3>
                 {entries.length > 0 && <span className="muted tnum">{kcal(mt.kcal)} kcal</span>}
               </div>
               {entries.length > 0 && (
@@ -358,7 +387,7 @@ export function DiaryScreen() {
 
       {/* ── Add-food sheet (per meal) ─────────────────────────────────────── */}
       {addSlot && (
-        <Modal title={t("diary.addToMeal", { meal: t(`diary.slots.${addSlot}`) })} onClose={closeAdd}>
+        <Modal title={t("diary.addToMeal", { meal: slotLabel(addSlot) })} onClose={closeAdd}>
           <input
             className="input"
             type="search"
@@ -381,6 +410,9 @@ export function DiaryScreen() {
             <button className="btn btn--ghost btn--sm" onClick={() => fileInputRef.current?.click()}>
               🍽️ {t("diary.photo")}
             </button>
+            <button className="btn btn--ghost btn--sm" onClick={() => labelInputRef.current?.click()}>
+              🏷️ {t("diary.labelPhoto")}
+            </button>
             <button className="btn btn--ghost btn--sm" onClick={() => setShowSuggest(true)}>
               ✨ {t("suggest.fillRemaining")}
             </button>
@@ -394,6 +426,18 @@ export function DiaryScreen() {
             onChange={(e) => {
               const f = e.target.files?.[0];
               if (f) setPhotoFile(f);
+              e.target.value = "";
+            }}
+          />
+          <input
+            ref={labelInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            hidden
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) setLabelFile(f);
               e.target.value = "";
             }}
           />
@@ -481,8 +525,8 @@ export function DiaryScreen() {
             <label className="field">
               <span>{t("diary.slot")}</span>
               <select className="select" value={slot} onChange={(e) => setSlot(e.target.value as MealSlot)}>
-                {MEAL_SLOTS.map((s) => (
-                  <option key={s} value={s}>{t(`diary.slots.${s}`)}</option>
+                {slots.map((sdef) => (
+                  <option key={sdef.key} value={sdef.key}>{slotLabel(sdef.key)}</option>
                 ))}
               </select>
             </label>
@@ -583,6 +627,17 @@ export function DiaryScreen() {
             defaultSlot={slot}
             aiAvailable={(todayInfo.data?.ai_available ?? true) && !user?.is_demo}
             onClose={() => setPhotoFile(null)}
+          />
+        </Modal>
+      )}
+
+      {labelFile && (
+        <Modal onClose={() => setLabelFile(null)} bare>
+          <LabelPhotoPanel
+            file={labelFile}
+            aiAvailable={(todayInfo.data?.ai_available ?? true) && !user?.is_demo}
+            onCancel={() => setLabelFile(null)}
+            onExtracted={prefillCustomFromLabel}
           />
         </Modal>
       )}

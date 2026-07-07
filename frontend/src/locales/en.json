@@ -114,6 +114,9 @@
     "photoTitle": "Photo estimate",
     "photoDisclaimer": "AI estimate — approximate. Review before logging.",
     "estimating": "Estimating…",
+    "labelPhoto": "Scan label",
+    "labelTitle": "Read nutrition label",
+    "readingLabel": "Reading the nutrition label…",
     "confidence": { "low": "low confidence", "medium": "medium confidence", "high": "high confidence" },
     "answersPlaceholder": "Answer the questions to refine the estimate…",
     "reestimate": "Re-estimate",
@@ -378,6 +381,12 @@
     "shoeSize": "Shoe size (EU)",
     "shoeSizeHint": "Used by the km → steps calculator",
     "shoeSizePlaceholder": "e.g. 42",
+    "mealSlotsTitle": "Meal slots",
+    "mealSlotsHint": "Add your own diary sections (e.g. Pre-Workout) and reorder them. The four default meals can't be removed.",
+    "mealSlotName": "Meal name",
+    "addMealSlot": "Add meal",
+    "moveUp": "Move up",
+    "moveDown": "Move down",
     "dataTitle": "Data",
     "backfillServings": "Serving sizes from Open Food Facts",
     "backfillHint": "Fetch missing serving sizes for your scanned foods, so suggestions size realistic portions.",
@@ -507,10 +516,20 @@
         "desc": "Snap a photo of your meal and let AI estimate its calories and macros.",
         "how": "In the Diary, upload a meal photo to get an estimate."
       },
+      "labelScan": {
+        "name": "Scan nutrition label",
+        "desc": "Photograph a Nährwerttabelle and AI reads the per-100 g values into a new food for you to review.",
+        "how": "In the Diary's add-food sheet, tap “Scan label” and take a photo of the nutrition table."
+      },
       "customFood": {
         "name": "Custom foods",
         "desc": "Create your own foods with calories and macros per 100 g.",
         "how": "In the Diary search, choose “create custom food”."
+      },
+      "mealSlots": {
+        "name": "Custom meal slots",
+        "desc": "Add your own diary sections beyond breakfast/lunch/dinner/snack (e.g. Pre-Workout) and reorder them.",
+        "how": "In Settings → Meal slots, add, rename, reorder or remove your own meals."
       },
       "copyDay": {
         "name": "Copy a day",

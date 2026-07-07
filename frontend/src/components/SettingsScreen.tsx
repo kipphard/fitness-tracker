@@ -6,6 +6,7 @@ import type { BackfillResult, Settings, UnitSystem } from "../api/types";
 import { parseDecimalInput } from "../lib/format";
 import { Card } from "./Card";
 import { LanguageSwitcher } from "./LanguageSwitcher";
+import { MealSlotsSettings } from "./MealSlotsSettings";
 
 const UNIT_OPTIONS: UnitSystem[] = ["metric", "imperial"];
 
@@ -121,6 +122,8 @@ export function SettingsScreen() {
         <p className="muted setting-note">{t("settings.note")}</p>
         {saved && <div className="alert alert--ok">{t("settings.saved")}</div>}
       </Card>
+
+      <MealSlotsSettings />
 
       <Card title={t("settings.planTitle")}>
         <p className="muted setting-note">{t("settings.planHint")}</p>

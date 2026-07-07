@@ -16,6 +16,7 @@ from backend.persistence.database import get_session
 from backend.food.suggest_ai import AnthropicSuggestClient
 from backend.persistence.models import User
 from backend.vision.estimator import AnthropicVisionClient
+from backend.vision.label import AnthropicLabelClient
 
 SessionDep = Annotated[Session, Depends(get_session)]
 
@@ -73,6 +74,22 @@ def get_vision_client() -> AnthropicVisionClient:
 
 
 VisionClientDep = Annotated[AnthropicVisionClient, Depends(get_vision_client)]
+
+
+def get_label_client() -> AnthropicLabelClient:
+    """Claude vision client for reading nutrition labels. 503 if no API key; faked in tests."""
+    settings = get_settings()
+    if not settings.anthropic_configured or settings.anthropic_api_key is None:
+        raise HTTPException(
+            status_code=503,
+            detail="label reading is not configured (set ANTHROPIC_API_KEY).",
+        )
+    return AnthropicLabelClient(
+        api_key=settings.anthropic_api_key, model=settings.anthropic_model
+    )
+
+
+LabelClientDep = Annotated[AnthropicLabelClient, Depends(get_label_client)]
 
 
 def get_suggest_client() -> AnthropicSuggestClient:

@@ -737,11 +737,31 @@ a:hover {
   font-size: 0.8rem;
 }
 
+/* ── Meal-slot management (settings) ───────────────────────────────────── */
+.slot-edit-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0;
+}
+.slot-edit-row__name {
+  flex: 1;
+}
+.slot-edit-row__input {
+  flex: 1;
+  min-width: 0;
+}
+.slot-edit-row__actions {
+  display: flex;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
 /* ── Camera: barcode scanner + photo estimate ──────────────────────────── */
 .scanner-overlay {
   position: fixed;
   inset: 0;
-  z-index: 50;
+  z-index: 70; // above .modal (60) — the scanner is opened from inside the add-food modal
   background: rgba(0, 0, 0, 0.85);
   display: grid;
   place-items: center;

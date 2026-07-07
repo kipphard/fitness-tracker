@@ -9,6 +9,7 @@ from fastapi import APIRouter, HTTPException, Query, Response
 
 from backend.api.deps import CurrentUser, SessionDep
 from backend.food.scale import scale_per100
+from backend.food.slots import allowed_slot_keys
 from backend.persistence import repository
 from backend.persistence.models import Food, FoodSource
 from backend.schemas import (
@@ -42,6 +43,13 @@ def _day(session: SessionDep, user_id, day: date) -> DiaryDayOut:
     )
 
 
+def _validate_slot(session: SessionDep, user_id, slot: str) -> None:
+    """Reject a slot the user hasn't defined (built-in or one of their custom slots)."""
+    settings = repository.get_settings(session, user_id)
+    if slot not in allowed_slot_keys(settings.meal_slots if settings else None):
+        raise HTTPException(status_code=422, detail="unknown meal slot")
+
+
 def _resolve_food(session: SessionDep, user_id, payload: DiaryIn) -> Food:
     if payload.food_id is not None:
         food = repository.get_food(session, payload.food_id, user_id)
@@ -66,6 +74,7 @@ def _resolve_food(session: SessionDep, user_id, payload: DiaryIn) -> Food:
 
 @router.post("", response_model=DiaryEntryOut, status_code=201)
 def add_entry(payload: DiaryIn, session: SessionDep, user: CurrentUser) -> DiaryEntryOut:
+    _validate_slot(session, user.id, payload.slot)
     food = _resolve_food(session, user.id, payload)
     scaled = scale_per100(
         per100_kcal=food.per100_kcal,
@@ -136,6 +145,7 @@ def update_entry(
     if log is None:
         raise HTTPException(status_code=404, detail="entry not found")
     if payload.slot is not None:
+        _validate_slot(session, user.id, payload.slot)
         log.slot = payload.slot
     if payload.amount_g is not None:
         food = repository.get_food(session, log.food_id, user.id) if log.food_id else None

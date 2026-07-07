@@ -133,6 +133,9 @@ class Settings(Base):
     currency: Mapped[str | None] = mapped_column(String(3), nullable=True)
     # Shoe size (EU) — a rough basis for stride length in the km->steps calculator (#13). Optional.
     shoe_size_eu: Mapped[Decimal | None] = mapped_column(Numeric(4, 1), nullable=True)
+    # User-defined meal slots (ordered list of {"key", "label"|None}); None = the 4 defaults.
+    # See backend.food.slots. Custom slots let users add their own diary sections.
+    meal_slots: Mapped[list | None] = mapped_column(JSONType, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_now, nullable=False
     )
@@ -239,7 +242,9 @@ class FoodLog(Base):
         GUID, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
     date: Mapped[date] = mapped_column(Date, nullable=False, index=True)
-    slot: Mapped[MealSlot] = mapped_column(Enum(MealSlot, name="meal_slot"), nullable=False)
+    # Free-text slot key: a built-in (breakfast/lunch/dinner/snack) or a user's custom_<hex>.
+    # Validated against the user's slot list in the API. See backend.food.slots.
+    slot: Mapped[str] = mapped_column(String(50), nullable=False)
     food_id: Mapped[uuid.UUID | None] = mapped_column(
         GUID, ForeignKey("foods.id", ondelete="SET NULL"), nullable=True
     )

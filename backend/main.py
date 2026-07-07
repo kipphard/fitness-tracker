@@ -11,6 +11,7 @@ from backend.api import (
     food,
     health,
     macros,
+    meal_slots,
     measurements,
     pantry,
     profile,
@@ -50,6 +51,7 @@ app.include_router(food.router, prefix=API)
 app.include_router(pantry.router, prefix=API)
 app.include_router(shopping.router, prefix=API)
 app.include_router(diary.router, prefix=API)
+app.include_router(meal_slots.router, prefix=API)
 app.include_router(steps.router, prefix=API)
 app.include_router(today.router, prefix=API)
 app.include_router(exercises.router, prefix=API)

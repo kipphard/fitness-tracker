@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { apiPost, apiUpload } from "../api/client";
-import { MEAL_SLOTS, type MealSlot, type PhotoEstimate } from "../api/types";
+import { type MealSlot, type PhotoEstimate } from "../api/types";
+import { useMealSlots, useSlotLabel } from "../hooks/useMealSlots";
 import { kcal, num, oneDecimal } from "../lib/format";
 import { AiUnavailableNote } from "./AiUnavailableNote";
 import { Card } from "./Card";
@@ -25,6 +26,8 @@ export function PhotoEstimatePanel({
   onClose: () => void;
 }) {
   const { t } = useTranslation();
+  const { slots } = useMealSlots();
+  const slotLabel = useSlotLabel(slots);
   const [estimate, setEstimate] = useState<PhotoEstimate | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -152,9 +155,9 @@ export function PhotoEstimatePanel({
                 value={slot}
                 onChange={(e) => setSlot(e.target.value as MealSlot)}
               >
-                {MEAL_SLOTS.map((s) => (
-                  <option key={s} value={s}>
-                    {t(`diary.slots.${s}`)}
+                {slots.map((sdef) => (
+                  <option key={sdef.key} value={sdef.key}>
+                    {slotLabel(sdef.key)}
                   </option>
                 ))}
               </select>

@@ -11,6 +11,7 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 
 from backend.api.deps import (
     CurrentUser,
+    LabelClientDep,
     OffClientDep,
     SessionDep,
     SuggestClientDep,
@@ -22,11 +23,12 @@ from backend.config import get_settings
 from backend.food import plan as plan_engine
 from backend.food import suggest as suggest_engine
 from backend.persistence import repository
-from backend.persistence.models import Food, FoodSource, MealSlot, User
+from backend.persistence.models import Food, FoodSource, User
 from backend.schemas import (
     BackfillOut,
     FoodDataOut,
     FoodIn,
+    FoodLabelDraftOut,
     FoodOut,
     FoodUpdateIn,
     PhotoEstimateOut,
@@ -43,6 +45,20 @@ router = APIRouter(prefix="/food", tags=["food"])
 
 _MAX_IMAGE_BYTES = 8 * 1024 * 1024  # 8 MB
 _ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
+
+
+def _read_image_b64(file: UploadFile) -> tuple[str, str]:
+    """Validate an uploaded image and return (base64 data, media_type). Raises the usual
+    415/400/413 HTTPExceptions. Used by both vision endpoints; the image is never stored."""
+    media_type = (file.content_type or "image/jpeg").split(";")[0].strip().lower()
+    if media_type not in _ALLOWED_IMAGE_TYPES:
+        raise HTTPException(status_code=415, detail="unsupported image type")
+    data = file.file.read()
+    if not data:
+        raise HTTPException(status_code=400, detail="empty file")
+    if len(data) > _MAX_IMAGE_BYTES:
+        raise HTTPException(status_code=413, detail="image too large (max 8 MB)")
+    return base64.standard_b64encode(data).decode(), media_type
 
 
 @router.get("", response_model=list[FoodOut])
@@ -126,16 +142,7 @@ def estimate_photo(
 ) -> PhotoEstimateOut:
     """Estimate a meal's items + macros from a photo via Claude vision. The optional `context`
     carries the user's answers to clarifying questions for a refined re-estimate."""
-    media_type = (file.content_type or "image/jpeg").split(";")[0].strip().lower()
-    if media_type not in _ALLOWED_IMAGE_TYPES:
-        raise HTTPException(status_code=415, detail="unsupported image type")
-    data = file.file.read()
-    if not data:
-        raise HTTPException(status_code=400, detail="empty file")
-    if len(data) > _MAX_IMAGE_BYTES:
-        raise HTTPException(status_code=413, detail="image too large (max 8 MB)")
-
-    image_b64 = base64.standard_b64encode(data).decode()
+    image_b64, media_type = _read_image_b64(file)
     try:
         estimate = vision.estimate(
             image_b64=image_b64, media_type=media_type, context=context
@@ -143,6 +150,24 @@ def estimate_photo(
     except Exception as exc:  # noqa: BLE001 - upstream/model failure
         raise HTTPException(status_code=502, detail="photo estimation failed") from exc
     return PhotoEstimateOut.model_validate(estimate)
+
+
+@router.post(
+    "/photo-label", response_model=FoodLabelDraftOut, dependencies=[Depends(block_in_demo)]
+)
+def read_label_photo(
+    user: CurrentUser,  # resolved first, so unauthenticated requests 401 before the 503 check
+    label: LabelClientDep,
+    file: UploadFile = File(...),
+) -> FoodLabelDraftOut:
+    """Extract per-100g nutrition from a photo of a Nährwerttabelle (nutrition-facts table).
+    Returns a draft the client uses to prefill the custom-food form — nothing is saved here."""
+    image_b64, media_type = _read_image_b64(file)
+    try:
+        draft = label.read_label(image_b64=image_b64, media_type=media_type)
+    except Exception as exc:  # noqa: BLE001 - upstream/model failure
+        raise HTTPException(status_code=502, detail="label reading failed") from exc
+    return FoodLabelDraftOut.model_validate(draft)
 
 
 # --- fill remaining calories (issue #5, section 1) ---
@@ -370,7 +395,7 @@ def _build_plan_out(
         tot_k, tot_p, tot_f, tot_c = tot_k + s_k, tot_p + s_p, tot_f + s_f, tot_c + s_c
         meals_out.append(
             PlanMealOut(
-                slot=MealSlot(pm.slot),
+                slot=pm.slot,
                 suggestions=[SuggestionOut.model_validate(s) for s in pm.suggestions],
                 kcal=s_k,
                 protein_g=s_p,
@@ -405,7 +430,7 @@ def plan_rule(payload: PlanIn, session: SessionDep, user: CurrentUser) -> PlanOu
     pantry_ids = repository.pantry_food_ids(session, user.id)
     by_slot: dict[str, list[suggest_engine.Candidate]] = {}
     for slot, _pct in plan_engine.meal_split(payload.meals):
-        affinity = repository.food_slot_counts(session, user.id, MealSlot(slot))
+        affinity = repository.food_slot_counts(session, user.id, slot)
         by_slot[slot] = suggest_engine.dedup_candidates(
             [_to_candidate(f, affinity.get(f.id, 0), f.id in pantry_ids) for f in foods]
         )

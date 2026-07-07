@@ -16,7 +16,9 @@ from typing import Any
 
 import httpx
 
-_USER_AGENT = "fitness-tracker/0.1 (self-hosted)"
+# OFF asks for a descriptive User-Agent with contact info and rate-limits / blocks generic
+# ones; include an app URL + contact so search/barcode requests aren't throttled.
+_USER_AGENT = "fitness-tracker/0.1 (https://fitness-tracker.kipphard.com; akipphard@yahoo.de)"
 
 
 @dataclass(frozen=True)
@@ -60,21 +62,27 @@ def parse_product(product: dict, barcode: str | None) -> FoodData | None:
 
 class OpenFoodFactsClient:
     BASE = "https://world.openfoodfacts.org"
+    # Modern full-text search service (Search-a-licious). The legacy /cgi/search.pl endpoint
+    # on BASE is deprecated and frequently returns 5xx, so it is only a best-effort fallback.
+    SEARCH_BASE = "https://search.openfoodfacts.org"
     _FIELDS = "code,product_name,nutriments,serving_quantity"
 
     def __init__(self, lc: str = "de", timeout: float = 8.0) -> None:
         self._lc = lc
         self._timeout = timeout
 
-    def _get(self, path: str, params: dict) -> dict:
+    def _request(self, url: str, params: dict, timeout: float | None = None) -> dict:
         resp = httpx.get(
-            f"{self.BASE}{path}",
+            url,
             params=params,
-            timeout=self._timeout,
+            timeout=timeout or self._timeout,
             headers={"User-Agent": _USER_AGENT},
         )
         resp.raise_for_status()
         return resp.json()
+
+    def _get(self, path: str, params: dict) -> dict:
+        return self._request(f"{self.BASE}{path}", params)
 
     def get_product(self, barcode: str) -> FoodData | None:
         data = self._get(
@@ -86,6 +94,30 @@ class OpenFoodFactsClient:
         return parse_product(data.get("product") or {}, barcode)
 
     def search(self, query: str, limit: int = 10) -> list[FoodData]:
+        """Full-text product search via the modern Search-a-licious service.
+
+        Falls back to the deprecated /cgi/search.pl endpoint only if the modern service is
+        unreachable; if both fail the exception propagates so the route reports 502.
+        """
+        try:
+            return self._search_modern(query, limit)
+        except Exception:  # noqa: BLE001 - modern search unreachable; try the legacy endpoint
+            return self._search_legacy(query, limit)
+
+    def _search_modern(self, query: str, limit: int) -> list[FoodData]:
+        data = self._request(
+            f"{self.SEARCH_BASE}/search",
+            {
+                "q": query,
+                "page_size": limit,
+                "lang": self._lc,
+                "fields": self._FIELDS,
+            },
+            timeout=max(self._timeout, 10.0),
+        )
+        return self._parse_hits(data.get("hits"))
+
+    def _search_legacy(self, query: str, limit: int) -> list[FoodData]:
         data = self._get(
             "/cgi/search.pl",
             {
@@ -98,8 +130,12 @@ class OpenFoodFactsClient:
                 "fields": self._FIELDS,
             },
         )
+        return self._parse_hits(data.get("products"))
+
+    @staticmethod
+    def _parse_hits(products: list[dict] | None) -> list[FoodData]:
         out: list[FoodData] = []
-        for product in data.get("products") or []:
+        for product in products or []:
             parsed = parse_product(product, product.get("code"))
             if parsed is not None:
                 out.append(parsed)

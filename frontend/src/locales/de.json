@@ -114,6 +114,9 @@
     "photoTitle": "Foto-Schätzung",
     "photoDisclaimer": "KI-Schätzung — ungefähr. Vor dem Eintragen prüfen.",
     "estimating": "Schätzt…",
+    "labelPhoto": "Tabelle scannen",
+    "labelTitle": "Nährwerttabelle lesen",
+    "readingLabel": "Nährwerttabelle wird gelesen…",
     "confidence": { "low": "geringe Sicherheit", "medium": "mittlere Sicherheit", "high": "hohe Sicherheit" },
     "answersPlaceholder": "Beantworte die Fragen zur Verfeinerung…",
     "reestimate": "Neu schätzen",
@@ -378,6 +381,12 @@
     "shoeSize": "Schuhgröße (EU)",
     "shoeSizeHint": "Für den km → Schritte-Rechner",
     "shoeSizePlaceholder": "z. B. 42",
+    "mealSlotsTitle": "Mahlzeiten",
+    "mealSlotsHint": "Füge eigene Tagebuch-Abschnitte hinzu (z. B. Pre-Workout) und ordne sie neu. Die vier Standard-Mahlzeiten lassen sich nicht entfernen.",
+    "mealSlotName": "Name der Mahlzeit",
+    "addMealSlot": "Mahlzeit hinzufügen",
+    "moveUp": "Nach oben",
+    "moveDown": "Nach unten",
     "dataTitle": "Daten",
     "backfillServings": "Portionsgrößen von Open Food Facts",
     "backfillHint": "Fehlende Portionsgrößen für deine gescannten Lebensmittel laden, damit Vorschläge realistische Portionen wählen.",
@@ -507,10 +516,20 @@
         "desc": "Fotografiere deine Mahlzeit und lass die KI Kalorien und Makros schätzen.",
         "how": "Lade im Tagebuch ein Foto deiner Mahlzeit hoch, um eine Schätzung zu erhalten."
       },
+      "labelScan": {
+        "name": "Nährwerttabelle scannen",
+        "desc": "Fotografiere eine Nährwerttabelle – die KI liest die Werte pro 100 g in ein neues Lebensmittel zum Prüfen ein.",
+        "how": "Tippe im Tagebuch beim Hinzufügen auf „Tabelle scannen“ und fotografiere die Nährwerttabelle."
+      },
       "customFood": {
         "name": "Eigene Lebensmittel",
         "desc": "Lege eigene Lebensmittel mit Kalorien und Makros pro 100 g an.",
         "how": "Wähle in der Tagebuch-Suche „Eigenes Lebensmittel anlegen“."
+      },
+      "mealSlots": {
+        "name": "Eigene Mahlzeiten",
+        "desc": "Füge eigene Tagebuch-Abschnitte über Frühstück/Mittag/Abend/Snack hinaus hinzu (z. B. Pre-Workout) und ordne sie neu.",
+        "how": "Unter Einstellungen → Mahlzeiten kannst du eigene Mahlzeiten hinzufügen, umbenennen, sortieren oder entfernen."
       },
       "copyDay": {
         "name": "Tag kopieren",

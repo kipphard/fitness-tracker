@@ -163,8 +163,17 @@ export interface Today {
 
 // --- food + diary (Phase 4) ---
 
-export type MealSlot = "breakfast" | "lunch" | "dinner" | "snack";
-export const MEAL_SLOTS: MealSlot[] = ["breakfast", "lunch", "dinner", "snack"];
+// A slot key: a built-in (breakfast/lunch/dinner/snack) or a user's custom_<hex> key.
+export type MealSlot = string;
+export const MEAL_SLOTS = ["breakfast", "lunch", "dinner", "snack"] as const;
+
+// A meal slot as returned by GET /meal-slots. Built-ins have label=null (translated by key);
+// custom slots carry the user's label. See backend.food.slots.
+export interface MealSlotDef {
+  key: string;
+  label: string | null;
+  builtin: boolean;
+}
 
 export interface Food {
   id: string;
@@ -180,6 +189,17 @@ export interface Food {
 
 // A transient OFF search result (no id yet).
 export type FoodData = Omit<Food, "id" | "source">;
+
+// Per-100g nutrition extracted from a Nährwerttabelle photo, used to prefill the custom-food
+// form (POST /food/photo-label). Not persisted until the user saves the custom food.
+export interface FoodLabelDraft {
+  name: string;
+  per100_kcal: string;
+  per100_protein_g: string;
+  per100_fat_g: string;
+  per100_carbs_g: string;
+  serving_g: string | null;
+}
 
 // --- pantry: foods the user has at home (issue #5 §2) ---
 export interface PantryItem {
