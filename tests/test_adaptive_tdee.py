@@ -132,6 +132,27 @@ def test_empty_activity_is_backward_compatible():
     )
 
 
+def test_only_activity_above_the_floor_is_subtracted():
+    # The formula already includes an occupational allowance (activity_floor); only activity
+    # above it (deliberate exercise) is excluded — everyday movement stays in the baseline.
+    kwargs = dict(
+        formula=2160, weigh_points=_linear_weights(80, -0.05, 28),
+        intake_by_day=_intake(28, 2000), today=TODAY,
+    )
+    activity = {d: Decimal("600") for d in _intake(28, 2000)}
+    floored = adaptive.adaptive_maintenance(**kwargs, activity_by_day=activity, activity_floor=360)
+    no_floor = adaptive.adaptive_maintenance(**kwargs, activity_by_day=activity, activity_floor=0)
+    assert floored.measured - no_floor.measured == Decimal("360")  # 360 kept in the baseline
+
+    # Activity at or below the floor → nothing subtracted (it's all everyday movement).
+    below = adaptive.adaptive_maintenance(
+        **kwargs,
+        activity_by_day={d: Decimal("300") for d in _intake(28, 2000)},
+        activity_floor=360,
+    )
+    assert below.measured == adaptive.adaptive_maintenance(**kwargs).measured
+
+
 # --- integration: the value flows through /today ----------------------------
 
 def test_today_uses_adaptive_maintenance(client):
@@ -161,9 +182,9 @@ def test_today_uses_adaptive_maintenance(client):
     assert measured > Decimal("2000")
 
 
-def test_today_measured_excludes_logged_activity(client):
-    """With the same intake+weight-loss but high daily steps logged, the measured maintenance
-    reads a sport-free baseline (well below the ~2385 total it would show without activity)."""
+def test_today_measured_stays_comparable_to_formula(client):
+    """Everyday steps are within the occupational allowance the formula already grants, so the
+    measured maintenance stays near the formula — not collapsed toward BMR."""
     client.put("/api/profile", json={
         "height_cm": "180", "age": 30, "gender": "male",
         "weight_kg": "82", "activity_level": "sedentary", "goal": "cut",
@@ -176,13 +197,14 @@ def test_today_measured_excludes_logged_activity(client):
             "date": day, "slot": "breakfast", "amount_g": "400",
             "food": {"name": "Day", "per100_kcal": "500"},  # 2000 kcal
         })
-        client.put("/api/steps", json={"date": day, "steps": 15000})  # ≈ 600 kcal/day of sport
+        client.put("/api/steps", json={"date": day, "steps": 15000})
 
     t = client.get("/api/today").json()["calories"]
     measured = Decimal(t["measured_maintenance"])
+    formula = Decimal(t["formula_maintenance"])
     assert measured is not None
-    # ~2385 total minus ~600 sport → clearly below the no-activity value.
-    assert measured < Decimal("2100")
+    assert abs(measured - formula) < Decimal("300")  # comparable, not collapsed to BMR
+    assert measured > Decimal("1950")
 
 
 def test_today_without_data_is_pure_formula(client):

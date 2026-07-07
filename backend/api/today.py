@@ -115,6 +115,9 @@ def compute_today(session: Session, user: User, day: date, tz: int = 0) -> Today
         activity_by_day=activity_by_day(
             session, user, points, profile.weight_kg, window_start, day, tz
         ),
+        # Occupational allowance already in the formula (BMR × (factor−1)) — from the user's
+        # activity-level setting; only activity above it is treated as deliberate exercise.
+        activity_floor=cal.maintenance - cal.bmr,
     )
     maintenance = adapt.maintenance
     target = engine.goal_target(maintenance, profile.gender, profile.goal)

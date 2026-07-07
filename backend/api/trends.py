@@ -53,6 +53,7 @@ def trends(session: SessionDep, user: CurrentUser) -> TrendsOut:
             activity_by_day=activity_by_day(
                 session, user, weigh_points, profile.weight_kg, window_start, today
             ),
+            activity_floor=cal.maintenance - cal.bmr,  # occupational allowance from the profile
         )
         target = engine.goal_target(adapt.maintenance, profile.gender, profile.goal)
 

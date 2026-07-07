@@ -11,12 +11,14 @@ than EWMA endpoints — EWMA lags and under-reports the change when weigh-ins ar
 irregular, whereas the slope is robust and uses every point.
 
 ``measured_TDEE`` from energy balance is *total* expenditure — it includes deliberate exercise.
-The formula maintenance excludes it (occupational activity only). To keep the two comparable and
-avoid double-counting (callers add today's steps+workouts on top for the net deficit / eat-back
-budget), we subtract the window's mean daily activity so the reported ``measured`` is an
-**exercise-excluded baseline**. Once enough dense data exists we blend that baseline into the
-formula, with confidence growing as the window fills, so the target self-corrects per person.
-Below the data threshold confidence is 0 → pure formula.
+The formula maintenance is BMR × an occupational factor (e.g. ×1.2 for a desk job), so it already
+grants an everyday-activity allowance but excludes deliberate exercise. To keep ``measured``
+comparable to the formula, we subtract only the window's mean activity **above that occupational
+allowance** (``activity_floor`` = formula − BMR, derived from the user's activity-level setting) —
+i.e. the deliberate exercise / extra movement the formula doesn't cover, leaving everyday activity
+in the baseline. Once enough dense data exists we blend that baseline into the formula, with
+confidence growing as the window fills, so the target self-corrects per person. Below the data
+threshold confidence is 0 → pure formula.
 
 Pure: no database, no framework. All values are :class:`~decimal.Decimal`, never ``float``.
 """
@@ -106,6 +108,7 @@ def adaptive_maintenance(
     intake_by_day: dict[date, Decimal],
     today: date,
     activity_by_day: dict[date, Decimal] | None = None,
+    activity_floor: Decimal | int | float | str = 0,
     window_days: int = WINDOW_DAYS,
 ) -> AdaptiveResult:
     """Blend the formula maintenance with a measured *baseline* maintenance when enough recent
@@ -114,12 +117,13 @@ def adaptive_maintenance(
     ``intake_by_day`` maps a date → that day's total kcal (logged days only). The current day
     is excluded from the intake average since its log is still partial.
 
-    ``activity_by_day`` maps a date → that day's deliberate-exercise kcal (steps + workouts).
-    Energy balance measures *total* expenditure (BMR + NEAT + exercise); we subtract the window's
-    mean daily activity so the reported ``measured`` is an **exercise-excluded baseline**,
-    directly comparable to the exercise-excluded ``formula``. Callers add today's activity back on
-    top exactly once (net deficit / eat-back budget), so exercise is never double-counted. Omit it
-    (or pass empty) to get the raw total-expenditure measurement.
+    ``activity_by_day`` maps a date → that day's activity kcal (steps + workouts). Energy balance
+    measures *total* expenditure; ``measured`` should instead be comparable to the ``formula``,
+    which already includes an occupational activity allowance (``activity_floor`` = formula − BMR,
+    e.g. BMR × 0.2 for a desk job). So we subtract only the window's mean activity **above**
+    ``activity_floor`` — the deliberate exercise / extra movement the formula doesn't cover —
+    leaving everyday activity in the baseline. Omit both (or pass empty / 0) to get the raw
+    total-expenditure measurement.
     """
     formula = _dec(formula)
     nil = AdaptiveResult(formula, formula, None, Decimal(0), 0, 0)
@@ -154,14 +158,16 @@ def adaptive_maintenance(
     delta = slope * Decimal(span_days)
     raw_total = measured_tdee(mean_intake, delta, span_days)  # incl. exercise (energy balance)
 
-    # Subtract the window's mean deliberate-exercise kcal over the SAME logged days, so `measured`
-    # is an exercise-excluded baseline comparable to the formula (activity is added back on top
-    # once, downstream). Empty activity → mean_activity 0 → raw total (backward compatible).
+    # Subtract only the mean activity ABOVE the formula's occupational allowance (over the SAME
+    # logged days), so `measured` keeps everyday activity in the baseline and stays comparable to
+    # the formula — only deliberate exercise / extra movement is excluded. Empty activity or
+    # activity ≤ floor → excess 0 → raw total (backward compatible).
     activity = activity_by_day or {}
     mean_activity = sum(
         (_dec(activity.get(d, 0)) for d, _ in logged), Decimal(0)
     ) / Decimal(logged_days)
-    raw_base = raw_total - mean_activity
+    excess_activity = max(Decimal(0), mean_activity - _dec(activity_floor))
+    raw_base = raw_total - excess_activity
     measured = min(max(raw_base, formula * CLAMP_LOW), formula * CLAMP_HIGH)
 
     confidence = _confidence(span_days)
