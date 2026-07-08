@@ -5,25 +5,33 @@ import { useAuth } from "../auth";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 
 export function LoginScreen() {
-  const { login, demoLogin } = useAuth();
+  const { login, register, demoLogin } = useAuth();
   const { t } = useTranslation();
+  const [mode, setMode] = useState<"signIn" | "register">("signIn");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [demoBusy, setDemoBusy] = useState(false);
 
+  const isRegister = mode === "register";
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true);
     setError(null);
     try {
-      await login(email, password);
+      await (isRegister ? register(email, password) : login(email, password));
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
       setBusy(false);
     }
+  };
+
+  const toggleMode = () => {
+    setMode(isRegister ? "signIn" : "register");
+    setError(null);
   };
 
   const startDemo = async () => {
@@ -45,7 +53,7 @@ export function LoginScreen() {
           <LanguageSwitcher />
         </div>
         <p className="muted auth-card__tagline">{t("auth.tagline")}</p>
-        <h1>{t("auth.signInTitle")}</h1>
+        <h1>{t(isRegister ? "auth.registerTitle" : "auth.signInTitle")}</h1>
 
         <label className="field">
           <span>{t("auth.email")}</span>
@@ -64,18 +72,23 @@ export function LoginScreen() {
           <input
             className="input"
             type="password"
-            autoComplete="current-password"
+            autoComplete={isRegister ? "new-password" : "current-password"}
             required
             minLength={8}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
+          {isRegister && <small className="muted">{t("auth.passwordHint")}</small>}
         </label>
 
         {error && <div className="error">{error}</div>}
 
         <button className="btn btn--primary" type="submit" disabled={busy || demoBusy}>
-          {t("auth.signIn")}
+          {busy ? t("common.loading") : t(isRegister ? "auth.register" : "auth.signIn")}
+        </button>
+
+        <button className="btn btn--link btn--sm" type="button" onClick={toggleMode} disabled={busy || demoBusy}>
+          {t(isRegister ? "auth.toLogin" : "auth.toRegister")}
         </button>
 
         <div className="auth-divider"><span>{t("demo.or")}</span></div>
