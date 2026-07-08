@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import uuid
+from datetime import datetime, timezone
 from decimal import Decimal
 
 from fastapi import APIRouter, HTTPException, Response
@@ -10,6 +11,7 @@ from backend.api.deps import CurrentUser, SessionDep
 from backend.persistence import repository
 from backend.schemas import (
     SessionStartIn,
+    SessionUpdateIn,
     SetIn,
     SetOut,
     SetUpdateIn,
@@ -19,6 +21,11 @@ from backend.schemas import (
 from backend.workouts.progression import set_volume
 
 router = APIRouter(prefix="/workouts", tags=["workouts"])
+
+
+def _as_utc(dt: datetime) -> datetime:
+    """Treat a naive datetime as UTC so aware/naive values compare safely."""
+    return dt if dt.tzinfo is not None else dt.replace(tzinfo=timezone.utc)
 
 
 @router.post("", response_model=WorkoutSessionOut, status_code=201)
@@ -87,6 +94,30 @@ def get_session_detail(
     ws = repository.get_workout_session(session, session_id, user.id)
     if ws is None:
         raise HTTPException(status_code=404, detail="session not found")
+    return WorkoutSessionOut.model_validate(ws)
+
+
+@router.patch("/{session_id}", response_model=WorkoutSessionOut)
+def update_session(
+    session_id: uuid.UUID,
+    payload: SessionUpdateIn,
+    session: SessionDep,
+    user: CurrentUser,
+) -> WorkoutSessionOut:
+    """Edit a past session's start/end time — only the sent fields are applied."""
+    ws = repository.get_workout_session(session, session_id, user.id)
+    if ws is None:
+        raise HTTPException(status_code=404, detail="session not found")
+    data = payload.model_dump(exclude_unset=True)
+    if "started_at" in data and data["started_at"] is not None:
+        ws.started_at = data["started_at"]
+    if "ended_at" in data:
+        ws.ended_at = data["ended_at"]
+    # SQLite returns naive datetimes for tz-aware columns (Postgres returns aware);
+    # normalize both to UTC so the comparison never mixes naive and aware.
+    if ws.ended_at is not None and _as_utc(ws.ended_at) < _as_utc(ws.started_at):
+        raise HTTPException(status_code=422, detail="ended_at is before started_at")
+    session.commit()
     return WorkoutSessionOut.model_validate(ws)
 
 

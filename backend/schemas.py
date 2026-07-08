@@ -603,6 +603,12 @@ class SessionStartIn(BaseModel):
     routine_id: uuid.UUID | None = None
 
 
+class SessionUpdateIn(BaseModel):
+    # Edit a past session's timing. Both optional so a PATCH can change either or both.
+    started_at: datetime | None = None
+    ended_at: datetime | None = None
+
+
 class SetIn(BaseModel):
     exercise_id: uuid.UUID
     weight: Decimal = Field(ge=0, le=2000)

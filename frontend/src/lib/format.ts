@@ -52,6 +52,24 @@ export function todayIso(): string {
   ).padStart(2, "0")}`;
 }
 
+// ISO timestamp → value for an <input type="datetime-local"> (local "YYYY-MM-DDTHH:mm").
+export function isoToDatetimeLocal(iso?: string | null): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(
+    d.getHours(),
+  )}:${pad(d.getMinutes())}`;
+}
+
+// A datetime-local value (interpreted as local time) → ISO UTC string for the API.
+export function datetimeLocalToIso(local: string): string {
+  if (!local) return "";
+  const d = new Date(local);
+  return Number.isNaN(d.getTime()) ? "" : d.toISOString();
+}
+
 // Add n days to a YYYY-MM-DD string. Parse and format in UTC so the result never
 // drifts by the local timezone offset (the bug that broke the diary's prev/next).
 export function addDays(iso: string, n: number): string {

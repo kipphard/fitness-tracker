@@ -4,6 +4,7 @@
     "loading": "Loading…",
     "save": "Save",
     "saving": "Saving…",
+    "done": "Done",
     "logout": "Log out",
     "toggleTheme": "Toggle light / dark",
     "nav": {
@@ -95,6 +96,7 @@
     "saveServing": "Save serving",
     "amount": "Amount (g)",
     "slot": "Meal",
+    "proteinShort": "P",
     "add": "Add to diary",
     "cancel": "Cancel",
     "delete": "Delete",
@@ -236,7 +238,13 @@
     "pickToSee": "Pick an exercise to see progression.",
     "history": "History",
     "setsShort": "sets",
-    "noHistory": "No workouts yet."
+    "noHistory": "No workouts yet.",
+    "editWorkout": "Edit workout",
+    "editTitle": "Edit workout",
+    "startTime": "Start",
+    "endTime": "End",
+    "deleteSet": "Delete set",
+    "noSets": "No sets in this workout."
   },
   "exercise": {
     "details": "Details",
@@ -581,6 +589,11 @@
         "name": "Progression",
         "desc": "See personal records, estimated 1RM and volume trends per exercise.",
         "how": "Pick an exercise under Progression to see your trend."
+      },
+      "editWorkout": {
+        "name": "Edit past workouts",
+        "desc": "Fix a logged set's weight or reps, delete a set, or correct a workout's start/end time after you finished it.",
+        "how": "Tap the ✎ on any workout in History to edit its time and sets."
       },
       "weight": {
         "name": "Weight tracking",

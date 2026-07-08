@@ -147,6 +147,32 @@ def test_session_log_sets_and_finish(client):
     assert len(client.get(f"/api/workouts/{sid}").json()["sets"]) == 1
 
 
+def test_edit_session_time(client):
+    sid = client.post("/api/workouts", json={}).json()["id"]
+    client.post(f"/api/workouts/{sid}/finish")
+
+    # Change both start and end of a past session.
+    patched = client.patch(
+        f"/api/workouts/{sid}",
+        json={"started_at": "2026-07-01T17:00:00Z", "ended_at": "2026-07-01T18:30:00Z"},
+    )
+    assert patched.status_code == 200, patched.text
+    body = patched.json()
+    assert body["started_at"].startswith("2026-07-01T17:00:00")
+    assert body["ended_at"].startswith("2026-07-01T18:30:00")
+    # Persisted.
+    assert client.get(f"/api/workouts/{sid}").json()["started_at"].startswith("2026-07-01T17:00:00")
+
+    # end-before-start is rejected; a partial patch (only start) is allowed.
+    bad = client.patch(f"/api/workouts/{sid}", json={"ended_at": "2026-06-30T00:00:00Z"})
+    assert bad.status_code == 422
+    ok = client.patch(f"/api/workouts/{sid}", json={"started_at": "2026-07-01T16:00:00Z"})
+    assert ok.status_code == 200 and ok.json()["ended_at"].startswith("2026-07-01T18:30:00")
+
+    import uuid as _uuid
+    assert client.patch(f"/api/workouts/{_uuid.uuid4()}", json={"started_at": "2026-07-01T17:00:00Z"}).status_code == 404
+
+
 def test_last_time_and_progression(client):
     bench = _exercise(client)
     s1 = client.post("/api/workouts", json={}).json()["id"]

@@ -41,6 +41,7 @@ const GROUPS: Group[] = [
       { id: "routines", icon: "🗂️", to: "/workouts" },
       { id: "exerciseLibrary", icon: "📚", to: "/workouts" },
       { id: "progression", icon: "📈", to: "/workouts" },
+      { id: "editWorkout", icon: "✏️", to: "/workouts" },
     ],
   },
   {

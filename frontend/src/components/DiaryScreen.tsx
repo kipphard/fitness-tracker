@@ -374,12 +374,22 @@ export function DiaryScreen() {
                 {entries.length > 0 && <span className="muted tnum">{kcal(mt.kcal)} kcal</span>}
               </div>
               {entries.length > 0 && (
+                <div className="add-form__macros meal-summary">
+                  <span><strong className="tnum">{oneDecimal(mt.protein)} g</strong> {t("today.macros.protein")}</span>
+                  <span><strong className="tnum">{oneDecimal(mt.carbs)} g</strong> {t("today.macros.carbs")}</span>
+                  <span><strong className="tnum">{oneDecimal(mt.fat)} g</strong> {t("today.macros.fat")}</span>
+                </div>
+              )}
+              {entries.length > 0 && (
                 <ul className="list">
                   {entries.map((e) => (
                     <li key={e.id} className="diary-row">
                       <button className="diary-entry__row" onClick={() => openEdit(e)}>
                         <span className="diary-entry__name">{e.food_name}</span>
                         <span className="muted tnum">{oneDecimal(e.amount_g)} g</span>
+                        <span className="muted tnum diary-entry__protein">
+                          {oneDecimal(e.protein_g)} g {t("diary.proteinShort")}
+                        </span>
                         <span className="tnum diary-entry__kcal">{kcal(e.kcal)}</span>
                       </button>
                     </li>

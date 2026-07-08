@@ -680,7 +680,7 @@ a:hover {
 }
 .diary-entry__row {
   display: grid;
-  grid-template-columns: 1fr auto auto;
+  grid-template-columns: 1fr auto auto auto;
   align-items: center;
   gap: 0.6rem;
   width: 100%;
@@ -752,10 +752,16 @@ a:hover {
   margin-top: 0.35rem;
   justify-content: flex-end;
 }
-/* Per-meal macro subtotal under each slot's entries. */
+/* Per-meal macro subtotal, right-aligned under the slot's kcal. */
 .meal-summary {
-  padding-top: 0.4rem;
+  margin: -0.1rem 0 0.15rem;
   font-size: 0.8rem;
+  justify-content: flex-end;
+}
+/* Protein per food row — a touch dimmer than kcal, distinct from the amount via its label. */
+.diary-entry__protein {
+  font-size: 0.82rem;
+  white-space: nowrap;
 }
 .icon-btn--xs {
   width: 1.7rem;
@@ -1230,6 +1236,11 @@ a:hover {
 }
 .set-row--done {
   background: var(--surface-2);
+}
+/* Edit-workout modal rows: idx · weight · reps · delete (no "previous"/check columns). */
+.set-table__head--edit,
+.set-row--edit {
+  grid-template-columns: 2.2rem 1fr 1fr 2.6rem;
 }
 .set-row__idx {
   display: grid;

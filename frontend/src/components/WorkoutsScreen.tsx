@@ -22,6 +22,7 @@ import { ExercisePicker } from "./ExercisePicker";
 import { ExerciseThumb } from "./ExerciseThumb";
 import { LiveSession } from "./LiveSession";
 import { RoutineEditModal } from "./RoutineEditModal";
+import { WorkoutEditModal } from "./WorkoutEditModal";
 
 export function WorkoutsScreen() {
   const { t, i18n } = useTranslation();
@@ -37,6 +38,7 @@ export function WorkoutsScreen() {
 
   // null = closed; { routine: null } = create; { routine } = edit.
   const [routineModal, setRoutineModal] = useState<{ routine: Routine | null } | null>(null);
+  const [editId, setEditId] = useState<string | null>(null);
 
   const [progId, setProgId] = useState("");
   const [prog, setProg] = useState<Progression | null>(null);
@@ -218,6 +220,13 @@ export function WorkoutsScreen() {
                 <span className="tnum">{oneDecimal(h.total_volume)} kg</span>
                 <button
                   className="icon-btn icon-btn--xs"
+                  onClick={() => setEditId(h.id)}
+                  aria-label={t("workouts.editWorkout")}
+                >
+                  ✎
+                </button>
+                <button
+                  className="icon-btn icon-btn--xs"
                   onClick={() => apiDelete(`/workouts/${h.id}`).catch(() => undefined)}
                   aria-label={t("workouts.deleteWorkout")}
                 >
@@ -237,6 +246,10 @@ export function WorkoutsScreen() {
           library={library.data ?? []}
           onClose={() => setRoutineModal(null)}
         />
+      )}
+
+      {editId && (
+        <WorkoutEditModal sessionId={editId} nameFor={exName} onClose={() => setEditId(null)} />
       )}
 
       {pickerProg && (

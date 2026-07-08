@@ -4,6 +4,7 @@
     "loading": "Lädt…",
     "save": "Speichern",
     "saving": "Speichert…",
+    "done": "Fertig",
     "logout": "Abmelden",
     "toggleTheme": "Hell / Dunkel umschalten",
     "nav": {
@@ -95,6 +96,7 @@
     "saveServing": "Portion speichern",
     "amount": "Menge (g)",
     "slot": "Mahlzeit",
+    "proteinShort": "EW",
     "add": "Zum Tagebuch hinzufügen",
     "cancel": "Abbrechen",
     "delete": "Löschen",
@@ -236,7 +238,13 @@
     "pickToSee": "Wähle eine Übung für den Fortschritt.",
     "history": "Verlauf",
     "setsShort": "Sätze",
-    "noHistory": "Noch kein Training."
+    "noHistory": "Noch kein Training.",
+    "editWorkout": "Workout bearbeiten",
+    "editTitle": "Workout bearbeiten",
+    "startTime": "Beginn",
+    "endTime": "Ende",
+    "deleteSet": "Satz löschen",
+    "noSets": "Keine Sätze in diesem Workout."
   },
   "exercise": {
     "details": "Details",
@@ -581,6 +589,11 @@
         "name": "Fortschritt",
         "desc": "Sieh Bestleistungen, geschätztes 1RM und Volumen-Trends je Übung.",
         "how": "Wähle unter „Fortschritt“ eine Übung, um deinen Verlauf zu sehen."
+      },
+      "editWorkout": {
+        "name": "Vergangene Workouts bearbeiten",
+        "desc": "Korrigiere Gewicht oder Wiederholungen eines Satzes, lösche einen Satz oder passe Beginn/Ende eines bereits beendeten Workouts an.",
+        "how": "Tippe im Verlauf auf das ✎ eines Workouts, um Zeit und Sätze zu bearbeiten."
       },
       "weight": {
         "name": "Gewicht",
