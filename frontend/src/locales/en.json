@@ -102,7 +102,11 @@
     "addToMeal": "Add to {{meal}}",
     "slots": { "breakfast": "Breakfast", "lunch": "Lunch", "dinner": "Dinner", "snack": "Snack" },
     "dayTitle": "This day",
-    "copyYesterday": "Copy yesterday",
+    "copyFrom": "Copy from…",
+    "copyTitle": "Copy from another day",
+    "copySourceDate": "From day",
+    "copyBtn": "Copy ({{count}})",
+    "copyEmpty": "No entries on that day.",
     "empty": "Nothing logged yet.",
     "total": "Total",
     "noSaved": "No saved foods match — try Open Food Facts or add a custom food.",
@@ -534,9 +538,9 @@
         "how": "In Settings → Meal slots, add, rename, reorder or remove your own meals."
       },
       "copyDay": {
-        "name": "Copy a day",
-        "desc": "Repeat a previous day's diary in one tap instead of re-entering everything.",
-        "how": "Use “copy yesterday” at the top of the Diary."
+        "name": "Copy from another day",
+        "desc": "Pull a whole day, a single meal, or just one food (with its portion) from any past day instead of re-entering it.",
+        "how": "Tap “Copy from…” at the top of the Diary, pick the day, then check what to bring over."
       },
       "fillRemaining": {
         "name": "Fill remaining calories",

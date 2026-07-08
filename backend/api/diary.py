@@ -119,7 +119,11 @@ def copy_day(
     payload: DiaryCopyIn, session: SessionDep, user: CurrentUser
 ) -> DiaryDayOut:
     to_day = payload.to_date or date.today()
-    for log in repository.list_food_logs(session, user.id, payload.from_date):
+    logs = repository.list_food_logs(session, user.id, payload.from_date)
+    if payload.entry_ids is not None:
+        wanted = set(payload.entry_ids)
+        logs = [log for log in logs if log.id in wanted]
+    for log in logs:
         repository.create_food_log(
             session,
             user.id,

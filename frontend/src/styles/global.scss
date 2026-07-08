@@ -644,6 +644,32 @@ a:hover {
   font-weight: 600;
   font-size: 0.85rem;
 }
+// Copy-from-another-day sheet: meal header + food rows carry a leading checkbox.
+.copy-slot__head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+.copy-slot__head h3 {
+  margin: 0.6rem 0 0.3rem;
+}
+.copy-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.55rem 0.25rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+.copy-slot__head input[type="checkbox"],
+.copy-row input[type="checkbox"] {
+  width: 1.1rem;
+  height: 1.1rem;
+  accent-color: var(--primary-strong);
+}
 // Tappable logged-entry row (opens the edit modal).
 .diary-row {
   list-style: none;

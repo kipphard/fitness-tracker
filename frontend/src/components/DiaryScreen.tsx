@@ -78,6 +78,13 @@ export function DiaryScreen() {
   const [editing, setEditing] = useState<DiaryEntry | null>(null);
   const [editAmount, setEditAmount] = useState("");
 
+  // Copy-from-another-day sheet: pick a source day, then check which foods/meals to pull in.
+  const [copyOpen, setCopyOpen] = useState(false);
+  const [copyFrom, setCopyFrom] = useState("");
+  const [copySource, setCopySource] = useState<DiaryDay | null>(null);
+  const [copyLoading, setCopyLoading] = useState(false);
+  const [copySel, setCopySel] = useState<Set<string>>(new Set());
+
   // Search the user's saved foods as they type (only while the add sheet is open).
   useEffect(() => {
     const q = query.trim();
@@ -97,6 +104,26 @@ export function DiaryScreen() {
   useEffect(() => {
     setServingEdit(selected?.serving_g ?? "");
   }, [selected]);
+
+  // Load the chosen source day whenever the copy sheet is open (or its date changes).
+  // Uses apiGet (not useApi) so it only fetches while the sheet is up. Everything starts checked.
+  useEffect(() => {
+    if (!copyOpen) return;
+    let active = true;
+    setCopyLoading(true);
+    setCopySource(null);
+    apiGet<DiaryDay>(`/diary?date=${copyFrom}`)
+      .then((d) => {
+        if (!active) return;
+        setCopySource(d);
+        setCopySel(new Set(d.entries.map((e) => e.id)));
+      })
+      .catch(() => active && setCopySource(null))
+      .finally(() => active && setCopyLoading(false));
+    return () => {
+      active = false;
+    };
+  }, [copyOpen, copyFrom]);
 
   const openAdd = (s: MealSlot) => {
     setAddSlot(s);
@@ -235,8 +262,34 @@ export function DiaryScreen() {
       { kcal: 0, protein: 0, carbs: 0, fat: 0 },
     );
 
-  const copyYesterday = () =>
-    apiPost("/diary/copy", { from_date: addDays(date, -1), to_date: date }).catch(() => undefined);
+  const openCopy = () => {
+    setCopyFrom(addDays(date, -1));
+    setCopySource(null);
+    setCopySel(new Set());
+    setCopyOpen(true);
+  };
+  const toggleCopy = (id: string) =>
+    setCopySel((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  const toggleCopySlot = (ids: string[], allSelected: boolean) =>
+    setCopySel((prev) => {
+      const next = new Set(prev);
+      for (const id of ids) allSelected ? next.delete(id) : next.add(id);
+      return next;
+    });
+  const doCopy = async () => {
+    if (copySel.size === 0) return;
+    await apiPost("/diary/copy", {
+      from_date: copyFrom,
+      to_date: date,
+      entry_ids: [...copySel],
+    }).catch(() => undefined);
+    setCopyOpen(false);
+  };
 
   const searching = query.trim().length >= 2;
   const results = searching ? saved : recent.data ?? [];
@@ -262,6 +315,13 @@ export function DiaryScreen() {
     (k) => !knownSlotKeys.has(k),
   );
   const slotKeys = [...slots.map((s) => s.key), ...orphanSlotKeys];
+
+  // Same slot ordering for the copy sheet, over the source day's entries.
+  const copyEntries = copySource?.entries ?? [];
+  const copyOrphanKeys = [...new Set(copyEntries.map((e) => e.slot))].filter(
+    (k) => !knownSlotKeys.has(k),
+  );
+  const copySlotKeys = [...slots.map((s) => s.key), ...copyOrphanKeys];
 
   return (
     <div className="screen">
@@ -301,7 +361,7 @@ export function DiaryScreen() {
       <Card
         title={t("diary.dayTitle")}
         action={
-          <button className="btn btn--ghost btn--sm" onClick={copyYesterday}>{t("diary.copyYesterday")}</button>
+          <button className="btn btn--ghost btn--sm" onClick={openCopy}>{t("diary.copyFrom")}</button>
         }
       >
         {slotKeys.map((s) => {
@@ -531,6 +591,81 @@ export function DiaryScreen() {
               <span><strong className="tnum">{oneDecimal(editScaled.fat)} g</strong> {t("today.macros.fat")}</span>
             </div>
           )}
+        </Modal>
+      )}
+
+      {/* ── Copy foods / meals from another day ────────────────────────────── */}
+      {copyOpen && (
+        <Modal
+          title={t("diary.copyTitle")}
+          onClose={() => setCopyOpen(false)}
+          footer={
+            <div className="diary-actions">
+              <button
+                className="btn btn--primary"
+                onClick={doCopy}
+                disabled={copySel.size === 0 || copyLoading}
+              >
+                {t("diary.copyBtn", { count: copySel.size })}
+              </button>
+              <button className="btn btn--ghost" onClick={() => setCopyOpen(false)}>{t("diary.cancel")}</button>
+            </div>
+          }
+        >
+          <label className="field">
+            <span>{t("diary.copySourceDate")}</span>
+            <input
+              className="input"
+              type="date"
+              value={copyFrom}
+              max={addDays(date, -1)}
+              onChange={(e) => setCopyFrom(e.target.value)}
+            />
+          </label>
+
+          {copyLoading && <div className="muted">{t("common.loading")}</div>}
+          {!copyLoading && copyEntries.length === 0 && (
+            <div className="muted food-results__empty">{t("diary.copyEmpty")}</div>
+          )}
+
+          {!copyLoading &&
+            copySlotKeys.map((s) => {
+              const es = copyEntries.filter((e) => e.slot === s);
+              if (es.length === 0) return null;
+              const ids = es.map((e) => e.id);
+              const someSel = ids.some((id) => copySel.has(id));
+              const allSel = ids.every((id) => copySel.has(id));
+              return (
+                <div className="slot-group" key={s}>
+                  <label className="copy-slot__head">
+                    <input
+                      type="checkbox"
+                      checked={allSel}
+                      ref={(el) => {
+                        if (el) el.indeterminate = someSel && !allSel;
+                      }}
+                      onChange={() => toggleCopySlot(ids, allSel)}
+                    />
+                    <h3>{slotLabel(s)}</h3>
+                  </label>
+                  <ul className="list">
+                    {es.map((e) => (
+                      <li key={e.id} className="diary-row">
+                        <label className="copy-row">
+                          <input
+                            type="checkbox"
+                            checked={copySel.has(e.id)}
+                            onChange={() => toggleCopy(e.id)}
+                          />
+                          <span className="diary-entry__name">{e.food_name}</span>
+                          <span className="muted tnum">{oneDecimal(e.amount_g)} g</span>
+                        </label>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })}
         </Modal>
       )}
 

@@ -109,6 +109,41 @@ def test_copy_day(client):
     assert len(copied["entries"]) == 1
 
 
+def test_copy_selected_entries_only(client):
+    a = client.post(
+        "/api/diary",
+        json={"date": "2026-06-01", "slot": "breakfast", "amount_g": "100",
+              "food": {"name": "A", "per100_kcal": "100"}},
+    ).json()
+    client.post(
+        "/api/diary",
+        json={"date": "2026-06-01", "slot": "lunch", "amount_g": "100",
+              "food": {"name": "B", "per100_kcal": "200"}},
+    )
+    copied = client.post(
+        "/api/diary/copy",
+        json={"from_date": "2026-06-01", "to_date": "2026-06-02", "entry_ids": [a["id"]]},
+    ).json()
+    assert copied["date"] == "2026-06-02"
+    assert [e["food_name"] for e in copied["entries"]] == ["A"]
+    assert copied["entries"][0]["slot"] == "breakfast"
+
+
+def test_copy_ignores_unknown_entry_ids(client):
+    client.post(
+        "/api/diary",
+        json={"date": "2026-06-01", "slot": "breakfast", "amount_g": "100",
+              "food": {"name": "A", "per100_kcal": "100"}},
+    )
+    # An id that isn't in from_date (here: a fresh random UUID) is silently skipped.
+    copied = client.post(
+        "/api/diary/copy",
+        json={"from_date": "2026-06-01", "to_date": "2026-06-02",
+              "entry_ids": ["00000000-0000-0000-0000-000000000000"]},
+    ).json()
+    assert copied["entries"] == []
+
+
 def test_recent_foods(client):
     food = client.get(f"/api/food/barcode/{BARCODE}").json()
     client.post("/api/diary", json={"slot": "breakfast", "amount_g": "50", "food_id": food["id"]})

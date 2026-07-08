@@ -337,6 +337,7 @@ class MealSlotsIn(BaseModel):
 class DiaryCopyIn(BaseModel):
     from_date: date_type
     to_date: date_type | None = None
+    entry_ids: list[uuid.UUID] | None = None  # None = copy the whole from_date
 
 
 class StepsIn(BaseModel):

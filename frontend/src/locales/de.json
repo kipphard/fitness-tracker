@@ -102,7 +102,11 @@
     "addToMeal": "Zu {{meal}} hinzufügen",
     "slots": { "breakfast": "Frühstück", "lunch": "Mittagessen", "dinner": "Abendessen", "snack": "Snack" },
     "dayTitle": "Dieser Tag",
-    "copyYesterday": "Gestern kopieren",
+    "copyFrom": "Aus Tag kopieren…",
+    "copyTitle": "Aus anderem Tag kopieren",
+    "copySourceDate": "Von Tag",
+    "copyBtn": "Kopieren ({{count}})",
+    "copyEmpty": "Keine Einträge an diesem Tag.",
     "empty": "Noch nichts eingetragen.",
     "total": "Gesamt",
     "noSaved": "Keine gespeicherten Lebensmittel — probiere Open Food Facts oder leg ein eigenes an.",
@@ -534,9 +538,9 @@
         "how": "Unter Einstellungen → Mahlzeiten kannst du eigene Mahlzeiten hinzufügen, umbenennen, sortieren oder entfernen."
       },
       "copyDay": {
-        "name": "Tag kopieren",
-        "desc": "Übernimm das Tagebuch eines früheren Tages mit einem Tipp, statt alles neu einzugeben.",
-        "how": "Nutze oben im Tagebuch „Gestern kopieren“."
+        "name": "Aus anderem Tag kopieren",
+        "desc": "Übernimm einen ganzen Tag, eine einzelne Mahlzeit oder nur ein Lebensmittel (mit Portion) aus einem früheren Tag, statt es neu einzugeben.",
+        "how": "Tippe oben im Tagebuch auf „Aus Tag kopieren…“, wähle den Tag und hake an, was übernommen werden soll."
       },
       "fillRemaining": {
         "name": "Restkalorien füllen",
