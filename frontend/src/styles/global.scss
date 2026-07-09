@@ -2068,3 +2068,278 @@ a:hover {
   height: 11rem;
   width: auto;
 }
+
+/* ── Shared UI components (design system) ──────────────────────────────── */
+.section-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-2);
+}
+.section-header__title {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin: 0;
+}
+.section-header__action {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--primary);
+}
+.section-header__action a,
+.section-header__action button {
+  color: var(--primary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  padding: 0;
+}
+
+/* Ring gauge */
+.ring-gauge {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+}
+.ring-gauge__track {
+  stroke: var(--surface-2);
+}
+.ring-gauge__fill {
+  stroke: var(--primary);
+  transition: stroke-dashoffset 0.5s ease;
+}
+.ring-gauge__fill.is-over {
+  stroke: var(--danger);
+}
+.ring-gauge__center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+.ring-gauge__value {
+  font-family: var(--font-display);
+  font-size: 1.9rem;
+  font-weight: 700;
+  line-height: 1;
+}
+.ring-gauge__label {
+  font-size: 0.8rem;
+}
+
+/* Macro bars */
+.macro-bars {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+.macro-bar__head {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.82rem;
+  margin-bottom: 4px;
+}
+.macro-bar__label {
+  color: var(--muted);
+}
+.macro-bar__track {
+  height: 7px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-2);
+  overflow: hidden;
+}
+.macro-bar__fill {
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--primary);
+  transition: width 0.4s ease;
+}
+
+/* Stat tiles */
+.stat-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--sp-4);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.stat-tile__icon {
+  font-size: 1.1rem;
+}
+.stat-tile__value {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+.stat-tile__label {
+  font-size: 0.82rem;
+}
+
+/* Option cards */
+.option-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+.option-card {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  width: 100%;
+  text-align: left;
+  padding: var(--sp-4);
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, transform 0.08s;
+}
+.option-card:active {
+  transform: scale(0.99);
+}
+.option-card.is-selected {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+}
+.option-card__icon {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+.option-card__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+.option-card__label {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1rem;
+}
+.option-card__desc {
+  font-size: 0.85rem;
+}
+.option-card__mark {
+  flex-shrink: 0;
+  width: 1.5rem;
+  height: 1.5rem;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-pill);
+  border: 1.5px solid var(--border);
+  color: var(--on-primary);
+  font-size: 0.8rem;
+}
+.option-card__mark--multi {
+  border-radius: 7px;
+}
+.option-card.is-selected .option-card__mark {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+/* Segmented control */
+.segmented {
+  display: inline-flex;
+  padding: 4px;
+  gap: 4px;
+  background: var(--surface-2);
+  border-radius: var(--radius-pill);
+}
+.segmented--block {
+  display: flex;
+  width: 100%;
+}
+.segmented__btn {
+  flex: 1;
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 0.5rem 0.9rem;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--muted);
+  transition: background 0.15s, color 0.15s;
+}
+.segmented__btn.is-active {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--elev-1);
+}
+
+/* Progress bar */
+.progress-bar {
+  height: 8px;
+  width: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--surface-2);
+  overflow: hidden;
+}
+.progress-bar__fill {
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--primary);
+  transition: width 0.35s ease;
+}
+
+/* Wizard shell (onboarding) */
+.wizard {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  padding: calc(var(--sp-4) + env(safe-area-inset-top)) var(--sp-4)
+    calc(var(--sp-4) + env(safe-area-inset-bottom));
+}
+.wizard__top {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+.wizard__back-spacer {
+  width: 2.3rem;
+  flex-shrink: 0;
+}
+.wizard__body {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  padding: var(--sp-5) 0;
+  max-width: 30rem;
+  width: 100%;
+  margin: 0 auto;
+}
+.wizard__footer {
+  max-width: 30rem;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* Icon chip */
+.icon-chip {
+  display: inline-grid;
+  place-items: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: var(--radius-pill);
+  background: var(--surface-2);
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
