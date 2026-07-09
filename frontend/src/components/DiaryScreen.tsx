@@ -14,6 +14,16 @@ import { useMealSlots, useSlotLabel } from "../hooks/useMealSlots";
 import { addDays, kcal, num, oneDecimal, todayIso } from "../lib/format";
 import { Card } from "./Card";
 import { Modal } from "./Modal";
+import { IconChip } from "./ui";
+
+// Round meal-emoji chip for each slot header (built-ins get a themed emoji; custom slots a fork).
+const SLOT_EMOJI: Record<string, string> = {
+  breakfast: "☕",
+  lunch: "🍽️",
+  dinner: "🌙",
+  snack: "🍎",
+};
+const slotEmoji = (key: string) => SLOT_EMOJI[key] ?? "🍴";
 
 // Lazy so the ZXing barcode library only loads when the user opens the scanner.
 const BarcodeScanner = lazy(() =>
@@ -370,7 +380,10 @@ export function DiaryScreen() {
           return (
             <div className="slot-group" key={s}>
               <div className="slot-group__head">
-                <h3>{slotLabel(s)}</h3>
+                <div className="slot-group__title">
+                  <IconChip className="icon-chip--sm">{slotEmoji(s)}</IconChip>
+                  <h3>{slotLabel(s)}</h3>
+                </div>
                 {entries.length > 0 && <span className="muted tnum">{kcal(mt.kcal)} kcal</span>}
               </div>
               {entries.length > 0 && (

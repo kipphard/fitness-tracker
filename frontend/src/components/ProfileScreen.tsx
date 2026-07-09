@@ -14,6 +14,7 @@ import {
 } from "../api/types";
 import { kcal, oneDecimal } from "../lib/format";
 import { Card } from "./Card";
+import { OptionCard } from "./ui";
 
 const DEFAULTS: ProfileInput = {
   height_cm: "175",
@@ -22,6 +23,16 @@ const DEFAULTS: ProfileInput = {
   weight_kg: "75",
   activity_level: "sedentary",
   goal: "maintain",
+};
+
+const GOAL_ICON: Record<string, string> = { cut: "📉", maintain: "⚖️", bulk: "📈" };
+const GENDER_ICON: Record<string, string> = { male: "♂️", female: "♀️" };
+const ACTIVITY_ICON: Record<string, string> = {
+  sedentary: "🪑",
+  lightly_active: "🚶",
+  moderately_active: "🏃",
+  heavy: "🏋️",
+  very_heavy: "🔥",
 };
 
 export function ProfileScreen() {
@@ -110,74 +121,73 @@ export function ProfileScreen() {
               </label>
             </div>
 
-            <div className="form__row">
-              <label className="field">
-                <span>{t("profile.age")}</span>
-                <input
-                  className="input"
-                  type="number"
-                  min="10"
-                  max="120"
-                  step="1"
-                  required
-                  value={form.age}
-                  onChange={(e) => set("age", Number(e.target.value))}
-                />
-              </label>
-              <label className="field">
-                <span>{t("profile.gender")}</span>
-                <select
-                  className="select"
-                  value={form.gender}
-                  onChange={(e) => set("gender", e.target.value as ProfileInput["gender"])}
-                >
-                  {GENDERS.map((g) => (
-                    <option key={g} value={g}>
-                      {t(`profile.genderOptions.${g}`)}
-                    </option>
-                  ))}
-                </select>
-              </label>
+            <label className="field">
+              <span>{t("profile.age")}</span>
+              <input
+                className="input"
+                type="number"
+                min="10"
+                max="120"
+                step="1"
+                required
+                value={form.age}
+                onChange={(e) => set("age", Number(e.target.value))}
+              />
+            </label>
+
+            <div className="field">
+              <span>{t("profile.gender")}</span>
+              <div className="option-list option-list--row">
+                {GENDERS.map((g) => (
+                  <OptionCard
+                    key={g}
+                    icon={GENDER_ICON[g]}
+                    label={t(`profile.genderOptions.${g}`)}
+                    selected={form.gender === g}
+                    onSelect={() => set("gender", g)}
+                  />
+                ))}
+              </div>
             </div>
 
-            <label className="field">
+            <div className="field">
+              <span>{t("profile.goal")}</span>
+              <div className="option-list">
+                {GOALS.map((g) => (
+                  <OptionCard
+                    key={g}
+                    icon={GOAL_ICON[g]}
+                    label={t(`profile.goalOptions.${g}`)}
+                    selected={form.goal === g}
+                    onSelect={() => set("goal", g)}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div className="field">
               <span>{t("profile.activity")}</span>
-              <select
-                className="select"
-                value={form.activity_level}
-                onChange={(e) =>
-                  set("activity_level", e.target.value as ProfileInput["activity_level"])
-                }
-              >
+              <div className="option-list">
                 {ACTIVITY_LEVELS.map((key) => {
                   const mult = multiplierFor(key);
                   return (
-                    <option key={key} value={key}>
-                      {t(`calories.levels.${key}.label`)}
-                      {mult ? ` (×${oneDecimal(mult)})` : ""}
-                    </option>
+                    <OptionCard
+                      key={key}
+                      icon={ACTIVITY_ICON[key]}
+                      label={t(`calories.levels.${key}.label`)}
+                      description={`${t(`calories.levels.${key}.desc`)}${
+                        mult ? ` · ×${oneDecimal(mult)}` : ""
+                      }`}
+                      selected={form.activity_level === key}
+                      onSelect={() => set("activity_level", key)}
+                    />
                   );
                 })}
-              </select>
-            </label>
-
-            <label className="field">
-              <span>{t("profile.goal")}</span>
-              <select
-                className="select"
-                value={form.goal}
-                onChange={(e) => set("goal", e.target.value as ProfileInput["goal"])}
-              >
-                {GOALS.map((g) => (
-                  <option key={g} value={g}>
-                    {t(`profile.goalOptions.${g}`)}
-                  </option>
-                ))}
-              </select>
-            </label>
+              </div>
+            </div>
 
             {error && <div className="error">{error}</div>}
-            <button className="btn btn--primary" type="submit" disabled={saving}>
+            <button className="btn btn--primary btn--block" type="submit" disabled={saving}>
               {saving ? t("common.saving") : t("profile.calculate")}
             </button>
           </form>

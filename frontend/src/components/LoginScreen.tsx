@@ -83,7 +83,7 @@ export function LoginScreen() {
 
         {error && <div className="error">{error}</div>}
 
-        <button className="btn btn--primary" type="submit" disabled={busy || demoBusy}>
+        <button className="btn btn--primary btn--block" type="submit" disabled={busy || demoBusy}>
           {busy ? t("common.loading") : t(isRegister ? "auth.register" : "auth.signIn")}
         </button>
 
@@ -94,7 +94,7 @@ export function LoginScreen() {
         <div className="auth-divider"><span>{t("demo.or")}</span></div>
 
         <button
-          className="btn btn--ghost"
+          className="btn btn--ghost btn--block"
           type="button"
           onClick={startDemo}
           disabled={busy || demoBusy}
