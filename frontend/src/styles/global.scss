@@ -538,45 +538,6 @@ a:hover {
   line-height: 1;
   color: var(--primary-strong);
 }
-.macro-cards {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.75rem;
-  margin-top: 0.5rem;
-}
-.macro-card {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-  padding: 0.6rem 0.7rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  font-size: 0.85rem;
-}
-.macro-card__dot {
-  width: 0.7rem;
-  height: 0.7rem;
-  border-radius: 50%;
-}
-.macro-card__name {
-  font-weight: 600;
-}
-.macro-card strong {
-  font-size: 1.05rem;
-}
-.macro-bar {
-  height: 6px;
-  background: var(--surface-2);
-  border-radius: 999px;
-  overflow: hidden;
-  margin-top: 0.3rem;
-}
-.macro-bar__fill {
-  height: 100%;
-  border-radius: 999px;
-  transition: width 0.2s ease;
-}
-
 /* ── Diary ─────────────────────────────────────────────────────────────── */
 .diary-head {
   display: flex;
@@ -1674,27 +1635,6 @@ a:hover {
   .form > .btn {
     width: 100%;
   }
-  /* Stack macro tiles full-width and lay each one out as a row so the
-     "eaten / target g" value no longer wraps onto three lines. */
-  .macro-cards {
-    grid-template-columns: 1fr;
-  }
-  .macro-card {
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-items: center;
-    column-gap: 0.5rem;
-  }
-  .macro-card__name {
-    flex: 1;
-  }
-  .macro-card strong {
-    font-size: 1rem;
-  }
-  .macro-bar {
-    flex-basis: 100%;
-    margin-top: 0.1rem;
-  }
 }
 
 /* ── Exercise picker (Hevy-style) ──────────────────────────────────────── */
@@ -2385,6 +2325,26 @@ a:hover {
   font-size: 1.25rem;
   font-weight: 700;
   color: var(--text);
+}
+
+/* Inline ⓘ toggle that reveals a row's explanatory hint on tap */
+.info-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.info-btn {
+  appearance: none;
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 0.85rem;
+  line-height: 1;
+}
+.info-btn:hover {
+  color: var(--primary);
 }
 
 /* Onboarding steps */

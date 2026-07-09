@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
@@ -9,6 +10,46 @@ import { addDays, kcal, num, oneDecimal, todayIso } from "../lib/format";
 import { Card } from "./Card";
 import { StepsFromDistance } from "./StepsFromDistance";
 import { MacroBars, RingGauge } from "./ui";
+
+// A result row whose explanatory text is tucked behind an ⓘ toggle (declutters
+// the dense breakdown — the hint only appears when tapped).
+function InfoRow({
+  label,
+  value,
+  hint,
+  strong = false,
+}: {
+  label: ReactNode;
+  value: ReactNode;
+  hint: string;
+  strong?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <div className={"result-row" + (strong ? " result-row--divider result-row--target" : "")}>
+        <span className={"info-label" + (strong ? "" : " muted")}>
+          {label}
+          <button
+            type="button"
+            className="info-btn"
+            aria-label="Info"
+            aria-expanded={open}
+            onClick={() => setOpen((o) => !o)}
+          >
+            ⓘ
+          </button>
+        </span>
+        {strong ? (
+          <strong className="tnum">{value}</strong>
+        ) : (
+          <span className="tnum">{value}</span>
+        )}
+      </div>
+      {open && <p className="muted result-hint">{hint}</p>}
+    </>
+  );
+}
 
 export function TodayScreen() {
   const { t } = useTranslation();
@@ -196,18 +237,21 @@ export function TodayScreen() {
       </Card>
 
       <Card title={t("today.targetTitle")}>
-          <div className="result-row">
-            <span className="muted">{t("today.maintenance")}</span>
-            <span className="tnum">{kcal(calories.maintenance)}</span>
-          </div>
-          {calories.measured_maintenance && (
-            <p className="muted result-hint">
-              {t("today.adaptiveMaintenance", {
+          {calories.measured_maintenance ? (
+            <InfoRow
+              label={t("today.maintenance")}
+              value={kcal(calories.maintenance)}
+              hint={t("today.adaptiveMaintenance", {
                 measured: kcal(calories.measured_maintenance),
                 formula: kcal(calories.formula_maintenance),
                 pct: Math.round(num(calories.tdee_confidence) * 100),
               })}
-            </p>
+            />
+          ) : (
+            <div className="result-row">
+              <span className="muted">{t("today.maintenance")}</span>
+              <span className="tnum">{kcal(calories.maintenance)}</span>
+            </div>
           )}
           <div className="result-row">
             <span className="muted">{t("today.targetLabel")}</span>
@@ -239,20 +283,21 @@ export function TodayScreen() {
               <span className="muted tnum">+{kcal(workout_kcal)}</span>
             </div>
           )}
-          <div className="result-row result-row--divider result-row--target">
-            <span>{t("today.totalBurn")}</span>
-            <strong className="tnum">{kcal(totalBurn)}</strong>
-          </div>
-          <p className="muted result-hint">{t("today.totalBurnHint")}</p>
+          <InfoRow
+            label={t("today.totalBurn")}
+            value={kcal(totalBurn)}
+            hint={t("today.totalBurnHint")}
+            strong
+          />
           <div className="result-row">
             <span className="muted">{t("today.plannedDeficit")}</span>
             <span className="tnum">{kcal(plannedDeficit)}</span>
           </div>
-          <div className="result-row">
-            <span className="muted">{t("today.netDeficit")}</span>
-            <span className="tnum">{kcal(netDeficit)}</span>
-          </div>
-          <p className="muted result-hint">{t("today.netDeficitHint")}</p>
+          <InfoRow
+            label={t("today.netDeficit")}
+            value={kcal(netDeficit)}
+            hint={t("today.netDeficitHint")}
+          />
           <div className="result-row">
             <span className="muted">
               {weeklyChangeKg >= 0 ? t("today.weeklyLoss") : t("today.weeklyGain")}
