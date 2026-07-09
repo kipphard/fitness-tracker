@@ -2438,3 +2438,11 @@ a:hover {
   font-weight: 700;
   color: var(--primary-strong);
 }
+
+/* Body trend: big current-value readout above the chart */
+.body-current {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin: 0.4rem 0 0.2rem;
+}

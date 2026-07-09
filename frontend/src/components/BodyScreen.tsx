@@ -51,6 +51,7 @@ export function BodyScreen() {
     value: m[field] != null ? num(m[field]) : null,
   }));
   const recent = [...(data.data ?? [])].reverse();
+  const latest = recent.find((m) => m[field] != null)?.[field];
 
   return (
     <div className="screen">
@@ -140,6 +141,7 @@ export function BodyScreen() {
               </option>
             ))}
           </select>
+          {latest != null && <p className="body-current tnum">{oneDecimal(latest)} cm</p>}
           {series.some((s) => s.value != null) ? (
             <ResponsiveContainer width="100%" height={220}>
               <LineChart data={series} margin={{ top: 8, right: 8, bottom: 0, left: -18 }}>
