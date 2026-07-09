@@ -79,6 +79,25 @@
     "weeklyGain": "Gewichtszunahme",
     "kgPerWeek": "kg/Woche"
   },
+  "onboarding": {
+    "welcomeTitle": "Lass uns deinen Plan einrichten",
+    "welcomeBody": "Ein paar kurze Fragen und wir berechnen deine persönlichen Kalorien- und Makroziele.",
+    "start": "Los geht's",
+    "next": "Weiter",
+    "goalTitle": "Was ist dein Ziel?",
+    "genderTitle": "Was ist dein Geschlecht?",
+    "genderHint": "Wir nutzen das, um deinen Kalorienbedarf genau zu berechnen.",
+    "ageTitle": "Wie alt bist du?",
+    "heightTitle": "Wie groß bist du?",
+    "weightTitle": "Was ist dein aktuelles Gewicht?",
+    "activityTitle": "Wie aktiv bist du im Alltag?",
+    "years": "Jahre",
+    "summaryTitle": "Dein Plan ist fertig!",
+    "summaryBody": "Basierend auf deinen Angaben ist das dein persönliches Tagesziel.",
+    "dailyTarget": "Tägliches Kalorienziel",
+    "enterApp": "Auf geht's",
+    "saving": "Erstelle deinen Plan…"
+  },
   "diary": {
     "title": "Tagebuch",
     "prev": "Vorheriger Tag",

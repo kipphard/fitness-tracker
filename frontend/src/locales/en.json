@@ -79,6 +79,25 @@
     "weeklyGain": "Weight gain",
     "kgPerWeek": "kg/week"
   },
+  "onboarding": {
+    "welcomeTitle": "Let's set up your plan",
+    "welcomeBody": "A few quick questions and we'll calculate your personal daily calorie and macro targets.",
+    "start": "Get started",
+    "next": "Continue",
+    "goalTitle": "What's your goal?",
+    "genderTitle": "What's your gender?",
+    "genderHint": "We use this to calculate your calorie needs accurately.",
+    "ageTitle": "How old are you?",
+    "heightTitle": "How tall are you?",
+    "weightTitle": "What's your current weight?",
+    "activityTitle": "How active are you day-to-day?",
+    "years": "years",
+    "summaryTitle": "Your plan is ready!",
+    "summaryBody": "Based on what you told us, here's your personalized daily target.",
+    "dailyTarget": "Daily calorie target",
+    "enterApp": "Let's go",
+    "saving": "Creating your plan…"
+  },
   "diary": {
     "title": "Diary",
     "prev": "Previous day",

@@ -28,7 +28,11 @@ export function OptionCard({
       role={multi ? "checkbox" : "radio"}
       aria-checked={selected}
     >
-      {icon != null && <span className="option-card__icon">{icon}</span>}
+      {icon != null && (
+        <span className="option-card__icon" aria-hidden>
+          {icon}
+        </span>
+      )}
       <span className="option-card__text">
         <span className="option-card__label">{label}</span>
         {description != null && <span className="option-card__desc muted">{description}</span>}

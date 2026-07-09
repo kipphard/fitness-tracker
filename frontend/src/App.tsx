@@ -2,9 +2,41 @@ import { useEffect, useRef, useState } from "react";
 import { HashRouter } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
+import { apiGet } from "./api/client";
+import type { Profile } from "./api/types";
 import { AuthProvider, useAuth } from "./auth";
 import { AppShell } from "./components/AppShell";
 import { LoginScreen } from "./components/LoginScreen";
+import { OnboardingFlow } from "./components/onboarding/OnboardingFlow";
+
+// A signed-in user with no saved profile is dropped straight into the guided
+// setup wizard; everyone else goes to the app.
+function AuthedApp() {
+  const { t } = useTranslation();
+  const [profile, setProfile] = useState<"loading" | "missing" | "ok">("loading");
+
+  useEffect(() => {
+    let active = true;
+    apiGet<Profile>("/profile")
+      .then(() => active && setProfile("ok"))
+      .catch(() => active && setProfile("missing")); // 404: no profile yet
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  if (profile === "loading") {
+    return <div className="auth-screen muted">{t("common.loading")}</div>;
+  }
+  if (profile === "missing") {
+    return <OnboardingFlow onDone={() => setProfile("ok")} />;
+  }
+  return (
+    <HashRouter>
+      <AppShell />
+    </HashRouter>
+  );
+}
 
 function Root() {
   const { user, loading, demoLogin } = useAuth();
@@ -26,11 +58,7 @@ function Root() {
     return <div className="auth-screen muted">{t("common.loading")}</div>;
   }
   if (!user) return <LoginScreen />;
-  return (
-    <HashRouter>
-      <AppShell />
-    </HashRouter>
-  );
+  return <AuthedApp />;
 }
 
 export default function App() {
