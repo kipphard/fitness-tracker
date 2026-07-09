@@ -39,7 +39,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   const chart: ChartColors =
     theme === "dark"
-      ? { grid: "#272b38", axis: "#99a0b1", weight: "#5b6472", trend: "#1bb583" }
+      ? { grid: "#262a36", axis: "#99a0b1", weight: "#5b6472", trend: "#1bb583" }
       : { grid: "#ecedf3", axis: "#98a0b3", weight: "#aab0bd", trend: "#11936a" };
 
   return (

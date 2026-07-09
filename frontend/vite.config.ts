@@ -18,7 +18,7 @@ export default defineConfig({
         description: "Self-hosted fitness & nutrition tracker",
         lang: "en",
         theme_color: "#11936a",
-        background_color: "#0d0f15",
+        background_color: "#0a0b0f",
         display: "standalone",
         start_url: "/",
         scope: "/",
