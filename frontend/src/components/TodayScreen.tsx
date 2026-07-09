@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 
 import { apiPut } from "../api/client";
 import type { MacroPrefs, Today, WeighIn } from "../api/types";
@@ -9,8 +8,7 @@ import { useApi } from "../hooks/useApi";
 import { addDays, kcal, num, oneDecimal, todayIso } from "../lib/format";
 import { Card } from "./Card";
 import { StepsFromDistance } from "./StepsFromDistance";
-
-const MACRO_COLORS = { protein: "#6366f1", carbs: "#f59e0b", fat: "#10b981" };
+import { MacroBars, RingGauge } from "./ui";
 
 export function TodayScreen() {
   const { t } = useTranslation();
@@ -115,21 +113,17 @@ export function TodayScreen() {
   // early loss also includes water/glycogen, and the body adapts over time.
   const KCAL_PER_KG = 7700;
   const weeklyChangeKg = (netDeficit * 7) / KCAL_PER_KG;
-  const donut = [
-    { key: "protein", name: t("today.macros.protein"), value: num(macros.protein_kcal), color: MACRO_COLORS.protein },
-    { key: "carbs", name: t("today.macros.carbs"), value: num(macros.carbs_kcal), color: MACRO_COLORS.carbs },
-    { key: "fat", name: t("today.macros.fat"), value: num(macros.fat_kcal), color: MACRO_COLORS.fat },
-  ];
 
-  const macroCards = [
-    { key: "protein", target: macros.protein_g, eaten: consumed.protein_g, color: MACRO_COLORS.protein },
-    { key: "carbs", target: macros.carbs_g, eaten: consumed.carbs_g, color: MACRO_COLORS.carbs },
-    { key: "fat", target: macros.fat_g, eaten: consumed.fat_g, color: MACRO_COLORS.fat },
+  // Ring: how full today's eating budget is (eaten vs eaten+remaining). Over when remaining < 0.
+  const budget = num(consumed.kcal) + num(remaining_kcal);
+  const ringFraction = budget > 0 ? num(consumed.kcal) / budget : 0;
+  const overBudget = num(remaining_kcal) < 0;
+
+  const macroBars = [
+    { label: t("today.macros.protein"), value: num(consumed.protein_g), max: num(macros.protein_g), unit: "g" },
+    { label: t("today.macros.carbs"), value: num(consumed.carbs_g), max: num(macros.carbs_g), unit: "g" },
+    { label: t("today.macros.fat"), value: num(consumed.fat_g), max: num(macros.fat_g), unit: "g" },
   ];
-  const progress = (eaten: string, target: string) => {
-    const total = num(target);
-    return total > 0 ? Math.min(100, (num(eaten) / total) * 100) : 0;
-  };
 
   return (
     <div className="screen">
@@ -180,12 +174,28 @@ export function TodayScreen() {
         </Card>
       )}
 
-      <div className="grid grid--2">
-        <Card title={t("today.targetTitle")}>
-          <div className="target-hero">
-            <strong className="tnum">{kcal(remaining_kcal)}</strong>
-            <span className="muted">{t("today.left")}</span>
+      <Card title={t("today.overviewTitle")}>
+        <div className="today-overview">
+          <div className="today-overview__stat">
+            <span className="today-overview__num tnum">{kcal(consumed.kcal)}</span>
+            <span className="muted">{t("today.eaten")}</span>
           </div>
+          <RingGauge
+            size={172}
+            fraction={ringFraction}
+            over={overBudget}
+            label={kcal(remaining_kcal)}
+            sublabel={t("today.left")}
+          />
+          <div className="today-overview__stat">
+            <span className="today-overview__num tnum">{kcal(activity_kcal)}</span>
+            <span className="muted">{t("today.burned")}</span>
+          </div>
+        </div>
+        <MacroBars bars={macroBars} />
+      </Card>
+
+      <Card title={t("today.targetTitle")}>
           <div className="result-row">
             <span className="muted">{t("today.maintenance")}</span>
             <span className="tnum">{kcal(calories.maintenance)}</span>
@@ -271,46 +281,6 @@ export function TodayScreen() {
             </Link>
           </div>
         </Card>
-
-        <Card title={t("today.macrosTitle")}>
-          <ResponsiveContainer width="100%" height={190}>
-            <PieChart>
-              <Pie
-                data={donut}
-                dataKey="value"
-                nameKey="name"
-                innerRadius={48}
-                outerRadius={78}
-                paddingAngle={2}
-              >
-                {donut.map((d) => (
-                  <Cell key={d.key} fill={d.color} stroke="none" />
-                ))}
-              </Pie>
-              <Tooltip formatter={(v: number) => `${Math.round(v)} kcal`} />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
-
-          <div className="macro-cards">
-            {macroCards.map((m) => (
-              <div className="macro-card" key={m.key}>
-                <span className="macro-card__dot" style={{ background: m.color }} />
-                <span className="macro-card__name">{t(`today.macros.${m.key}`)}</span>
-                <strong className="tnum">
-                  {oneDecimal(m.eaten)} / {oneDecimal(m.target)} g
-                </strong>
-                <div className="macro-bar">
-                  <div
-                    className="macro-bar__fill"
-                    style={{ width: `${progress(m.eaten, m.target)}%`, background: m.color }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        </Card>
-      </div>
 
       <Card title={t("today.adjustTitle")}>
         <form className="form macro-adjust" onSubmit={apply}>

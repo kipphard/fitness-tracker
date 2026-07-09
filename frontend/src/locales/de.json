@@ -45,6 +45,8 @@
     "targetLabel": "Ziel",
     "eaten": "Gegessen",
     "left": "Übrig",
+    "burned": "Verbrannt",
+    "overviewTitle": "Übersicht",
     "steps": "Schritte",
     "kmToSteps": "km → Schritte",
     "distanceKm": "km",

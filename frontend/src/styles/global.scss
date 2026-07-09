@@ -2343,3 +2343,27 @@ a:hover {
   font-size: 1.2rem;
   flex-shrink: 0;
 }
+
+/* Today overview hero — ring flanked by eaten / burned stats */
+.today-overview {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-5);
+}
+.today-overview__stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+  font-size: 0.8rem;
+}
+.today-overview__num {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text);
+}
