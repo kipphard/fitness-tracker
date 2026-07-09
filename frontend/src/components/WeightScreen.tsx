@@ -17,6 +17,7 @@ import { useApi } from "../hooks/useApi";
 import { num, oneDecimal, shortDate } from "../lib/format";
 import { useTheme } from "../theme";
 import { Card } from "./Card";
+import { StatTile } from "./ui";
 
 function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
@@ -63,6 +64,25 @@ export function WeightScreen() {
         <h1>{t("weight.title")}</h1>
         <p className="muted">{t("weight.subtitle")}</p>
       </header>
+
+      {(recent[0] || data?.current_trend) && (
+        <div className="grid grid--2">
+          {recent[0] && (
+            <StatTile
+              icon="⚖️"
+              value={`${oneDecimal(recent[0].weight_kg)} kg`}
+              label={t("weight.latest")}
+            />
+          )}
+          {data?.current_trend && (
+            <StatTile
+              icon="📉"
+              value={`${oneDecimal(data.current_trend)} kg`}
+              label={t("weight.trendWeight")}
+            />
+          )}
+        </div>
+      )}
 
       <div className="grid grid--2">
         <Card title={t("weight.logTitle")}>

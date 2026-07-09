@@ -17,6 +17,7 @@ import { useApi } from "../hooks/useApi";
 import { kcal, num, oneDecimal, shortDate } from "../lib/format";
 import { useTheme } from "../theme";
 import { Card } from "./Card";
+import { StatTile } from "./ui";
 
 export function TrendsScreen() {
   const { t } = useTranslation();
@@ -45,6 +46,25 @@ export function TrendsScreen() {
       </header>
 
       {d?.rate_warning && <div className="alert alert--warn">{t("trends.rateWarning")}</div>}
+
+      {(change != null || measuredMaint) && (
+        <div className="grid grid--2">
+          {change != null && (
+            <StatTile
+              icon="⚖️"
+              value={`${oneDecimal(change)} kg`}
+              label={t("trends.weeklyChange")}
+            />
+          )}
+          {measuredMaint && (
+            <StatTile
+              icon="🔥"
+              value={kcal(measuredMaint)}
+              label={t("trends.measuredMaintenance")}
+            />
+          )}
+        </div>
+      )}
 
       <Card title={t("trends.maintenanceTitle")}>
         {measuredMaint ? (
