@@ -20,6 +20,7 @@ import { useTheme } from "../theme";
 import { Card } from "./Card";
 import { ExercisePicker } from "./ExercisePicker";
 import { ExerciseThumb } from "./ExerciseThumb";
+import { StatTile } from "./ui";
 import { LiveSession } from "./LiveSession";
 import { RoutineEditModal } from "./RoutineEditModal";
 import { WorkoutEditModal } from "./WorkoutEditModal";
@@ -100,6 +101,10 @@ export function WorkoutsScreen() {
   const sessions = history.data ?? [];
   const activeSummary = sessions.find((s) => !s.ended_at);
   const pastSessions = activeSummary ? sessions.filter((s) => s.id !== activeSummary.id) : sessions;
+  const weekAgo = Date.now() - 7 * 24 * 3600 * 1000;
+  const thisWeekCount = pastSessions.filter(
+    (s) => new Date(s.started_at).getTime() >= weekAgo,
+  ).length;
 
   const progExercise = (library.data ?? []).find((e) => e.id === progId);
   const progData = (prog?.points ?? []).map((p) => ({ label: shortDate(p.date), est: num(p.est_1rm) }));
@@ -110,6 +115,17 @@ export function WorkoutsScreen() {
         <h1>{t("workouts.title")}</h1>
         <p className="muted">{t("workouts.subtitle")}</p>
       </header>
+
+      {pastSessions.length > 0 && (
+        <div className="grid grid--2">
+          <StatTile
+            icon="🏋️"
+            value={String(pastSessions.length)}
+            label={t("workouts.totalWorkouts")}
+          />
+          <StatTile icon="📆" value={String(thisWeekCount)} label={t("workouts.thisWeek")} />
+        </div>
+      )}
 
       {activeSummary && (
         <Card title={t("workouts.resumeTitle")}>

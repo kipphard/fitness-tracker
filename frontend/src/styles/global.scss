@@ -1293,6 +1293,7 @@ a:hover {
 }
 .session-stats strong {
   color: var(--text);
+  font-family: var(--font-display);
 }
 .ex-title {
   display: inline-flex;
@@ -1391,6 +1392,7 @@ a:hover {
 }
 .finish-stats__item strong {
   font-size: 1.3rem;
+  font-family: var(--font-display);
 }
 .routine-list {
   margin-top: 0.75rem;
