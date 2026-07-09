@@ -7,6 +7,7 @@ import { parseDecimalInput } from "../lib/format";
 import { Card } from "./Card";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { MealSlotsSettings } from "./MealSlotsSettings";
+import { SegmentedControl } from "./ui";
 
 const UNIT_OPTIONS: UnitSystem[] = ["metric", "imperial"];
 
@@ -73,17 +74,14 @@ export function SettingsScreen() {
         </div>
         <div className="setting-row">
           <span>{t("settings.units")}</span>
-          <select
-            className="select select--auto"
+          <SegmentedControl
+            options={UNIT_OPTIONS.map((u) => ({
+              value: u,
+              label: t(`settings.unitOptions.${u}`),
+            }))}
             value={settings?.unit_system ?? "metric"}
-            onChange={(e) => save({ unit_system: e.target.value as UnitSystem })}
-          >
-            {UNIT_OPTIONS.map((u) => (
-              <option key={u} value={u}>
-                {t(`settings.unitOptions.${u}`)}
-              </option>
-            ))}
-          </select>
+            onChange={(u) => save({ unit_system: u })}
+          />
         </div>
         <div className="setting-row">
           <span>
