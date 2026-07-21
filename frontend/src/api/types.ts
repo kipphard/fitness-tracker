@@ -55,11 +55,6 @@ export interface CalorieResult {
   target: string;
   floor: string;
   below_floor: boolean;
-  // Adaptive TDEE (#4): `maintenance` is the value actually used (blended once enough data
-  // exists); measured is null until the data threshold.
-  formula_maintenance: string | null;
-  measured_maintenance: string | null;
-  tdee_confidence: string;
 }
 
 export type WeightSource = "weekly_average" | "latest_weigh_in" | "profile";
@@ -434,8 +429,4 @@ export interface Trends {
   weekly_weight: WeeklyWeight[];
   weekly_change_kg: string | null;
   rate_warning: boolean;
-  formula_maintenance: string | null;
-  measured_maintenance: string | null;
-  tdee_confidence: string;
-  tdee_days: number;
 }

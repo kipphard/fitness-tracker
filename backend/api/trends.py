@@ -8,8 +8,7 @@ from fastapi import APIRouter
 
 from backend.api.deps import CurrentUser, SessionDep
 from backend.api.diary import sum_consumed
-from backend.api.today import activity_by_day
-from backend.calories import adaptive, engine
+from backend.calories import engine
 from backend.persistence import repository
 from backend.schemas import AdherenceDayOut, TrendsOut, WeeklyWeightOut
 from backend.weight import trend as wtrend
@@ -30,7 +29,6 @@ def trends(session: SessionDep, user: CurrentUser) -> TrendsOut:
     ]
 
     target = None
-    adapt: adaptive.AdaptiveResult | None = None
     if profile is not None:
         weight, _ = wtrend.effective_weight(weigh_points, today, profile.weight_kg)
         cal = engine.compute(
@@ -41,21 +39,7 @@ def trends(session: SessionDep, user: CurrentUser) -> TrendsOut:
             activity=profile.activity_level,
             goal=profile.goal,
         )
-        # Adaptive TDEE (#4): same self-correcting maintenance the Today target uses (measured
-        # excludes exercise via the window's activity; tz=0 here — only workout day-bucketing is
-        # tz-sensitive and it's a window average, so the effect is negligible).
-        window_start = today - timedelta(days=adaptive.WINDOW_DAYS)
-        adapt = adaptive.adaptive_maintenance(
-            formula=cal.maintenance,
-            weigh_points=weigh_points,
-            intake_by_day=repository.daily_intake(session, user.id, window_start, today),
-            today=today,
-            activity_by_day=activity_by_day(
-                session, user, weigh_points, profile.weight_kg, window_start, today
-            ),
-            activity_floor=cal.maintenance - cal.bmr,  # occupational allowance from the profile
-        )
-        target = engine.goal_target(adapt.maintenance, profile.gender, profile.goal)
+        target = cal.target
 
     adherence: list[AdherenceDayOut] = []
     for offset in range(_ADHERENCE_DAYS - 1, -1, -1):
@@ -85,8 +69,4 @@ def trends(session: SessionDep, user: CurrentUser) -> TrendsOut:
         weekly_weight=weekly_weight,
         weekly_change_kg=change,
         rate_warning=rate_warning,
-        formula_maintenance=adapt.formula if adapt else None,
-        measured_maintenance=adapt.measured if adapt else None,
-        tdee_confidence=adapt.confidence if adapt else Decimal(0),
-        tdee_days=adapt.span_days if adapt else 0,
     )

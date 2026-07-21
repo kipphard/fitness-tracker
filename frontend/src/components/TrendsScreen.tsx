@@ -35,8 +35,6 @@ export function TrendsScreen() {
     avg: num(w.average),
   }));
   const change = d?.weekly_change_kg ?? null;
-  const measuredMaint = d?.measured_maintenance ?? null;
-  const conf = Math.round(num(d?.tdee_confidence) * 100);
 
   return (
     <div className="screen">
@@ -47,44 +45,15 @@ export function TrendsScreen() {
 
       {d?.rate_warning && <div className="alert alert--warn">{t("trends.rateWarning")}</div>}
 
-      {(change != null || measuredMaint) && (
+      {change != null && (
         <div className="grid grid--2">
-          {change != null && (
-            <StatTile
-              icon="⚖️"
-              value={`${oneDecimal(change)} kg`}
-              label={t("trends.weeklyChange")}
-            />
-          )}
-          {measuredMaint && (
-            <StatTile
-              icon="🔥"
-              value={kcal(measuredMaint)}
-              label={t("trends.measuredMaintenance")}
-            />
-          )}
+          <StatTile
+            icon="⚖️"
+            value={`${oneDecimal(change)} kg`}
+            label={t("trends.weeklyChange")}
+          />
         </div>
       )}
-
-      <Card title={t("trends.maintenanceTitle")}>
-        {measuredMaint ? (
-          <>
-            <div className="result-row">
-              <span className="muted">{t("trends.measuredMaintenance")}</span>
-              <strong className="tnum">{kcal(measuredMaint)}</strong>
-            </div>
-            <div className="result-row">
-              <span className="muted">{t("trends.formulaMaintenance")}</span>
-              <span className="tnum">{kcal(d?.formula_maintenance)}</span>
-            </div>
-            <p className="muted result-hint">
-              {t("trends.maintenanceHint", { pct: conf, days: d?.tdee_days ?? 0 })}
-            </p>
-          </>
-        ) : (
-          <p className="muted">{t("trends.maintenanceLearning")}</p>
-        )}
-      </Card>
 
       <Card title={t("trends.adherence")}>
         {adherence.some((a) => a.consumed > 0) ? (

@@ -8,8 +8,7 @@ short (all sets tapped in quickly, or a past workout backfilled), so it must nev
 below the set-count floor. An empty session (no sets) burns nothing; a manual ``kcal_override``
 short-circuits everything.
 
-Like step burn, this is a first-order estimate — the adaptive-TDEE correction (issue #4) absorbs
-the systematic error. No I/O; Decimal only.
+Like step burn, this is a first-order estimate. No I/O; Decimal only.
 """
 from __future__ import annotations
 

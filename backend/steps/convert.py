@@ -1,7 +1,7 @@
 """Pure step → calorie conversion (Phase 6).
 
-kcal ≈ steps × 0.0005 × weight(kg). A rough estimate (e.g. 10k steps @ 95 kg ≈ 475 kcal); the
-adaptive-TDEE correction in a later phase absorbs the systematic error. No I/O; Decimal only.
+kcal ≈ steps × 0.0005 × weight(kg). A rough estimate (e.g. 10k steps @ 95 kg ≈ 475 kcal).
+No I/O; Decimal only.
 """
 from __future__ import annotations
 

@@ -121,11 +121,6 @@ class CalorieResultOut(BaseModel):
     target: Decimal
     floor: Decimal
     below_floor: bool
-    # Adaptive TDEE (issue #4): `maintenance` above is the value actually used (blended once
-    # enough data exists). These expose the breakdown — measured is null until the threshold.
-    formula_maintenance: Decimal | None = None
-    measured_maintenance: Decimal | None = None
-    tdee_confidence: Decimal = Decimal(0)
 
 
 class MyCaloriesOut(CalorieResultOut):
@@ -718,8 +713,3 @@ class TrendsOut(BaseModel):
     weekly_weight: list[WeeklyWeightOut]
     weekly_change_kg: Decimal | None = None
     rate_warning: bool
-    # Adaptive TDEE (issue #4): measured vs. formula maintenance + confidence (0..1).
-    formula_maintenance: Decimal | None = None
-    measured_maintenance: Decimal | None = None
-    tdee_confidence: Decimal = Decimal(0)
-    tdee_days: int = 0

@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 
 from backend.api.deps import CurrentUser, SessionDep
 from backend.api.diary import sum_consumed
-from backend.calories import adaptive, engine
+from backend.calories import engine
 from backend.config import get_settings as get_app_settings
 from backend.macros import engine as macro_engine
 from backend.persistence import repository
@@ -25,50 +25,6 @@ from backend.weight import trend as wtrend
 from backend.workouts.calories import session_kcal
 
 router = APIRouter(tags=["today"])
-
-
-def activity_by_day(
-    session: Session,
-    user: User,
-    points: list[tuple[date, Decimal]],
-    fallback_weight: Decimal,
-    start_day: date,
-    end_day: date,
-    tz: int = 0,
-) -> dict[date, Decimal]:
-    """Per-day deliberate-exercise kcal (steps + workouts) over ``[start_day, end_day)``.
-
-    Fed to the adaptive-TDEE correction so the measured maintenance excludes exercise (see
-    ``backend.calories.adaptive``). Reuses the same per-day math as ``compute_today``: steps via
-    ``steps_to_kcal`` and workouts via ``session_kcal``, each priced at that day's effective
-    weight and bucketed to the session's local calendar day using ``tz``.
-    """
-    steps_by_day: dict[date, int] = {
-        sl.date: sl.steps
-        for sl in repository.list_step_logs(session, user.id)
-        if start_day <= sl.date < end_day
-    }
-
-    # Query a day wider on each side (UTC) then filter by local day, so tz can't drop edge sessions.
-    win_start = datetime(start_day.year, start_day.month, start_day.day, tzinfo=timezone.utc)
-    win_end = datetime(end_day.year, end_day.month, end_day.day, tzinfo=timezone.utc)
-    workout_by_day: dict[date, Decimal] = {}
-    for s in repository.list_workout_sessions_between(
-        session, user.id, win_start - timedelta(days=1), win_end + timedelta(days=1)
-    ):
-        local_day = (s.started_at + timedelta(minutes=tz)).date()
-        if not (start_day <= local_day < end_day):
-            continue
-        weight, _ = wtrend.effective_weight(points, local_day, fallback_weight)
-        workout_by_day[local_day] = workout_by_day.get(local_day, Decimal(0)) + session_kcal(
-            weight, started_at=s.started_at, ended_at=s.ended_at, set_count=len(s.sets)
-        )
-
-    out: dict[date, Decimal] = {}
-    for d in set(steps_by_day) | set(workout_by_day):
-        weight, _ = wtrend.effective_weight(points, d, fallback_weight)
-        out[d] = steps_to_kcal(steps_by_day.get(d, 0), weight) + workout_by_day.get(d, Decimal(0))
-    return out
 
 
 @router.get("/today", response_model=TodayOut)
@@ -102,26 +58,10 @@ def compute_today(session: Session, user: User, day: date, tz: int = 0) -> Today
         goal=profile.goal,
     )
 
-    # Adaptive TDEE (#4): correct the formula maintenance toward the value measured from intake
-    # vs. weight change, once enough recent data exists. Everything downstream (target, net
-    # deficit, weekly-loss prediction) then uses this self-correcting maintenance. Activity over
-    # the window is passed in so `measured` excludes exercise (added back on top once, below).
-    window_start = day - timedelta(days=adaptive.WINDOW_DAYS)
-    adapt = adaptive.adaptive_maintenance(
-        formula=cal.maintenance,
-        weigh_points=points,
-        intake_by_day=repository.daily_intake(session, user.id, window_start, day),
-        today=day,
-        activity_by_day=activity_by_day(
-            session, user, points, profile.weight_kg, window_start, day, tz
-        ),
-        # Occupational allowance already in the formula (BMR × (factor−1)) — from the user's
-        # activity-level setting; only activity above it is treated as deliberate exercise.
-        activity_floor=cal.maintenance - cal.bmr,
-    )
-    maintenance = adapt.maintenance
-    target = engine.goal_target(maintenance, profile.gender, profile.goal)
-    below_floor = (maintenance + engine.GOAL_ADJUSTMENT[profile.goal]) < cal.floor
+    # Maintenance comes straight from the formula (profile stats × the weekly-average weight
+    # above) — no adaptive correction from tracked intake, so untracked days can't skew it.
+    maintenance = cal.maintenance
+    target = cal.target
 
     prefs = repository.get_macro_target(session, user.id)
     protein_g_per_kg = (
@@ -164,18 +104,12 @@ def compute_today(session: Session, user: User, day: date, tz: int = 0) -> Today
     eat_back = bool(prefs.eat_back_activity) if prefs else False
     budget = target + (activity_kcal if eat_back else Decimal(0))
 
-    cal_data = asdict(cal)
-    cal_data.update(maintenance=maintenance, target=target, below_floor=below_floor)
-
     return TodayOut(
         date=day,
         calories=MyCaloriesOut(
-            **cal_data,
+            **asdict(cal),
             weight_kg=weight_kg,
             weight_source=source.value,
-            formula_maintenance=adapt.formula,
-            measured_maintenance=adapt.measured,
-            tdee_confidence=adapt.confidence,
         ),
         macros=MacroResultOut.model_validate(macros),
         consumed=consumed,

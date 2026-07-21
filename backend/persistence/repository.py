@@ -398,18 +398,6 @@ def list_food_logs(
     )
 
 
-def daily_intake(
-    session: Session, user_id: uuid.UUID, start: date, end: date
-) -> dict[date, Decimal]:
-    """Total kcal logged per day over [start, end] (only days with logs). For adaptive TDEE."""
-    rows = session.execute(
-        select(FoodLog.date, func.sum(FoodLog.kcal))
-        .where(FoodLog.user_id == user_id, FoodLog.date >= start, FoodLog.date <= end)
-        .group_by(FoodLog.date)
-    ).all()
-    return {d: Decimal(total) for d, total in rows}
-
-
 def get_food_log(
     session: Session, log_id: uuid.UUID, user_id: uuid.UUID
 ) -> FoodLog | None:

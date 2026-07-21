@@ -20,8 +20,13 @@ def test_seed_populates_and_is_idempotent(client, session_factory):
     weigh_ins = repository.list_weigh_ins(s2, user.id)
     assert len(weigh_ins) > 30
     # Food logs span most of the last ~45 days (a few days are intentionally skipped).
-    intake = repository.daily_intake(s2, user.id, date.today() - timedelta(days=46), date.today())
-    assert len(intake) > 30
+    logged_days = {
+        day
+        for offset in range(47)
+        for day in [date.today() - timedelta(days=offset)]
+        if repository.list_food_logs(s2, user.id, day)
+    }
+    assert len(logged_days) > 30
     sessions = repository.list_workout_sessions(s2, user.id)
     assert len(sessions) >= 10
     assert sum(len(ws.sets) for ws in sessions) > 0

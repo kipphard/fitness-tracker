@@ -237,22 +237,10 @@ export function TodayScreen() {
       </Card>
 
       <Card title={t("today.targetTitle")}>
-          {calories.measured_maintenance ? (
-            <InfoRow
-              label={t("today.maintenance")}
-              value={kcal(calories.maintenance)}
-              hint={t("today.adaptiveMaintenance", {
-                measured: kcal(calories.measured_maintenance),
-                formula: kcal(calories.formula_maintenance),
-                pct: Math.round(num(calories.tdee_confidence) * 100),
-              })}
-            />
-          ) : (
-            <div className="result-row">
-              <span className="muted">{t("today.maintenance")}</span>
-              <span className="tnum">{kcal(calories.maintenance)}</span>
-            </div>
-          )}
+          <div className="result-row">
+            <span className="muted">{t("today.maintenance")}</span>
+            <span className="tnum">{kcal(calories.maintenance)}</span>
+          </div>
           <div className="result-row">
             <span className="muted">{t("today.targetLabel")}</span>
             <span className="tnum">{kcal(calories.target)}</span>
